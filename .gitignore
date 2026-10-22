@@ -14,3 +14,7 @@ dist/
 
 # Métricas exportadas
 metricas.json
+
+# Packs originales de Kenney (no versionar los ZIP ni el material sin usar)
+assets/kenney/
+*.zip
