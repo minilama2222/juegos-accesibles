@@ -16,9 +16,10 @@ const OJOS = Array.from({ length: 5 }, (_, i) => "assets/recortes/ojos/ojo-" + i
 function cajaPulsable(H, ruta, tam) {
   const caja = document.createElement("div");
   caja.className = "objetivo";
-  caja.style.width = tam + "px";
-  caja.style.height = tam + "px";
-  caja.appendChild(H.sprite(ruta, tam));
+  const lado = tam > 0 ? tam + "px" : "26vmin";
+  caja.style.width = lado;
+  caja.style.height = lado;
+  caja.appendChild(H.sprite(ruta, "100%"));
   H.escena.appendChild(caja);
   Juego.iman(caja);
   return caja;

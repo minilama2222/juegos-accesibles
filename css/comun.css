@@ -175,3 +175,6 @@ body[data-juego="punteria1"] { background: #eef3fa; }
   #celebracion svg { animation: none; }
   .aparece { animation: none; }
 }
+
+/* Las cartas del juego de parejas van colocadas por la rejilla, no por coordenadas */
+.objetivo.carta { position: relative; }
