@@ -12,18 +12,18 @@ MOTOR.registrar("escalon0", {
   crear(H) {
     // Se eligen los animales disponibles una sola vez, para no repetir el mismo seguidos
     const ANIMALES = [
-      "assets/recortes/animales/bear.png",
-      "assets/recortes/animales/dog.png",
-      "assets/recortes/animales/giraffe.png",
-      "assets/recortes/animales/hippo.png",
-      "assets/recortes/animales/penguin.png",
-      "assets/recortes/animales/sloth.png",
-      "assets/recortes/animales/elephant.png",
-      "assets/recortes/animales/duck.png",
-      "assets/recortes/animales/gorilla.png",
-      "assets/recortes/animales/crocodile.png",
-      "assets/recortes/animales/chicken.png",
-      "assets/recortes/animales/snake.png",
+      "assets/recortes/vector/animal-bear.svg",
+      "assets/recortes/vector/animal-dog.svg",
+      "assets/recortes/vector/animal-giraffe.svg",
+      "assets/recortes/vector/animal-hippo.svg",
+      "assets/recortes/vector/animal-penguin.svg",
+      "assets/recortes/vector/animal-sloth.svg",
+      "assets/recortes/vector/animal-elephant.svg",
+      "assets/recortes/vector/animal-duck.svg",
+      "assets/recortes/vector/animal-gorilla.svg",
+      "assets/recortes/vector/animal-crocodile.svg",
+      "assets/recortes/vector/animal-chicken.svg",
+      "assets/recortes/vector/animal-snake.svg",
     ];
 
     let i = 0, toques = 0, acabado = false;
