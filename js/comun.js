@@ -68,9 +68,9 @@ const Juego = (() => {
       }
       if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
     },
-    // Efecto de acierto: corto, suave, ascendente (≈0,45 s)
+    // Efecto de acierto: corto y ascendente (≈0,45 s).
+    // Los EFECTOS no los silencia el botón: el botón solo corta la MÚSICA de fondo.
     acierto() {
-      if (this.mutado) return;
       this.iniciar();
       if (!this.ctx) return;
       const t = this.ctx.currentTime;
@@ -88,7 +88,8 @@ const Juego = (() => {
         o.stop(ini + 0.25);
       });
     },
-    // Fondo: dos tonos muy suaves en bucle continuo, volumen bajo
+    // MÚSICA de fondo: arpegio suave y lento en bucle (no un zumbido).
+    // El botón la silencia; los efectos siguen sonando.
     fondo(activar) {
       this.iniciar();
       if (!this.ctx) return;
@@ -97,23 +98,70 @@ const Juego = (() => {
         return;
       }
       if (this.fondoNodo) return;
-      const g = this.ctx.createGain();
-      g.gain.value = 0.012;                       // volumen muy bajo
-      const lfo = this.ctx.createOscillator();    // respiración lenta
-      const lfoG = this.ctx.createGain();
-      lfo.frequency.value = 0.07;
-      lfoG.gain.value = 0.006;
-      lfo.connect(lfoG).connect(g.gain);
-      [196, 294].forEach((f) => {
+
+      const salida = this.ctx.createGain();
+      salida.gain.value = 0.05;                  // colchón muy bajo
+      salida.connect(this.ctx.destination);
+
+      const notas = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];  // C · E · G · C' · G · E
+      let i = 0;
+      const tocar = () => {
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime;
         const o = this.ctx.createOscillator();
-        o.type = "sine";
+        const env = this.ctx.createGain();
+        o.type = "triangle";
+        o.frequency.value = notas[i % notas.length];
+        env.gain.setValueAtTime(0.0001, t);
+        env.gain.exponentialRampToValueAtTime(0.22, t + 0.25);
+        env.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+        o.connect(env).connect(salida);
+        o.start(t); o.stop(t + 1.7);
+        i++;
+      };
+      tocar();
+      const reloj = setInterval(tocar, 1300);
+      this.fondoNodo = { stop() { clearInterval(reloj); salida.disconnect(); } };
+    },
+
+    // Fanfarria de final: cuatro notas ascendentes (≈1,3 s). Efecto, no música.
+    fanfarria() {
+      this.iniciar();
+      if (!this.ctx) return;
+      const t0 = this.ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = "triangle";
         o.frequency.value = f;
-        o.connect(g);
-        o.start();
+        const t = t0 + i * 0.16;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.22, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + (i === 3 ? 0.7 : 0.3));
+        o.connect(g).connect(this.ctx.destination);
+        o.start(t); o.stop(t + 0.8);
       });
-      lfo.start();
-      g.connect(this.ctx.destination);
-      this.fondoNodo = { stop() { g.disconnect(); lfo.stop(); } };
+    },
+
+    // Aplausos: ráfagas de ruido filtrado con caída rápida (≈1,4 s).
+    aplausos() {
+      this.iniciar();
+      if (!this.ctx) return;
+      const dur = 0.06;
+      const buffer = this.ctx.createBuffer(1, Math.ceil(this.ctx.sampleRate * dur), this.ctx.sampleRate);
+      const datos = buffer.getChannelData(0);
+      for (let n = 0; n < datos.length; n++) datos[n] = (Math.random() * 2 - 1) * (1 - n / datos.length);
+      const t0 = this.ctx.currentTime;
+      for (let i = 0; i < 14; i++) {
+        const src = this.ctx.createBufferSource();
+        src.buffer = buffer;
+        const bp = this.ctx.createBiquadFilter();
+        bp.type = "bandpass"; bp.frequency.value = 1500 + Math.random() * 1200; bp.Q.value = 0.8;
+        const g = this.ctx.createGain();
+        g.gain.value = 0.10 + Math.random() * 0.08;
+        src.connect(bp).connect(g).connect(this.ctx.destination);
+        src.start(t0 + i * 0.09 + Math.random() * 0.04);
+      }
     },
     alternarBoton() {
       this.mutado = !this.mutado;
@@ -230,7 +278,25 @@ const Juego = (() => {
 
   function aleatorio(min, max) { return Math.random() * (max - min) + min; }
 
+  // ---------- Confeti (sin dependencias) ----------
+  function confeti() {
+    const colores = ["#4c9f70", "#e5a13c", "#5b8fd6", "#c96f8e", "#b07ec9", "#f2d16b"];
+    for (let i = 0; i < 70; i++) {
+      const c = document.createElement("div");
+      c.className = "confeti";
+      c.style.left = Math.random() * 100 + "vw";
+      c.style.background = colores[i % colores.length];
+      c.style.animationDelay = (Math.random() * 0.7).toFixed(2) + "s";
+      c.style.animationDuration = (2.2 + Math.random() * 1.4).toFixed(2) + "s";
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4200);
+    }
+  }
+
   function celebracion() {
+    confeti();
+    audio.fanfarria();
+    setTimeout(() => audio.aplausos(), 620);
     const c = document.createElement("div");
     c.id = "celebracion";
     c.innerHTML = formaSVG(0, 320);
@@ -251,5 +317,5 @@ const Juego = (() => {
 
   addEventListener("keydown", (e) => { if (e.key === "e") exportar(); });
 
-  return { ayuda, metricas, audio, crearPuntero, iman, crearBotones, formaSVG, aleatorio, celebracion, exportar };
+  return { ayuda, metricas, audio, crearPuntero, iman, crearBotones, formaSVG, aleatorio, celebracion, confeti, exportar };
 })();
