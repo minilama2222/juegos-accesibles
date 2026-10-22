@@ -1,0 +1,133 @@
+/* =====================================================================
+   comun.css — Juegos accesibles
+   Reglas de la capa CONSTANTE: esto NO cambia de un juego a otro.
+   ===================================================================== */
+
+:root {
+  /* Paleta suave y común (filtro de acabado): sin neón, sin saturación extrema */
+  --fondo: #fdfaf5;
+  --tinta: #3d3a36;
+  --acento: #4c9f70;
+  --acento-claro: #e8f4ec;
+  --objetivo: 96px;      /* área mínima de clic en móvil; se escala por juego */
+  --boton: 104px;        /* botones de la capa constante (siempre ≥44px) */
+  --radio: 28px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--fondo);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--tinta);
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* El cursor del sistema se oculta: lo dibujamos nosotros (grande y con estela) */
+body.con-puntero, body.con-puntero * { cursor: none; }
+
+#escena {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ---------------- Capa constante: botones ---------------- */
+.boton-sup {
+  position: fixed;
+  top: 18px;
+  width: var(--boton);
+  height: var(--boton);
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 6px 0 rgba(0,0,0,.08), 0 0 0 4px var(--acento-claro);
+  font-size: 48px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  transition: transform .12s ease;
+}
+.boton-sup:hover, .boton-sup.cerca { transform: scale(1.12); }
+.boton-sup:active { transform: scale(.96); }
+
+#boton-volver { left: 18px; }
+#boton-mute   { right: 18px; }
+
+/* ---------------- Puntero propio ---------------- */
+#puntero {
+  position: fixed;
+  left: 0; top: 0;
+  width: 64px; height: 64px;
+  margin-left: -32px; margin-top: -32px;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform .08s linear;
+}
+#puntero svg { width: 100%; height: 100%; display: block; }
+
+.estela {
+  position: fixed;
+  width: 18px; height: 18px;
+  margin-left: -9px; margin-top: -9px;
+  border-radius: 50%;
+  background: rgba(76,159,112,.35);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ---------------- Objetivos ---------------- */
+.objetivo {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radio);
+  background: #ffffff;
+  box-shadow: 0 8px 0 rgba(0,0,0,.06);
+  transition: transform .15s ease, box-shadow .15s ease;
+  will-change: transform;
+}
+.objetivo.cerca  { transform: scale(1.06); }              /* imán: crece el OBJETIVO */
+.objetivo.acierto { animation: pop .5s ease; }
+
+@keyframes pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+
+/* Celebración final: fondo suave, sin parpadeos */
+#celebracion {
+  position: fixed; inset: 0;
+  display: none;
+  place-items: center;
+  background: radial-gradient(circle at 50% 45%, var(--acento-claro), var(--fondo) 70%);
+  z-index: 40;
+}
+#celebracion.activa { display: grid; }
+#celebracion svg { width: min(46vw, 380px); height: auto; animation: latido 1.4s ease-in-out infinite; }
+
+@keyframes latido {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.08); }
+}
+
+/* Regla de seguridad: en pantalla táctil, puntero del sistema */
+@media (pointer: coarse) {
+  body.con-puntero, body.con-puntero * { cursor: default; }
+  #puntero, .estela { display: none; }
+}
+
+/* Respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  #puntero { transition: none; }
+  .objetivo, .boton-sup { transition: none; }
+  #celebracion svg { animation: none; }
+}

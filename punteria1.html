@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>P1 · Diana estática</title>
+  <link rel="stylesheet" href="css/comun.css">
+  <style>
+    /* Ambientación propia (distinta del escalón 0, como se decidió):
+       fondo plano azulado, muy suave. */
+    body { background: #eef3fa; }
+    #escena { background: radial-gradient(circle at 50% 55%, #ffffff, #eef3fa 72%); }
+    #diana { width: 34vmin; height: 34vmin; min-width: 160px; min-height: 160px; }
+  </style>
+</head>
+<body>
+  <div id="escena"><div class="objetivo" id="diana"></div></div>
+
+  <script src="js/comun.js"></script>
+  <script>
+    /* P1 — DIANA ESTÁTICA.
+       Un objetivo grande y quieto. Al acertar: celebra y se muda a otro sitio
+       (siempre quieto, para no convertirlo en P3).
+       Si falla: NO pasa nada negativo; el objetivo crece un poco (más ayuda).
+       Sesión con final natural: 12 aciertos y se acaba. */
+
+    Juego.crearPuntero();
+    Juego.crearBotones({ volver: "index.html", fondo: true });
+
+    const escena = document.getElementById("escena");
+    const diana  = document.getElementById("diana");
+    let n = 0, aciertos = 0, acabado = false;
+
+    function pintarDiana() {
+      diana.innerHTML = Juego.formaSVG(n, "100%");
+    }
+
+    function colocarDiana() {
+      const r = diana.getBoundingClientRect();
+      const m = 90;
+      const x = Juego.aleatorio(m, Math.max(m + 1, innerWidth  - r.width  - m));
+      const y = Juego.aleatorio(m, Math.max(m + 1, innerHeight - r.height - m));
+      diana.style.left = x + "px";
+      diana.style.top  = y + "px";
+    }
+
+    function siguienteDiana() {
+      n++;
+      pintarDiana();
+      // el tamaño refleja la ayuda actual: cuanta más ayuda, más grande
+      diana.style.width  = (30 + 14 * Juego.ayuda.nivel) + "vmin";
+      diana.style.height = (30 + 14 * Juego.ayuda.nivel) + "vmin";
+      colocarDiana();
+    }
+
+    pintarDiana();
+    siguienteDiana();
+    Juego.iman(diana);
+
+    document.body.addEventListener("pointerdown", (ev) => {
+      if (acabado) return;
+      const res = Juego.metricas.registrar(ev.clientX, ev.clientY, diana);
+      if (res.dentro) {
+        aciertos++;
+        diana.classList.add("acierto");
+        Juego.audio.acierto();
+        setTimeout(() => diana.classList.remove("acierto"), 520);
+        if (aciertos >= 12) {
+          acabado = true;
+          Juego.metricas.guardar();
+          Juego.celebracion();
+          setTimeout(() => { acabado = false; aciertos = 0; siguienteDiana(); }, 4200);
+        } else {
+          setTimeout(siguienteDiana, 320);
+        }
+      } else {
+        // Sin castigo: crece el objetivo y se vuelve a colocar cerca del fallo
+        diana.style.width  = (34 + 14 * Juego.ayuda.nivel) + "vmin";
+        diana.style.height = (34 + 14 * Juego.ayuda.nivel) + "vmin";
+      }
+    });
+
+    addEventListener("resize", colocarDiana);
+  </script>
+</body>
+</html>

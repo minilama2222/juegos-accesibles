@@ -1,0 +1,16 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Dependencias y artefactos (la v0 no tiene ninguna)
+node_modules/
+dist/
+*.log
+
+# Métricas exportadas
+metricas.json

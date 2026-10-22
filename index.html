@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Juegos accesibles — selección (para adultos)</title>
+  <link rel="stylesheet" href="css/comun.css">
+  <style>
+    /* Esta página SÍ lleva texto: la usa un adulto para elegir juego.
+       Los juegos en sí no llevan una sola palabra. */
+    body { overflow: auto; }
+    .aviso {
+      max-width: 900px; margin: 28px auto 8px; padding: 18px 22px;
+      background: #fff; border-radius: 18px; box-shadow: 0 6px 0 rgba(0,0,0,.06);
+      font-size: 17px; line-height: 1.5;
+    }
+    h1 { font-size: 26px; margin: 0 0 6px; }
+    .rejilla {
+      max-width: 900px; margin: 18px auto 60px; padding: 0 20px;
+      display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .tarjeta {
+      display: block; text-decoration: none; color: inherit; background: #fff;
+      border-radius: 22px; padding: 22px; box-shadow: 0 8px 0 rgba(0,0,0,.06);
+      transition: transform .12s ease;
+    }
+    .tarjeta:hover { transform: translateY(-3px) scale(1.02); }
+    .tarjeta h2 { margin: 0 0 6px; font-size: 21px; }
+    .tarjeta p { margin: 0; font-size: 15px; opacity: .8; }
+    .tarjeta .miniatura { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
+  </style>
+</head>
+<body>
+  <div class="aviso">
+    <h1>Juegos accesibles</h1>
+    <p>Elige un juego. <strong>Dentro no hay ni una palabra</strong>: todo se entiende mirando. Estas dos
+    pantallas son las primeras de la escalera; el resto se irán añadiendo encima.</p>
+    <p style="margin-top:10px">
+      <strong>Atajo para adultos:</strong> dentro de un juego, pulsa <kbd>E</kbd> para descargar las
+      métricas de la sesión (aciertos, fallos, distancia media al centro y porcentaje dentro del objetivo).
+    </p>
+  </div>
+
+  <div class="rejilla">
+    <a class="tarjeta" href="escalon0.html">
+      <h2>0 · Toca y pasa algo</h2>
+      <p>Causa-efecto puro. Un toque en cualquier parte y el personaje aparece y celebra. Es imposible fallar.</p>
+      <div class="miniatura" id="mini0"></div>
+    </a>
+
+    <a class="tarjeta" href="punteria1.html">
+      <h2>P1 · Diana estática</h2>
+      <p>Un objetivo grande y quieto que espera. Aquí ya se entrena la puntería, con ayuda que se retira poco a poco.</p>
+      <div class="miniatura" id="mini1"></div>
+    </a>
+  </div>
+
+  <script src="js/comun.js"></script>
+  <script>
+    document.getElementById("mini0").innerHTML = Juego.formaSVG(0, 72) + Juego.formaSVG(2, 72) + Juego.formaSVG(3, 72);
+    document.getElementById("mini1").innerHTML = Juego.formaSVG(1, 72) + Juego.formaSVG(0, 72);
+  </script>
+</body>
+</html>

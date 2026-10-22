@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>0 · Toca y pasa algo</title>
+  <link rel="stylesheet" href="css/comun.css">
+  <style>
+    /* Ambientación de este juego: fondo plano, un solo tono, sin movimiento. */
+    body { background: #f7f3ea; }
+    #escena { background: radial-gradient(circle at 50% 60%, #fff6e6, #f7f3ea 70%); }
+    .aparece {
+      position: absolute;
+      animation: entrada .55s cubic-bezier(.2,1.5,.4,1);
+      transform-origin: center;
+    }
+    @keyframes entrada {
+      0%   { transform: scale(.2) rotate(-18deg); opacity: 0; }
+      60%  { transform: scale(1.18) rotate(6deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+    .se-va { transition: transform .35s ease, opacity .35s ease; }
+  </style>
+</head>
+<body>
+  <div id="escena"></div>
+
+  <script src="js/comun.js"></script>
+  <script>
+    /* ESCALÓN 0 — Causa-efecto puro.
+       Cualquier clic, en cualquier punto, produce SIEMPRE el mismo resultado:
+       aparece un personaje grande, celebra y se va. No existe el fallo. */
+
+    Juego.crearPuntero();
+    Juego.crearBotones({ volver: "index.html", fondo: true });
+
+    const escena = document.getElementById("escena");
+    let n = 0;
+
+    document.body.addEventListener("pointerdown", (ev) => {
+      const tam = Math.round(Math.min(innerWidth, innerHeight) * 0.34);   // grande de verdad
+      const el = document.createElement("div");
+      el.className = "aparece";
+      el.style.left = (ev.clientX - tam / 2) + "px";
+      el.style.top  = (ev.clientY - tam / 2) + "px";
+      el.innerHTML = Juego.formaSVG(n, tam);
+      escena.appendChild(el);
+
+      Juego.audio.acierto();
+
+      setTimeout(() => {
+        el.classList.add("se-va");
+        el.style.transform = "scale(.6)";
+        el.style.opacity = "0";
+      }, 900);
+      setTimeout(() => el.remove(), 1300);
+
+      n++;
+    });
+  </script>
+</body>
+</html>
