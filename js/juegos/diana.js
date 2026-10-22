@@ -33,17 +33,33 @@ MOTOR.registrar("punteria1", {
     }
 
     function tamano() {
-      // El tamaño refleja la ayuda: ayuda máxima = objetivo más grande
-      const vmin = 30 + 16 * H.ayuda.nivel;
+      // Medianas-grandes, y DISTINTA cada vez. La ayuda las agranda un poco más.
+      const base = 26 + H.aleatorio(0, 9);
+      const vmin = base * (0.92 + 0.18 * H.ayuda.nivel);
       diana.style.width = vmin + "vmin";
       diana.style.height = vmin + "vmin";
     }
 
+    let anterior = null;
+
     function colocar() {
+      // Se separan entre sí todo lo posible: se prueban varias posiciones y se elige la más lejana.
       const r = diana.getBoundingClientRect();
-      const m = 100;
-      diana.style.left = H.aleatorio(m, Math.max(m + 1, innerWidth  - r.width  - m)) + "px";
-      diana.style.top  = H.aleatorio(m, Math.max(m + 1, innerHeight - r.height - m)) + "px";
+      const m = 110;
+      const maxX = Math.max(m + 1, innerWidth - r.width - m);
+      const maxY = Math.max(m + 1, innerHeight - r.height - m);
+      const minimo = Math.min(innerWidth, innerHeight) * 0.42;   // separación deseada
+
+      let mejor = null, mejorD = -1;
+      for (let intento = 0; intento < 14; intento++) {
+        const x = H.aleatorio(m, maxX), y = H.aleatorio(m, maxY);
+        const d = anterior ? Math.hypot(x - anterior.x, y - anterior.y) : 1e6;
+        if (d > mejorD) { mejorD = d; mejor = { x: x, y: y }; }
+        if (d >= minimo) break;                                   // ya está suficientemente lejos
+      }
+      diana.style.left = mejor.x + "px";
+      diana.style.top  = mejor.y + "px";
+      anterior = mejor;
     }
 
     function siguiente() { pintar(); tamano(); colocar(); }
@@ -65,7 +81,8 @@ MOTOR.registrar("punteria1", {
           acabado = true;
           H.cerrarSesion("punteria1");
           H.celebracion();
-          setTimeout(() => { acabado = false; aciertos = 0; H.reiniciarSesion(); siguiente(); }, 4200);
+          // Terminar un nivel lleva al siguiente, sin que nadie tenga que elegir nada.
+          setTimeout(() => H.avanzar(), 4600);
         } else {
           setTimeout(siguiente, 320);
         }

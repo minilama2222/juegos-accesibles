@@ -177,20 +177,29 @@ const Juego = (() => {
     if (window.matchMedia("(pointer: coarse)").matches) return;   // táctil: no hay cursor
     document.body.classList.add("con-puntero");
 
+    // ÚNICO puntero visible: flecha grande en blanco y negro, sin adornos.
     const p = document.createElement("div");
     p.id = "puntero";
     p.innerHTML =
-      '<svg viewBox="0 0 64 64" aria-hidden="true">' +
-      '<circle cx="32" cy="32" r="22" fill="#4c9f70" opacity=".22"/>' +
-      '<path d="M20 12 L52 32 L34 36 L26 54 Z" fill="#3d3a36" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>' +
+      '<svg viewBox="0 0 48 48" aria-hidden="true">' +
+      '<path d="M8 4 L40 26 L24 29 L17 44 Z" ' +
+      'fill="#111111" stroke="#ffffff" stroke-width="5" stroke-linejoin="round"/>' +
       "</svg>";
     document.body.appendChild(p);
 
+    // Estela: cometa de puntos que se encogen y se apagan. NO es un segundo puntero.
+    const PUNTOS = 14;
     const estelas = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < PUNTOS; i++) {
+      const t = i / (PUNTOS - 1);                       // 0 = junto al cursor, 1 = el final
       const e = document.createElement("div");
       e.className = "estela";
-      e.style.opacity = String(0.5 - i * 0.07);
+      const tam = 22 * (1 - t) + 6;
+      e.style.width = tam + "px";
+      e.style.height = tam + "px";
+      e.style.marginLeft = (-tam / 2) + "px";
+      e.style.marginTop = (-tam / 2) + "px";
+      e.style.background = "rgba(76,159,112," + (0.55 * (1 - t) + 0.06).toFixed(2) + ")";
       document.body.appendChild(e);
       estelas.push({ el: e, x: innerWidth / 2, y: innerHeight / 2 });
     }
@@ -202,8 +211,8 @@ const Juego = (() => {
     (function animar() {
       let px = x, py = y;
       estelas.forEach((s) => {
-        s.x += (px - s.x) * 0.35;
-        s.y += (py - s.y) * 0.35;
+        s.x += (px - s.x) * 0.32;
+        s.y += (py - s.y) * 0.32;
         s.el.style.transform = `translate(${s.x}px, ${s.y}px)`;
         px = s.x; py = s.y;
       });

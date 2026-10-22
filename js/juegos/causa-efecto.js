@@ -53,7 +53,8 @@ MOTOR.registrar("escalon0", {
         acabado = true;
         H.cerrarSesion("escalon0");
         H.celebracion();
-        setTimeout(() => { acabado = false; toques = 0; H.reiniciarSesion(); }, 4200);
+        // Terminar un nivel lleva al siguiente, sin que nadie tenga que elegir nada.
+        setTimeout(() => H.avanzar(), 4600);
       }
     });
   },

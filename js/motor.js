@@ -45,12 +45,22 @@ const MOTOR = (() => {
     };
   }
 
+  // ---------- Un nivel lleva al siguiente ----------
+  // Orden de la escalera tal como está construida hoy. El último vuelve al primero.
+  const ORDEN = ["escalon0", "punteria1"];
+  function siguiente(id) {
+    const i = ORDEN.indexOf(id);
+    return ORDEN[(i + 1) % ORDEN.length];
+  }
+
   // ---------- Contexto que recibe cada juego ----------
   function contexto() {
     const rel = (ruta) => ruta;                       // rutas relativas a la raíz del sitio
     return {
       escena,
       ayuda,
+      // Al terminar un nivel se pasa al siguiente sin que nadie tenga que elegir nada.
+      avanzar: () => { location.href = "juego.html?j=" + encodeURIComponent(siguiente(def && def.id)); },
       sprite: (ruta, tam) => {
         const img = document.createElement("img");
         img.src = ruta; img.alt = ""; img.draggable = false;
@@ -78,6 +88,7 @@ const MOTOR = (() => {
   function arrancar(id) {
     def = JUEGOS[id];
     if (!def) { document.body.innerHTML = ""; return; }
+    def.id = id;
     escena = document.getElementById("escena");
     escena.innerHTML = "";
     document.title = def.nombre || id;
