@@ -12,19 +12,19 @@ MOTOR.registrar("escalon0", {
   crear(H) {
     // Se eligen los animales disponibles una sola vez, para no repetir el mismo seguidos
     const ANIMALES = [
-      "assets/recortes/animales/bear.png",
-      "assets/recortes/animales/dog.png",
-      "assets/recortes/animales/giraffe.png",
-      "assets/recortes/animales/hippo.png",
-      "assets/recortes/animales/penguin.png",
-      "assets/recortes/animales/sloth.png",
-      "assets/recortes/animales/elephant.png",
-      "assets/recortes/animales/duck.png",
-      "assets/recortes/animales/gorilla.png",
-      "assets/recortes/animales/crocodile.png",
-      "assets/recortes/animales/chicken.png",
-      "assets/recortes/animales/snake.png",
-    ];
+  "assets/recortes/arasaac/perro.png",
+  "assets/recortes/arasaac/gato.png",
+  "assets/recortes/arasaac/leon.png",
+  "assets/recortes/arasaac/vaca.png",
+  "assets/recortes/arasaac/pato.png",
+  "assets/recortes/arasaac/elefante.png",
+  "assets/recortes/arasaac/caballo.png",
+  "assets/recortes/arasaac/oveja.png",
+  "assets/recortes/arasaac/conejo.png",
+  "assets/recortes/arasaac/raton.png",
+  "assets/recortes/arasaac/tortuga.png",
+  "assets/recortes/arasaac/pajaro.png",
+];
 
     let i = 0, toques = 0, acabado = false;
     const TOPE = 12;                      // final natural de la sesión

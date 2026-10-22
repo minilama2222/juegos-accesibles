@@ -5,12 +5,22 @@
    ===================================================================== */
 
 const ANIMALES = [
-  "bear", "dog", "giraffe", "hippo", "penguin", "sloth",
-  "elephant", "duck", "gorilla", "crocodile", "chicken", "snake",
-].map((n) => "assets/recortes/animales/" + n + ".png");
+  "assets/recortes/arasaac/perro.png",
+  "assets/recortes/arasaac/gato.png",
+  "assets/recortes/arasaac/leon.png",
+  "assets/recortes/arasaac/vaca.png",
+  "assets/recortes/arasaac/pato.png",
+  "assets/recortes/arasaac/elefante.png",
+  "assets/recortes/arasaac/caballo.png",
+  "assets/recortes/arasaac/oveja.png",
+  "assets/recortes/arasaac/conejo.png",
+  "assets/recortes/arasaac/raton.png",
+  "assets/recortes/arasaac/tortuga.png",
+  "assets/recortes/arasaac/pajaro.png",
+];
 
-const PELOTAS = Array.from({ length: 8 }, (_, i) => "assets/recortes/pelotas/pelota-" + i + ".png");
-const OJOS = Array.from({ length: 5 }, (_, i) => "assets/recortes/ojos/ojo-" + i + ".png");
+const PELOTAS = ["assets/recortes/arasaac/pelota.png", "assets/recortes/arasaac/balon.png"];
+const OJOS = ["assets/recortes/arasaac/ojo.png"];
 
 // Piezas comunes ------------------------------------------------------
 function cajaPulsable(H, ruta, tam) {

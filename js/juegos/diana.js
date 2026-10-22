@@ -8,16 +8,13 @@
 MOTOR.registrar("punteria1", {
   nombre: "P1 · Diana estática",
   escalon: "P1",
-  arte: "Sports Pack (balones)",
+  arte: "ARASAAC (balón)",
 
   crear(H) {
     const DIANAS = [
-      "assets/recortes/futbol/ball_soccer1.png",
-      "assets/recortes/futbol/ball_soccer2.png",
-      "assets/recortes/futbol/ball_soccer3.png",
-      "assets/recortes/futbol/ball_soccer4.png",
-      "assets/recortes/futbol/ball_football.png",
-    ];
+  "assets/recortes/arasaac/balon.png",
+  "assets/recortes/arasaac/pelota.png",
+];
 
     let i = 0, aciertos = 0, acabado = false;
     const TOPE = 12;
