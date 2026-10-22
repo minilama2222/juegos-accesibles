@@ -8,15 +8,15 @@
 MOTOR.registrar("punteria1", {
   nombre: "P1 · Diana estática",
   escalon: "P1",
-  arte: "Shooting Gallery",
+  arte: "Sports Pack (balones)",
 
   crear(H) {
     const DIANAS = [
-      "assets/recortes/dianas/shot_yellow_large.png",
-      "assets/recortes/dianas/shot_blue_large.png",
-      "assets/recortes/dianas/shot_brown_large.png",
-      "assets/recortes/dianas/shot_grey_large.png",
-      "assets/recortes/dianas/duck_target_yellow.png",
+      "assets/recortes/futbol/ball_soccer1.png",
+      "assets/recortes/futbol/ball_soccer2.png",
+      "assets/recortes/futbol/ball_soccer3.png",
+      "assets/recortes/futbol/ball_soccer4.png",
+      "assets/recortes/futbol/ball_football.png",
     ];
 
     let i = 0, aciertos = 0, acabado = false;
