@@ -74,7 +74,8 @@ MOTOR.registrar("punteria1", {
       if (res.dentro) {
         aciertos++;
         diana.classList.add("acierto");
-        H.acierto();
+        Juego.audio.acierto();                                   // sonido de "bien"
+        Juego.marca(ev.clientX, ev.clientY, "bien");             // señal visual de "bien"
         setTimeout(() => diana.classList.remove("acierto"), 520);
 
         if (aciertos >= TOPE) {
@@ -87,8 +88,9 @@ MOTOR.registrar("punteria1", {
           setTimeout(siguiente, 320);
         }
       } else {
-        // Sin castigo: crece el objetivo (más ayuda) y se recoloca
-        tamano(); colocar();
+        // Fallo: sonido y señal claros, pero suaves. El objetivo NO se mueve ni cambia de tamaño.
+        Juego.audio.mal();
+        Juego.marca(ev.clientX, ev.clientY, "mal");
       }
     });
 

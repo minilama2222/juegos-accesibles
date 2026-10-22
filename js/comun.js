@@ -163,6 +163,25 @@ const Juego = (() => {
         src.start(t0 + i * 0.09 + Math.random() * 0.04);
       }
     },
+    // "Mal": aviso de fallo, suave y descendente (≈0,3 s). Nunca agresivo. Es un EFECTO.
+    mal() {
+      this.iniciar();
+      if (!this.ctx) return;
+      const t0 = this.ctx.currentTime;
+      [392.00, 311.13].forEach((f, i) => {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = f;
+        const t = t0 + i * 0.14;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.10, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+        o.connect(g).connect(this.ctx.destination);
+        o.start(t); o.stop(t + 0.26);
+      });
+    },
+
     alternarBoton() {
       this.mutado = !this.mutado;
       localStorage.setItem("juegos.mutado", JSON.stringify(this.mutado));
@@ -287,6 +306,30 @@ const Juego = (() => {
 
   function aleatorio(min, max) { return Math.random() * (max - min) + min; }
 
+  // ---------- Marca visual en el punto del clic (acierto o fallo) ----------
+  function marca(x, y, tipo) {
+    const bien = tipo !== "mal";
+    const tam = bien ? 130 : 92;
+    const d = document.createElement("div");
+    d.style.position = "fixed";
+    d.style.left = (x - tam / 2) + "px";
+    d.style.top = (y - tam / 2) + "px";
+    d.style.width = tam + "px";
+    d.style.height = tam + "px";
+    d.style.borderRadius = "50%";
+    d.style.pointerEvents = "none";
+    d.style.zIndex = "59";
+    d.style.border = bien
+      ? "9px solid rgba(76,159,112,.92)"          // verde: bien
+      : "6px dashed rgba(140,140,140,.8)";        // gris punteado: fuera, sin dramatismo
+    document.body.appendChild(d);
+    const pasos = bien
+      ? [{ transform: "scale(.35)", opacity: .95 }, { transform: "scale(1.3)", opacity: 0 }]
+      : [{ transform: "scale(.95)", opacity: .85 }, { transform: "scale(1.12)", opacity: 0 }];
+    try { d.animate(pasos, { duration: bien ? 620 : 520, easing: "ease-out" }); } catch (e) {}
+    setTimeout(() => d.remove(), 720);
+  }
+
   // ---------- Confeti (sin dependencias) ----------
   function confeti() {
     const colores = ["#4c9f70", "#e5a13c", "#5b8fd6", "#c96f8e", "#b07ec9", "#f2d16b"];
@@ -326,5 +369,5 @@ const Juego = (() => {
 
   addEventListener("keydown", (e) => { if (e.key === "e") exportar(); });
 
-  return { ayuda, metricas, audio, crearPuntero, iman, crearBotones, formaSVG, aleatorio, celebracion, confeti, exportar };
+  return { ayuda, metricas, audio, crearPuntero, iman, crearBotones, formaSVG, aleatorio, celebracion, confeti, marca, exportar };
 })();
