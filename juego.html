@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Juego</title>
+  <link rel="stylesheet" href="css/comun.css">
+</head>
+<body>
+  <div id="escena"></div>
+
+  <script src="js/comun.js"></script>
+  <script src="js/motor.js"></script>
+  <script src="js/juegos/causa-efecto.js"></script>
+  <script src="js/juegos/diana.js"></script>
+  <script>
+    // Página única del motor: el juego se elige con ?j=<id>
+    const id = new URLSearchParams(location.search).get("j") || "escalon0";
+    document.body.dataset.juego = id;                 // ambientación por juego (CSS)
+    localStorage.setItem("juegos.actual", id);        // lo usa el modo kiosco
+    MOTOR.arrancar(id);
+  </script>
+</body>
+</html>

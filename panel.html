@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estadísticas (para adultos)</title>
+  <link rel="stylesheet" href="css/comun.css">
+  <style>
+    body { overflow: auto; }
+    .envoltura { max-width: 900px; margin: 0 auto; padding: 26px 20px 70px; }
+    h1 { font-size: 26px; margin: 0 0 6px; }
+    .meta { opacity: .75; margin: 0 0 22px; font-size: 15px; }
+    .caja { background: #fff; border-radius: 18px; padding: 20px 22px; margin-bottom: 18px;
+            box-shadow: 0 7px 0 rgba(0,0,0,.06); }
+    .caja h2 { margin: 0 0 4px; font-size: 21px; }
+    .arte { font-size: 14px; opacity: .7; margin-bottom: 14px; }
+    .cifras { display: flex; flex-wrap: wrap; gap: 22px; margin: 0 0 14px; }
+    .cifra b { display: block; font-size: 27px; line-height: 1.1; }
+    .cifra span { font-size: 13px; opacity: .7; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; }
+    .vacio { opacity: .6; font-size: 15px; }
+    a.volver { display: inline-block; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="envoltura">
+    <h1>Estadísticas</h1>
+    <p class="meta">Solo para adultos. Son las sesiones jugadas <strong>en este dispositivo</strong>;
+    no se envía nada a ningún servidor.</p>
+    <div id="salida"></div>
+    <a class="volver" href="index.html">← volver</a>
+  </div>
+
+  <script src="js/comun.js"></script>
+  <script src="js/motor.js"></script>
+  <script src="js/juegos/causa-efecto.js"></script>
+  <script src="js/juegos/diana.js"></script>
+  <script>
+    const salida = document.getElementById("salida");
+    const ids = MOTOR.listar();
+    let algo = false;
+
+    ids.forEach((id) => {
+      const def = MOTOR.definicion(id);
+      const a = MOTOR.acumulado(id);
+      const h = MOTOR.historial(id).slice(-8).reverse();
+
+      const caja = document.createElement("div");
+      caja.className = "caja";
+      let html = `<h2>${def ? def.nombre : id}</h2>` +
+                 `<div class="arte">Arte: ${def && def.arte ? def.arte : "—"} · Kenney (CC0)</div>`;
+
+      if (a.sesiones) {
+        algo = true;
+        html += `<div class="cifras">
+          <div class="cifra"><b>${a.sesiones}</b><span>sesiones</span></div>
+          <div class="cifra"><b>${a.aciertos}</b><span>aciertos</span></div>
+          <div class="cifra"><b>${a.fallos}</b><span>fallos</span></div>
+          <div class="cifra"><b>${a.porcentajeDentro}%</b><span>dentro del objetivo</span></div>
+          <div class="cifra"><b>${a.distanciaMedia ? a.distanciaMedia + " px" : "—"}</b><span>distancia media al centro</span></div>
+          <div class="cifra"><b>${a.ayudaFinal != null ? a.ayudaFinal : "—"}</b><span>ayuda al acabar</span></div>
+          <div class="cifra"><b>${a.minutosTotales}</b><span>minutos</span></div>
+        </div>
+        <table><tr><th>Fecha</th><th>Aciertos</th><th>Fallos</th><th>Dentro</th><th>Dist. media</th></tr>`;
+        h.forEach((s) => {
+          html += `<tr><td>${new Date(s.fecha).toLocaleString("es-ES")}</td><td>${s.aciertos}</td>` +
+                  `<td>${s.fallos}</td><td>${s.porcentajeDentro}%</td><td>${s.distanciaMedia} px</td></tr>`;
+        });
+        html += `</table>`;
+      } else {
+        html += `<p class="vacio">Todavía no hay sesiones registradas. La ayuda empieza al máximo (1) y baja conforme acierta: si el número sube, es que ha necesitado más apoyo.</p>`;
+      }
+
+      caja.innerHTML = html;
+      salida.appendChild(caja);
+    });
+
+    if (!algo) {
+      const p = document.createElement("p");
+      p.className = "vacio";
+      p.textContent = "Juega una sesión y vuelve: aquí aparecerán la distancia media al centro y el porcentaje de aciertos.";
+      salida.prepend(p);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modo kiosco</title>
+  <link rel="stylesheet" href="css/comun.css">
+</head>
+<body>
+  <!-- Modo kiosco: abre directamente el juego que toca, sin elegir nada.
+       El juego "actual" se guarda al abrir cualquier juego; para fijarlo,
+       usa ?j=<id>. Pensado para dejar la tablet lista para él. -->
+  <script>
+    const pedido = new URLSearchParams(location.search).get("j");
+    const actual = pedido || localStorage.getItem("juegos.actual") || "escalon0";
+    location.replace("juego.html?j=" + encodeURIComponent(actual));
+  </script>
+</body>
+</html>

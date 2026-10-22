@@ -125,9 +125,35 @@ body.con-puntero, body.con-puntero * { cursor: none; }
   #puntero, .estela { display: none; }
 }
 
+/* ---- Ambientación por juego (capa VARIABLE, ADR 0001) ---------------- */
+body[data-juego="escalon0"]  { background: #f7f3ea; }
+body[data-juego="punteria1"] { background: #eef3fa; }
+
+/* Pieza que aparece en el juego de causa-efecto */
+.aparece {
+  position: absolute;
+  animation: entrada .55s cubic-bezier(.2,1.5,.4,1);
+  transform-origin: center;
+}
+.aparece.se-va {
+  animation: none;
+  transition: transform .35s ease, opacity .35s ease;
+  transform: scale(.6);
+  opacity: 0;
+}
+@keyframes entrada {
+  0%   { transform: scale(.2) rotate(-18deg); opacity: 0; }
+  60%  { transform: scale(1.18) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* Los sprites siempre dentro de su caja, sin desbordar */
+.objetivo img, .aparece img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+
 /* Respeta a quien prefiere menos movimiento */
 @media (prefers-reduced-motion: reduce) {
   #puntero { transition: none; }
   .objetivo, .boton-sup { transition: none; }
   #celebracion svg { animation: none; }
+  .aparece { animation: none; }
 }

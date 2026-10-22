@@ -6,59 +6,68 @@
   <title>Juegos accesibles — selección (para adultos)</title>
   <link rel="stylesheet" href="css/comun.css">
   <style>
-    /* Esta página SÍ lleva texto: la usa un adulto para elegir juego.
-       Los juegos en sí no llevan una sola palabra. */
+    /* Esta página SÍ lleva texto: la usa un adulto para elegir.
+       Los juegos, dentro, no llevan una sola palabra. */
     body { overflow: auto; }
-    .aviso {
-      max-width: 900px; margin: 28px auto 8px; padding: 18px 22px;
-      background: #fff; border-radius: 18px; box-shadow: 0 6px 0 rgba(0,0,0,.06);
-      font-size: 17px; line-height: 1.5;
-    }
+    .aviso { max-width: 940px; margin: 28px auto 8px; padding: 18px 22px; background: #fff;
+             border-radius: 18px; box-shadow: 0 6px 0 rgba(0,0,0,.06); font-size: 16px; line-height: 1.55; }
     h1 { font-size: 26px; margin: 0 0 6px; }
-    .rejilla {
-      max-width: 900px; margin: 18px auto 60px; padding: 0 20px;
-      display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    }
-    .tarjeta {
-      display: block; text-decoration: none; color: inherit; background: #fff;
-      border-radius: 22px; padding: 22px; box-shadow: 0 8px 0 rgba(0,0,0,.06);
-      transition: transform .12s ease;
-    }
+    .rejilla { max-width: 940px; margin: 18px auto 70px; padding: 0 20px; display: grid;
+               gap: 18px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+    .tarjeta { display: block; text-decoration: none; color: inherit; background: #fff;
+               border-radius: 22px; padding: 22px; box-shadow: 0 8px 0 rgba(0,0,0,.06);
+               transition: transform .12s ease; }
     .tarjeta:hover { transform: translateY(-3px) scale(1.02); }
     .tarjeta h2 { margin: 0 0 6px; font-size: 21px; }
     .tarjeta p { margin: 0; font-size: 15px; opacity: .8; }
-    .tarjeta .miniatura { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
+    .tarjeta .arte { font-size: 13px; opacity: .6; margin-top: 10px; }
+    .tarjeta .mini { margin-top: 14px; display: flex; gap: 12px; align-items: center; }
+    .tarjeta .mini img { width: 68px; height: 68px; object-fit: contain; }
+    .atajos { max-width: 940px; margin: 0 auto 60px; padding: 0 20px; display: flex; gap: 16px; flex-wrap: wrap; }
+    .atajos a { background: #fff; border-radius: 16px; padding: 14px 20px; text-decoration: none;
+                color: inherit; box-shadow: 0 6px 0 rgba(0,0,0,.05); font-size: 15px; }
   </style>
 </head>
 <body>
   <div class="aviso">
     <h1>Juegos accesibles</h1>
-    <p>Elige un juego. <strong>Dentro no hay ni una palabra</strong>: todo se entiende mirando. Estas dos
-    pantallas son las primeras de la escalera; el resto se irán añadiendo encima.</p>
-    <p style="margin-top:10px">
-      <strong>Atajo para adultos:</strong> dentro de un juego, pulsa <kbd>E</kbd> para descargar las
-      métricas de la sesión (aciertos, fallos, distancia media al centro y porcentaje dentro del objetivo).
-    </p>
+    <p>Elige un juego. <strong>Dentro no hay ni una palabra</strong>: todo se entiende mirando.</p>
+    <p style="margin-top:8px">Para dejárselo listo a él y que no tenga que elegir nada, usa el
+    <a href="kiosco.html">modo kiosco</a>: abre directamente el juego que toca.</p>
   </div>
 
-  <div class="rejilla">
-    <a class="tarjeta" href="escalon0.html">
-      <h2>0 · Toca y pasa algo</h2>
-      <p>Causa-efecto puro. Un toque en cualquier parte y el personaje aparece y celebra. Es imposible fallar.</p>
-      <div class="miniatura" id="mini0"></div>
-    </a>
+  <div class="rejilla" id="rejilla"></div>
 
-    <a class="tarjeta" href="punteria1.html">
-      <h2>P1 · Diana estática</h2>
-      <p>Un objetivo grande y quieto que espera. Aquí ya se entrena la puntería, con ayuda que se retira poco a poco.</p>
-      <div class="miniatura" id="mini1"></div>
-    </a>
+  <div class="atajos">
+    <a href="panel.html">📊 Estadísticas (adultos)</a>
+    <a href="preview.html">🎨 Arte elegido</a>
+    <a href="kiosco.html">▶️ Modo kiosco</a>
   </div>
 
   <script src="js/comun.js"></script>
+  <script src="js/motor.js"></script>
+  <script src="js/juegos/causa-efecto.js"></script>
+  <script src="js/juegos/diana.js"></script>
   <script>
-    document.getElementById("mini0").innerHTML = Juego.formaSVG(0, 72) + Juego.formaSVG(2, 72) + Juego.formaSVG(3, 72);
-    document.getElementById("mini1").innerHTML = Juego.formaSVG(1, 72) + Juego.formaSVG(0, 72);
+    // El índice se construye desde las definiciones: una sola fuente de verdad.
+    const MINI = {
+      escalon0:  ["assets/recortes/animales/bear.png", "assets/recortes/animales/giraffe.png"],
+      punteria1: ["assets/recortes/dianas/shot_yellow_large.png", "assets/recortes/dianas/duck_target_yellow.png"],
+    };
+    const rejilla = document.getElementById("rejilla");
+    MOTOR.listar().forEach((id) => {
+      const d = MOTOR.definicion(id);
+      const a = document.createElement("a");
+      a.className = "tarjeta";
+      a.href = "juego.html?j=" + encodeURIComponent(id);
+      a.innerHTML = `<h2>${d.nombre}</h2>` +
+        `<p>${id === "escalon0"
+            ? "Causa-efecto puro: un toque en cualquier parte y aparece un animal. Imposible fallar."
+            : "Un objetivo grande y quieto. Aquí se entrena la puntería, con ayuda que se retira."}</p>` +
+        `<div class="arte">Arte: ${d.arte} · Kenney (CC0)</div>` +
+        `<div class="mini">${(MINI[id] || []).map(s => `<img src="${s}" alt="">`).join("")}</div>`;
+      rejilla.appendChild(a);
+    });
   </script>
 </body>
 </html>
