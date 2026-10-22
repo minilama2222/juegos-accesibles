@@ -47,7 +47,7 @@ const MOTOR = (() => {
 
   // ---------- Un nivel lleva al siguiente ----------
   // Orden de la escalera tal como está construida hoy. El último vuelve al primero.
-  const ORDEN = ["escalon0", "punteria1"];
+  const ORDEN = ["escalon0", "escalon1", "escalon2", "escalon3", "parejas", "punteria1"];
   function siguiente(id) {
     const i = ORDEN.indexOf(id);
     return ORDEN[(i + 1) % ORDEN.length];
@@ -72,6 +72,13 @@ const MOTOR = (() => {
       acierto: () => Juego.audio.acierto(),
       metricas: Juego.metricas,
       aleatorio: Juego.aleatorio,
+      // Elige una pieza al azar de una lista (para no repetir siempre la misma)
+      pick: (lista) => lista[Math.floor(Math.random() * lista.length)],
+      // Un toque sobre CUALQUIER objetivo de la escena, con el elemento concreto
+      toca: (fn) => document.body.addEventListener("pointerdown", (ev) => {
+        const el = ev.target.closest && ev.target.closest(".objetivo");
+        if (el) fn(ev, el);
+      }),
       celebracion: Juego.celebracion,
       cerrarSesion(id, extra) {
         const r = Object.assign(Juego.metricas.resumen(), extra || {});

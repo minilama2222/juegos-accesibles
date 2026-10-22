@@ -163,6 +163,22 @@ const Juego = (() => {
         src.start(t0 + i * 0.09 + Math.random() * 0.04);
       }
     },
+    // Tono neutro breve: para señalar cuál suena, o al girar una carta. Es un EFECTO.
+    sonido(f) {
+      this.iniciar();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = f || 620;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.12, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.30);
+      o.connect(g).connect(this.ctx.destination);
+      o.start(t); o.stop(t + 0.32);
+    },
+
     // "Mal": aviso de fallo, suave y descendente (≈0,3 s). Nunca agresivo. Es un EFECTO.
     mal() {
       this.iniciar();
