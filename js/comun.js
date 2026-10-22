@@ -119,7 +119,7 @@ const Juego = (() => {
       this.mutado = !this.mutado;
       localStorage.setItem("juegos.mutado", JSON.stringify(this.mutado));
       const b = document.getElementById("boton-mute");
-      if (b) b.textContent = this.mutado ? "🔇" : "🔊";
+      if (b) b.innerHTML = ICO_SONIDO(this.mutado);
       if (this.mutado) this.fondo(false); else this.fondo(true);
     },
   };
@@ -148,6 +148,7 @@ const Juego = (() => {
     }
 
     let x = innerWidth / 2, y = innerHeight / 2;
+    p.style.transform = `translate(${x}px, ${y}px)`;   // visible desde el primer momento
     addEventListener("mousemove", (ev) => { x = ev.clientX; y = ev.clientY; p.style.transform = `translate(${x}px, ${y}px)`; });
 
     (function animar() {
@@ -175,19 +176,34 @@ const Juego = (() => {
   }
 
   // ---------- Capa constante: botones ----------
+  // Iconos en SVG, NO emojis: los emojis no se dibujan si falta la fuente (visto en la
+  // verificación visual: el altavoz salía como un cuadro vacío).
+  const ICO_VOLVER =
+    '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="#3d3a36" ' +
+    'stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M20 12H5"/><path d="M12 19l-7-7 7-7"/></svg>';
+  const ICO_SONIDO = (m) =>
+    '<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="#3d3a36" ' +
+    'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M11 5 6 9H3v6h3l5 4z" fill="#3d3a36"/>' +
+    (m
+      ? '<path d="M3 3l18 18"/>'
+      : '<path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>') +
+    '</svg>';
+
   function crearBotones({ volver = "index.html", fondo = true } = {}) {
     const v = document.createElement("a");
     v.id = "boton-volver";
     v.className = "boton-sup";
     v.href = volver;
-    v.textContent = "↩";
+    v.innerHTML = ICO_VOLVER;
     v.setAttribute("aria-label", "Volver");
     document.body.appendChild(v);
 
     const m = document.createElement("button");
     m.id = "boton-mute";
     m.className = "boton-sup";
-    m.textContent = audio.mutado ? "🔇" : "🔊";
+    m.innerHTML = ICO_SONIDO(audio.mutado);
     m.setAttribute("aria-label", "Sonido");
     m.addEventListener("click", () => { audio.iniciar(); audio.alternarBoton(); });
     document.body.appendChild(m);
