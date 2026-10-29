@@ -18,3 +18,12 @@ metricas.json
 # Packs originales de Kenney (no versionar los ZIP ni el material sin usar)
 assets/kenney/
 *.zip
+
+# Temporales y copias de seguridad
+*.bak
+*~
+*.tmp
+.cache/
+
+# NOTA: .opencode/ y .agents/ NO se ignoran a propósito.
+# Pueden contener skills o configuración específicas del repo, y queremos versionarlas.
