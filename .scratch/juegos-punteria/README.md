@@ -24,5 +24,7 @@ GitHub Pages se configura desde el **primer ticket (01)**. Cada push a `main` de
 
 - Pages sirve la rama `main` (raíz) del repo `minilama2222/juegos-accesibles`.
 - Sin build: lo que se sube es lo que se sirve.
-- Cada ticket se commitea y se empuja al terminar, de modo que Jordán pueda ver el progreso en la URL de Pages.
+- Flujo por ticket: commit en `opencode/juegos` → push → **merge a `main` por fast-forward** (`git push origin opencode/juegos:main`) → Pages lo publica.
+- `main` no se comprueba localmente: está reservada por el worktree principal. El merge se hace empujando la ref directamente.
+- Cada ticket se commitea, se mergea a `main` y se comprueba que Pages muestra la versión nueva.
 - URL de Pages (ya activada, rama `main`, raíz): https://minilama2222.github.io/juegos-accesibles/
