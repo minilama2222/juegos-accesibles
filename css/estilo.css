@@ -46,20 +46,20 @@ img {
   height: 100%;
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 3vmin;
-  padding: 4vmin;
+  gap: 4vmin;
+  padding: 5vmin;
 }
 
 .menu__cabecera {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 4vmin;
+  justify-content: center;
+  gap: 8vmin;
 }
 
 .avatar {
-  width: 14vmin;
-  height: 14vmin;
+  width: 15vmin;
+  height: 15vmin;
   border-radius: 50%;
   background: #ffffff18;
   border: 0.6vmin solid var(--acento);
@@ -74,14 +74,15 @@ img {
 
 .mundo,
 .juego {
-  width: 16vmin;
-  height: 16vmin;
+  width: 17vmin;
+  height: 17vmin;
   min-width: 96px;
   min-height: 96px;
   border-radius: 3vmin;
-  background: var(--fondo, #ffffff14);
+  background: #ffffff14;
   border: 0.7vmin solid #ffffff30;
   padding: 2vmin;
+  opacity: 1;
   transition:
     transform 160ms ease,
     border-color 160ms ease;
@@ -93,6 +94,10 @@ img {
   min-width: 120px;
   min-height: 120px;
   background: #ffffff12;
+}
+
+.mundo--activo {
+  background: color-mix(in srgb, var(--acento) 22%, transparent);
 }
 
 .mundo:hover,

@@ -92,8 +92,8 @@ function iconoMecanica(id) {
 function animarMenu() {
   const gsap = window.gsap;
   if (!gsap) return;
-  gsap.from('.mundo', { scale: 0.6, opacity: 0, duration: 0.35, stagger: 0.06, ease: 'back.out(2)' });
-  gsap.from('.juego', { y: 30, opacity: 0, duration: 0.4, stagger: 0.08, ease: 'power2.out' });
+  gsap.from('.mundo', { scale: 0.75, duration: 0.3, stagger: 0.05, ease: 'back.out(2)' });
+  gsap.from('.juego', { y: 24, duration: 0.35, stagger: 0.06, ease: 'power2.out' });
 }
 
 function elegirMundo(id) {
