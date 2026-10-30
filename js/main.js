@@ -71,7 +71,7 @@ function render() {
         </nav>
       </header>
       <main class="juegos">
-        ${ORDEN.map(
+        ${ORDEN.filter((id) => MECANICAS[id]?.implementada).map(
           (id) => `
           <button class="juego" data-juego="${id}">
             <span class="juego__icono"><img alt="" src="${svg(iconoMecanica(id))}"></span>

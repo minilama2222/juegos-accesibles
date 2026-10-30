@@ -27,7 +27,8 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
 
   let objetivo;
   let puntero = null;
-  const tam = () => Math.max(44, mecanica.objetivoVmin * V_MIN());
+  const tam = () =>
+    Math.max(44, (Number.isFinite(mecanica.objetivoVmin) ? mecanica.objetivoVmin : 32) * V_MIN());
 
   const oficial = () => ({
     mecanica: estado.mecanica,
@@ -44,14 +45,20 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
     const margen = radio + 24;
     const maxX = Math.max(1, juego.width() - margen * 2);
     const maxY = Math.max(1, juego.height() - margen * 2);
-    const lejosDelPuntero = (x, y) => !puntero || Math.hypot(x - puntero.x, y - puntero.y) > radio * 2.5;
+    const anterior = estado.objetivo;
+    const distanciaMinima = radio * 2.5;
+    const vale = (x, y) => {
+      if (puntero && Math.hypot(x - puntero.x, y - puntero.y) <= distanciaMinima) return false;
+      if (anterior && Math.hypot(x - anterior.x, y - anterior.y) <= distanciaMinima) return false;
+      return true;
+    };
 
-    let x;
-    let y;
-    for (let i = 0; i < 40; i++) {
+    let x = margen + Math.random() * maxX;
+    let y = margen + Math.random() * maxY;
+    for (let i = 0; i < 80; i++) {
+      if (vale(x, y)) break;
       x = margen + Math.random() * maxX;
       y = margen + Math.random() * maxY;
-      if (lejosDelPuntero(x, y)) break;
     }
     estado.objetivo = { x, y, radio };
     if (objetivo) objetivo.pos = juego.vec2(x, y);

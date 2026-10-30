@@ -43,7 +43,7 @@ export function mundoPorId(id) {
 
 export const MECANICAS = {
   causaEfecto: { id: 'causaEfecto' },
-  hover: { id: 'hover', llenadoMs: 800, vaciadoMs: 1600, objetivoVmin: 32 },
+  hover: { id: 'hover', implementada: true, llenadoMs: 800, vaciadoMs: 1600, objetivoVmin: 32 },
   clickEstatico: { id: 'clickEstatico' },
 };
 

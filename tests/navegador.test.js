@@ -35,6 +35,8 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
   await p.goto(URL_BASE());
   const mundos = await p.$$eval('[data-mundo]', (n) => n.map((x) => x.dataset.mundo));
   assert.deepEqual(mundos, ['navidad', 'animalitos', 'futbol', 'amarillo']);
+  const juegos = await p.$$eval('[data-juego]', (n) => n.map((x) => x.dataset.juego));
+  assert.deepEqual(juegos, ['hover'], 'sólo se ofrecen mecánicas implementadas');
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());
   assert.equal(textosVisibles, '');
   await b.close();
@@ -91,7 +93,7 @@ test('quedarse encima hasta llenar cuenta un acierto y el objetivo se recoloca l
   await p.waitForFunction(() => window.juego.escena.aciertos === 1, null, { timeout: 5000 });
   const despues = await p.evaluate(() => window.juego.escena.objetivo);
   const d = Math.hypot(despues.x - antes.x, despues.y - antes.y);
-  assert.ok(d > antes.radio, 'el objetivo debe moverse lejos del anterior');
+  assert.ok(d > antes.radio * 2, 'el objetivo debe moverse lejos del anterior');
   await b.close();
 });
 
