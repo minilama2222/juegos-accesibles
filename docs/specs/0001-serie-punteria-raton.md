@@ -56,6 +56,8 @@ Una serie de juegos web estáticos, sin build, publicada en GitHub Pages, que é
 33. Como padre, quiero que todas las animaciones se reduzcan si el sistema lo pide, para no marearle.
 34. Como padre, quiero que el juego no dependa de red más allá de la primera carga, para que vaya rápido.
 35. Como padre, quiero que el contenido temático sea sustituible sin tocar la lógica, para añadir mundos después.
+36. Como Jordán, quiero un juego avanzado futuro en el que pueda arrastrar dibujos con el ratón, para aprender a moverlos sin soltarlos.
+37. Como padre, quiero que el arrastre sea un juego aparte y de nivel avanzado, para no mezclarlo con el apuntado básico.
 
 ## Implementation Decisions
 
@@ -65,6 +67,7 @@ Una serie de juegos web estáticos, sin build, publicada en GitHub Pages, que é
 - **Kaplay 3001.0.19** (67 KB gz, MIT) vendoreado: escena de juego (`canvas`, sprites, movimiento, partículas).
 - **GSAP 3.15.0** (27 KB gz, licencia libre de Webflow desde 2025) vendoreado: UI fuera del canvas (menú, mundos, pegatinas, transiciones, refuerzos DOM).
 - **Separación de capas**: Kaplay posee la escena de juego; GSAP posee la capa de interfaz. No se anima el mismo objeto con ambos.
+- **Registro de mecánicas extensible**: añadir una mecánica (p. ej. arrastre) es añadir una entrada al registro; no altera las existentes ni la progresión ya publicada.
 - **Assets**: SVG propios generados; sin ARASAAC ni descargas externas; sin IP real.
 - **Deploy**: GitHub Pages desde `main` del repo `minilama2222/juegos-accesibles`.
 - **Sin backend, sin almacenamiento remoto**: `localStorage` únicamente.
@@ -134,7 +137,7 @@ Dos costuras, acordadas:
 ## Out of Scope
 
 - Táctil, móvil y control por teclado.
-- Arrastrar y soltar.
+- **Arrastrar y soltar en esta versión** (queda reservado para un juego futuro de nivel avanzado, ver "Notas").
 - Doble clic.
 - Multijugador, cuentas, backend, sincronización.
 - Otras lenguas aparte de nombres de fichero y código.
@@ -148,3 +151,4 @@ Dos costuras, acordadas:
 - GSAP es libre desde abril de 2025 bajo licencia "no charge" de Webflow; se respeta la marca y la licencia en los créditos del repositorio.
 - El repo arranca de cero: no se reutiliza nada del código anterior de la rama `main` previa (`8b620cf`), que queda sólo como histórico.
 - El padre dispone de Playwright y Chromium instalados para desarrollar y probar; eso no es requisito para jugar.
+- **Arrastre (futuro)**: se entrenará en un juego propio, posterior a la serie base y por encima de "movimiento lento" en dificultad. Requiere pulsar, no soltar y desplazar. El modelo contenido × mundo debe permitirlo sin tocar la serie existente: será una mecánica más del registro de juegos, y la API `window.juego` deberá exponer el arrastre en curso para poder testearlo.
