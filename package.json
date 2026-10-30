@@ -1,0 +1,12 @@
+{
+  "name": "juegos-jordan",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "serve": "python3 -m http.server 8080"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}

@@ -1,0 +1,173 @@
+:root {
+  --fondo: #10231d;
+  --acento: #ffd54f;
+  --tinta: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: system-ui, sans-serif;
+}
+
+body[data-vista='juego'] {
+  cursor: none;
+}
+
+#app {
+  height: 100%;
+}
+
+button {
+  font: inherit;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.menu {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 3vmin;
+  padding: 4vmin;
+}
+
+.menu__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4vmin;
+}
+
+.avatar {
+  width: 14vmin;
+  height: 14vmin;
+  border-radius: 50%;
+  background: #ffffff18;
+  border: 0.6vmin solid var(--acento);
+  padding: 1.4vmin;
+  flex: none;
+}
+
+.mundos {
+  display: flex;
+  gap: 2.5vmin;
+}
+
+.mundo,
+.juego {
+  width: 16vmin;
+  height: 16vmin;
+  min-width: 96px;
+  min-height: 96px;
+  border-radius: 3vmin;
+  background: var(--fondo, #ffffff14);
+  border: 0.7vmin solid #ffffff30;
+  padding: 2vmin;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease;
+}
+
+.juego {
+  width: 22vmin;
+  height: 22vmin;
+  min-width: 120px;
+  min-height: 120px;
+  background: #ffffff12;
+}
+
+.mundo:hover,
+.juego:hover,
+.mundo:focus-visible,
+.juego:focus-visible {
+  transform: scale(1.07);
+  border-color: var(--acento);
+}
+
+.mundo--activo {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 0.8vmin #ffffff22;
+}
+
+.juegos {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 4vmin;
+}
+
+.partida {
+  position: fixed;
+  inset: 0;
+}
+
+.lienzo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.puntero {
+  position: fixed;
+  left: -1.6vmin;
+  top: -1.6vmin;
+  width: 3.2vmin;
+  height: 3.2vmin;
+  border-radius: 50%;
+  background: #ffffffcc;
+  border: 0.5vmin solid #00000066;
+  pointer-events: none;
+  z-index: 5;
+  will-change: transform;
+}
+
+.salir {
+  position: fixed;
+  right: 2.5vmin;
+  bottom: 2.5vmin;
+  width: 11vmin;
+  height: 11vmin;
+  min-width: 72px;
+  min-height: 72px;
+  border-radius: 50%;
+  background: var(--acento);
+  color: #1a1a1a;
+  padding: 2vmin;
+  box-shadow: 0 0.6vmin 0 #00000055;
+  z-index: 6;
+}
+
+.salir:hover,
+.salir:focus-visible {
+  transform: scale(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mundo,
+  .juego,
+  .salir {
+    transition: none;
+  }
+}

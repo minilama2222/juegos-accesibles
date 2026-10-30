@@ -6,16 +6,16 @@
 
 **Status:** ready-for-agent
 
-- [ ] La página arranca servida estáticamente, sin build y sin `npm install` para jugar.
-- [ ] Kaplay está vendoreado y da la escena de juego; GSAP está vendoreado y anima la UI; no se anima el mismo objeto con ambos.
-- [ ] El menú muestra avatar y los cuatro mundos con pictogramas y sonido, sin texto legible.
-- [ ] Elegir mundo persiste durante la sesión y se aplica a la escena del juego.
-- [ ] La mecánica hover: el puntero debe permanecer dentro del objetivo ~0,6-1 s; una barra se llena; salirse la vacía despacio sin penalizar; no hay click.
-- [ ] El objetivo nunca baja de 44 px y se escala con `vmin`; sin scroll.
-- [ ] El botón "otro juego" está siempre visible, fuera del área de juego, y navega al menú sin confirmación.
-- [ ] El puntero del sistema se sustituye por uno propio grande y visible.
-- [ ] Existe una API pública `window.juego` que expone: juego actual, mundo, objetivos activos, aciertos, fin de partida y estado del hover; los elementos clave llevan atributos `data-*`.
-- [ ] Tests unitarios en node cubren las reglas de llenado/vaciado del hover.
-- [ ] Un test de Playwright (Chromium headless) comprueba que quedarse encima completa la barra, salirse la vacía y el botón "otro juego" vuelve al menú, hablando sólo con `window.juego` y `data-*`.
-- [ ] Para un fallo de test no se usan capturas como criterio; las capturas sólo sirven de evidencia.
-- [ ] `main` publica en GitHub Pages y cada push actualiza la versión visible.
+- [x] La página arranca servida estáticamente, sin build y sin `npm install` para jugar.
+- [x] Kaplay está vendoreado y da la escena de juego; GSAP está vendoreado y anima la UI; no se anima el mismo objeto con ambos.
+- [x] El menú muestra avatar y los cuatro mundos con pictogramas y sonido, sin texto legible.
+- [x] Elegir mundo persiste durante la sesión y se aplica a la escena del juego.
+- [x] La mecánica hover: el puntero debe permanecer dentro del objetivo ~0,6-1 s; una barra se llena; salirse la vacía despacio sin penalizar; no hay click.
+- [x] El objetivo nunca baja de 44 px y se escala con `vmin`; sin scroll.
+- [x] El botón "otro juego" está siempre visible, fuera del área de juego, y navega al menú sin confirmación.
+- [x] El puntero del sistema se sustituye por uno propio grande y visible.
+- [x] Existe una API pública `window.juego` que expone: juego actual, mundo, objetivos activos, aciertos, fin de partida y estado del hover; los elementos clave llevan atributos `data-*`.
+- [x] Tests unitarios en node cubren las reglas de llenado/vaciado del hover.
+- [x] Un test de Playwright (Chromium headless) comprueba que quedarse encima completa la barra, salirse la vacía y el botón "otro juego" vuelve al menú, hablando sólo con `window.juego` y `data-*`.
+- [x] Para un fallo de test no se usan capturas como criterio; las capturas sólo sirven de evidencia.
+- [x] `main` publica en GitHub Pages y cada push actualiza la versión visible.
