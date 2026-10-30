@@ -80,7 +80,7 @@ function render() {
       </main>
     </section>`;
   animarMenu();
-  publicar();
+  publicar({ escena: null, ultimo: null });
 }
 
 function iconoMecanica(id) {
@@ -141,7 +141,9 @@ async function jugar(mecanicaId) {
       if (partida === generacion && estado.vista === 'juego') publicar({ escena: e });
     },
     alTerminar: (r) => {
-      if (partida === generacion && estado.vista === 'juego') publicar({ ultimo: r });
+      if (partida !== generacion || estado.vista !== 'juego') return;
+      publicar({ ultimo: r });
+      if (r.terminada) celebrarYVolver(partida);
     },
   });
   if (partida !== generacion) {
@@ -150,6 +152,31 @@ async function jugar(mecanicaId) {
   }
   estado.escenaLista = true;
   publicar();
+}
+
+function celebrarYVolver(partida) {
+  const gsap = window.gsap;
+  if (!gsap) return render();
+  estado.vista = 'cerrando';
+  const contenedor = document.querySelector('.partida');
+  if (!contenedor) return render();
+  const fiesta = document.createElement('div');
+  fiesta.className = 'fiesta';
+  fiesta.innerHTML = Array.from({ length: 18 }, (_, i) => {
+    const ang = (i / 18) * Math.PI * 2;
+    return `<span style="--dx:${Math.cos(ang) * 32}vmin;--dy:${Math.sin(ang) * 32}vmin"></span>`;
+  }).join('');
+  contenedor.appendChild(fiesta);
+  let hecha = false;
+  const terminar = () => {
+    if (hecha) return;
+    hecha = true;
+    if (partida !== generacion) return;
+    if (estado.vista !== 'cerrando') return;
+    render();
+  };
+  gsap.to(fiesta, { opacity: 0, duration: 1.1, ease: 'power2.out', onComplete: terminar });
+  setTimeout(terminar, 1500);
 }
 
 function animarSalida() {

@@ -1,9 +1,11 @@
 import { cargarKaplay } from './kaplay-carga.js';
 import { crearHover } from './hover.js';
+import { crearMarcador } from './sesion.js';
 
 export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar }) {
   const kaplay = await cargarKaplay();
   const hover = crearHover({ llenadoMs: mecanica.llenadoMs, vaciadoMs: mecanica.vaciadoMs });
+  const marcador = crearMarcador({ meta: mecanica.meta ?? 6 });
   const V_MIN = () => Math.min(window.innerWidth, window.innerHeight) / 100;
 
   const estado = {
@@ -37,29 +39,32 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
     hoverLleno: Number(estado.hoverLleno.toFixed(3)),
     hoverCompletado: estado.hoverCompletado,
     aciertos: estado.aciertos,
+    meta: marcador.leer().meta,
+    terminada: marcador.leer().terminada,
     lista: estado.lista,
   });
 
   function colocarObjetivo() {
     const radio = tam();
+    const ancho = juego.width();
+    const alto = juego.height();
     const margen = radio + 24;
-    const maxX = Math.max(1, juego.width() - margen * 2);
-    const maxY = Math.max(1, juego.height() - margen * 2);
-    const anterior = estado.objetivo;
-    const distanciaMinima = radio * 2.5;
-    const vale = (x, y) => {
-      if (puntero && Math.hypot(x - puntero.x, y - puntero.y) <= distanciaMinima) return false;
-      if (anterior && Math.hypot(x - anterior.x, y - anterior.y) <= distanciaMinima) return false;
-      return true;
-    };
+    const referencia = estado.objetivo ?? puntero ?? { x: ancho / 2, y: alto / 2 };
 
-    let x = margen + Math.random() * maxX;
-    let y = margen + Math.random() * maxY;
-    for (let i = 0; i < 80; i++) {
-      if (vale(x, y)) break;
-      x = margen + Math.random() * maxX;
-      y = margen + Math.random() * maxY;
+    const tercios = [1 / 8, 3 / 8, 5 / 8, 7 / 8];
+    const lejos = [];
+    for (const fx of tercios) {
+      for (const fy of tercios) {
+        const x = ancho * fx;
+        const y = alto * fy;
+        if (Math.hypot(x - referencia.x, y - referencia.y) > radio * 3) lejos.push({ x, y });
+      }
     }
+    const opciones = lejos.length > 0 ? lejos : tercios.flatMap((fx) => tercios.map((fy) => ({ x: ancho * fx, y: alto * fy })));
+    const elegido = opciones[Math.floor(Math.random() * opciones.length)];
+
+    const x = Math.min(ancho - radio - 8, Math.max(radio + 8, elegido.x));
+    const y = Math.min(alto - radio - 8, Math.max(radio + 8, elegido.y));
     estado.objetivo = { x, y, radio };
     if (objetivo) objetivo.pos = juego.vec2(x, y);
   }
@@ -84,14 +89,21 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
         objetivo.scale = juego.vec2(escala, escala);
 
         if (e.completado) {
-          estado.aciertos += 1;
+          const m = marcador.anotarAcierto();
+          estado.aciertos = m.aciertos;
           hover.reiniciar();
           hover.salir();
           estado.hoverLleno = 0;
           estado.hoverCompletado = false;
           colocarObjetivo();
           objetivo.scale = juego.vec2(1, 1);
-          alTerminar?.({ acierto: true, aciertos: estado.aciertos });
+          alTerminar?.({ acierto: true, aciertos: m.aciertos, terminada: m.terminada });
+          if (m.terminada) {
+            objetivo.hidden = true;
+            alTerminar?.({ acierto: true, aciertos: m.aciertos, terminada: true });
+            alCambiar?.(oficial());
+            return;
+          }
         } else {
           estado.hoverCompletado = false;
         }

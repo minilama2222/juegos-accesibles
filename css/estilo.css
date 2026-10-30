@@ -171,3 +171,50 @@ img {
     transition: none;
   }
 }
+
+.fiesta {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  z-index: 7;
+}
+
+.fiesta span {
+  position: absolute;
+  width: 2.5vmin;
+  height: 2.5vmin;
+  border-radius: 50%;
+  background: var(--acento);
+  box-shadow:
+    0 0 2vmin var(--acento),
+    0 0 4vmin var(--acento);
+  animation: estallido 1s ease-out forwards;
+}
+
+.fiesta span:nth-child(3n) {
+  background: #fff;
+}
+
+.fiesta span:nth-child(3n + 1) {
+  width: 2vmin;
+  height: 2vmin;
+}
+
+@keyframes estallido {
+  from {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--dx), var(--dy)) scale(1.1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fiesta span {
+    animation-duration: 0.3s;
+  }
+}

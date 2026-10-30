@@ -1,34 +1,17 @@
-export function crearSesion({ mecanica, mundoId }) {
-  const estado = {
-    mecanica,
-    mundoId,
-    aciertos: 0,
-    intentos: 0,
-    terminada: false,
-  };
+export function crearMarcador({ meta = 6 } = {}) {
+  let aciertos = 0;
+  let terminada = false;
+
+  const leer = () => ({ meta, aciertos, terminada });
 
   return {
-    estado() {
-      return { ...estado };
-    },
-    registrarAcierto() {
-      if (estado.terminada) return { ...estado };
-      estado.intentos += 1;
-      estado.aciertos += 1;
-      return { ...estado };
-    },
-    registrarFallo() {
-      if (estado.terminada) return { ...estado };
-      estado.intentos += 1;
-      return { ...estado };
-    },
-    terminar() {
-      estado.terminada = true;
-      return { ...estado };
+    leer,
+    anotarAcierto() {
+      if (!terminada) {
+        aciertos += 1;
+        if (aciertos >= meta) terminada = true;
+      }
+      return leer();
     },
   };
-}
-
-export function debeTerminar({ aciertos, meta }) {
-  return aciertos >= meta;
 }

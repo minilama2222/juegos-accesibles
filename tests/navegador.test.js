@@ -89,11 +89,25 @@ test('quedarse encima hasta llenar cuenta un acierto y el objetivo se recoloca l
   await p.click('[data-juego="hover"]');
   await p.waitForFunction(() => window.juego?.escena?.lista === true);
   const antes = await p.evaluate(() => window.juego.escena.objetivo);
+  const aciertosPrevios = await p.evaluate(() => window.juego.escena.aciertos);
   await p.mouse.move(antes.x, antes.y);
-  await p.waitForFunction(() => window.juego.escena.aciertos === 1, null, { timeout: 5000 });
-  const despues = await p.evaluate(() => window.juego.escena.objetivo);
-  const d = Math.hypot(despues.x - antes.x, despues.y - antes.y);
-  assert.ok(d > antes.radio * 2, 'el objetivo debe moverse lejos del anterior');
+  await p.mouse.move(antes.x + 1, antes.y);
+  await p.mouse.move(antes.x, antes.y);
+  await p.waitForFunction(() => window.juego.escena.hoverLleno > 0.5, null, { timeout: 5000 });
+  const leido = await p
+    .waitForFunction(
+      ({ n, o }) => {
+        const e = window.juego?.escena;
+        if (!e || e.aciertos <= n) return false;
+        const d = Math.hypot(e.objetivo.x - o.x, e.objetivo.y - o.y);
+        return d > o.radio * 2.5 ? { d } : false;
+      },
+      { n: aciertosPrevios, o: antes },
+      { timeout: 8000 },
+    )
+    .then((h) => h.jsonValue())
+    .catch(() => null);
+  assert.ok(leido, 'el objetivo debe moverse lejos del anterior');
   await b.close();
 });
 
@@ -105,5 +119,26 @@ test('el objetivo nunca es menor de 44 px', async () => {
   await p.waitForFunction(() => window.juego?.escena?.lista === true);
   const o = await p.evaluate(() => window.juego.escena.objetivo);
   assert.ok(o.radio * 2 >= 44);
+  await b.close();
+});
+
+test('al llegar a la meta el juego termina y vuelve al menú', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+  await p.goto(URL_BASE());
+  await p.click('[data-juego="hover"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  const meta = await p.evaluate(() => window.juego.escena.meta);
+
+  for (let i = 0; i < meta; i++) {
+    const o = await p.evaluate(() => window.juego.escena.objetivo);
+    await p.mouse.move(o.x, o.y);
+    await p.mouse.move(o.x + 1, o.y);
+    await p.mouse.move(o.x, o.y);
+    await p.waitForFunction(({ n }) => window.juego?.escena?.aciertos === n, { n: i + 1 }, { timeout: 6000 });
+  }
+
+  await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  assert.equal(await p.locator('[data-mundo]').count(), 4);
   await b.close();
 });
