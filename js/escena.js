@@ -29,6 +29,7 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
 
   let objetivo;
   let puntero = null;
+  const colorEstela = mundo.acento;
   const tam = () =>
     Math.max(44, (Number.isFinite(mecanica.objetivoVmin) ? mecanica.objetivoVmin : 32) * V_MIN());
 
