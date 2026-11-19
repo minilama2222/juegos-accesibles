@@ -49,7 +49,8 @@ export const MECANICAS = {
     meta: 6,
     llenadoMs: 800,
     vaciadoMs: 1600,
-    objetivoVmin: 32,
+    objetivoMinVmin: 10,
+    objetivoMaxVmin: 18,
   },
   clickEstatico: { id: 'clickEstatico' },
 };

@@ -3,6 +3,8 @@ import { MUNDOS, MECANICAS, ORDEN } from './contenido.js';
 import { pictograma } from './pictogramas.js';
 import { accionDeDestino, guardarMundo, leerMundo } from './menu.js';
 import { crearEstela } from './estela.js';
+import { crearConfeti, avanzarConfeti, quedanVisibles } from './confeti.js';
+import { fanfarria, asegurarAudio } from './audio.js';
 
 const CLAVE_AVATAR = 'juegos.avatar';
 
@@ -158,27 +160,63 @@ async function jugar(mecanicaId) {
 
 function celebrarYVolver(partida) {
   const gsap = window.gsap;
-  if (!gsap) return render();
   estado.vista = 'cerrando';
-  const contenedor = document.querySelector('.partida');
-  if (!contenedor) return render();
-  const fiesta = document.createElement('div');
-  fiesta.className = 'fiesta';
-  fiesta.innerHTML = Array.from({ length: 18 }, (_, i) => {
-    const ang = (i / 18) * Math.PI * 2;
-    return `<span style="--dx:${Math.cos(ang) * 32}vmin;--dy:${Math.sin(ang) * 32}vmin"></span>`;
-  }).join('');
-  contenedor.appendChild(fiesta);
-  let hecha = false;
+  try {
+    fanfarria();
+  } catch {}
+
+  const contenedor = document.querySelector('.partida') ?? document.body;
+  const lienzo = document.createElement('canvas');
+  lienzo.className = 'confeti';
+  contenedor.appendChild(lienzo);
+
+  const ancho = window.innerWidth;
+  const alto = window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  lienzo.width = ancho * dpr;
+  lienzo.height = alto * dpr;
+  const ctx = lienzo.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const piezas = crearConfeti({ ancho, alto, cantidad: 220 });
+  let ultimo = performance.now();
+  let terminado = false;
+
   const terminar = () => {
-    if (hecha) return;
-    hecha = true;
+    if (terminado) return;
+    terminado = true;
     if (partida !== generacion) return;
     if (estado.vista !== 'cerrando') return;
     render();
   };
-  gsap.to(fiesta, { opacity: 0, duration: 1.1, ease: 'power2.out', onComplete: terminar });
-  setTimeout(terminar, 1500);
+
+  if (gsap) {
+    gsap.fromTo(lienzo, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+  }
+
+  const dibujar = (ahora) => {
+    const dt = Math.min(0.05, (ahora - ultimo) / 1000);
+    ultimo = ahora;
+    avanzarConfeti(piezas, dt);
+    ctx.clearRect(0, 0, ancho, alto);
+    for (const p of piezas) {
+      if (p.y > alto + 40) continue;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.giro);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = 0.95;
+      ctx.fillRect(-p.ancho / 2, -p.alto / 2, p.ancho, p.alto * (0.4 + Math.abs(Math.cos(p.giro)) * 0.6));
+      ctx.restore();
+    }
+    if (quedanVisibles(piezas, alto)) {
+      requestAnimationFrame(dibujar);
+    } else {
+      setTimeout(terminar, 250);
+    }
+  };
+  requestAnimationFrame(dibujar);
+  setTimeout(terminar, 4200);
 }
 
 function animarSalida() {
@@ -242,7 +280,12 @@ document.addEventListener('click', (ev) => {
   const m = accionDeDestino(ev, '[data-mundo]');
   if (m) return elegirMundo(m.dataset.mundo);
   const j = accionDeDestino(ev, '[data-juego]');
-  if (j) return jugar(j.dataset.juego);
+  if (j) {
+    try {
+      asegurarAudio();
+    } catch {}
+    return jugar(j.dataset.juego);
+  }
 });
 
 render();

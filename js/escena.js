@@ -1,6 +1,7 @@
 import { cargarKaplay } from './kaplay-carga.js';
 import { crearHover } from './hover.js';
 import { crearMarcador } from './sesion.js';
+import { calcularRadio } from './objetivo.js';
 
 export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar }) {
   const kaplay = await cargarKaplay();
@@ -31,7 +32,11 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
   let puntero = null;
   const colorEstela = mundo.acento;
   const tam = () =>
-    Math.max(44, (Number.isFinite(mecanica.objetivoVmin) ? mecanica.objetivoVmin : 32) * V_MIN());
+    calcularRadio({
+      vmin: V_MIN(),
+      minimo: Number.isFinite(mecanica.objetivoMinVmin) ? mecanica.objetivoMinVmin : 10,
+      maximo: Number.isFinite(mecanica.objetivoMaxVmin) ? mecanica.objetivoMaxVmin : 18,
+    });
 
   const oficial = () => ({
     mecanica: estado.mecanica,
@@ -49,7 +54,6 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
     const radio = tam();
     const ancho = juego.width();
     const alto = juego.height();
-    const margen = radio + 24;
     const referencia = estado.objetivo ?? puntero ?? { x: ancho / 2, y: alto / 2 };
 
     const tercios = [1 / 8, 3 / 8, 5 / 8, 7 / 8];
@@ -61,14 +65,28 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
         if (Math.hypot(x - referencia.x, y - referencia.y) > radio * 3) lejos.push({ x, y });
       }
     }
-    const opciones = lejos.length > 0 ? lejos : tercios.flatMap((fx) => tercios.map((fy) => ({ x: ancho * fx, y: alto * fy })));
-    const elegido = opciones[Math.floor(Math.random() * opciones.length)];
+
+    let elegido = null;
+    if (lejos.length > 0) {
+      elegido = lejos[Math.floor(Math.random() * lejos.length)];
+    } else {
+      for (let i = 0; i < 200 && !elegido; i++) {
+        const x = radio + 16 + Math.random() * Math.max(1, ancho - (radio + 16) * 2);
+        const y = radio + 16 + Math.random() * Math.max(1, alto - (radio + 16) * 2);
+        if (Math.hypot(x - referencia.x, y - referencia.y) > radio * 3) elegido = { x, y };
+      }
+      elegido ??= { x: ancho / 2, y: alto / 2 };
+    }
 
     const x = Math.min(ancho - radio - 8, Math.max(radio + 8, elegido.x));
     const y = Math.min(alto - radio - 8, Math.max(radio + 8, elegido.y));
     estado.objetivo = { x, y, radio };
-    if (objetivo) objetivo.pos = juego.vec2(x, y);
+    if (objetivo) {
+      objetivo.pos = juego.vec2(x, y);
+      objetivo.use(juego.circle(radio));
+    }
   }
+
 
   juego.onLoad(() => {
     juego.scene('hover', () => {
