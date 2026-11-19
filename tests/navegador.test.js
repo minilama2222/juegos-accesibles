@@ -76,6 +76,15 @@ test('el botón otro juego siempre visible vuelve al menú', async () => {
   await p.waitForSelector('[data-accion="otro-juego"]');
   const vis = await p.isVisible('[data-accion="otro-juego"]');
   assert.equal(vis, true);
+  // Regresión: quedaba encogido a ~0,6 por un tween de entrada que no terminaba.
+  await p.waitForTimeout(800);
+  const caja = await p.evaluate(() => {
+    const s = document.querySelector('[data-accion="otro-juego"]');
+    const r = s.getBoundingClientRect();
+    return { w: r.width, h: r.height, transform: getComputedStyle(s).transform };
+  });
+  assert.ok(caja.w >= 72 && caja.h >= 72, `el botón debe medir al menos 72px (mide ${caja.w}×${caja.h})`);
+  assert.equal(caja.transform, 'none', 'sin transform residual');
   await p.click('[data-accion="otro-juego"]');
   await p.waitForSelector('[data-mundo]');
   assert.equal(await p.evaluate(() => window.juego.vista), 'menu');

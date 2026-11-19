@@ -318,8 +318,7 @@ function animarSalida() {
       { clipPath: 'circle(150% at 50% 50%)' },
       { clipPath: 'circle(0% at 50% 50%)', duration: 0.55, ease: 'power3.inOut' },
     )
-    .add(() => cortina.remove())
-    .from('.salir', { scale: 0, rotate: -45, duration: 0.5, ease: 'back.out(3.2)' }, '-=0.3');
+    .add(() => cortina.remove());
 }
 
 function seguirPuntero() {

@@ -2,7 +2,7 @@ import { cargarKaplay } from './kaplay-carga.js';
 import { crearHover } from './hover.js';
 import { crearMarcador } from './sesion.js';
 import { calcularRadio } from './objetivo.js';
-import { animarAparicion, animarAcierto, progreso, APARICION_MS, ACIERTO_MS } from './animaciones.js';
+import { animarAparicion, progreso, APARICION_MS } from './animaciones.js';
 import { prefiereMenosMovimiento } from './movimiento-reducido.js';
 
 export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, alEstallar }) {
@@ -35,7 +35,6 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
   let puntero = null;
   const colorEstela = mundo.acento;
   let apareceEn = 0;
-  let aciertoPendiente = null;
   const tam = () =>
     calcularRadio({
       vmin: V_MIN(),
@@ -116,21 +115,8 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
         const ahora = juego.time();
         const pAp = progreso((ahora - apareceEn) * 1000, APARICION_MS);
         const a = animarAparicion(pAp);
-        let ac = null;
-        if (aciertoPendiente) {
-          const pAc = progreso((ahora - aciertoPendiente.en) * 1000, ACIERTO_MS);
-          if (pAc >= 1) {
-            aciertoPendiente = null;
-          } else {
-            ac = animarAcierto(pAc);
-          }
-        }
 
-        if (ac) {
-          objetivo.scale = juego.vec2(1, 1);
-          objetivo.angle = 0;
-          objetivo.opacity = ac.opacidad;
-        } else if (menosMovimiento) {
+        if (menosMovimiento) {
           // Menos movimiento: el objetivo no se deforma ni gira; el hover sí responde
           // (es la señal de que va a acertar) y la aparición es instantánea.
           const pulso = 1 + 0.12 * e.lleno;
@@ -158,9 +144,7 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
           const radio = estado.objetivo.radio;
           // Un estallido por acierto, no uno por fotograma. Con menos movimiento no hay partículas.
           if (!menosMovimiento) alEstallar?.({ x, y, radio });
-          colocarObjetivo();
-          apareceEn = ahora + ACIERTO_MS / 2000; // segundos: medio acierto de retraso
-          aciertoPendiente = { en: ahora, x, y, radio };
+          colocarObjetivo(); // la bola nueva empieza su aparición desde cero, sin saltos
           alTerminar?.({ acierto: true, aciertos: m.aciertos, terminada: m.terminada });
           if (m.terminada) {
             objetivo.hidden = true;
