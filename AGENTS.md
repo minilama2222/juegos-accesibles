@@ -49,8 +49,8 @@ entrega la URL.
   trabajo nuevo.
 - Orden de tickets y spec: `.scratch/juegos-punteria/README.md` y
   `docs/specs/0001-serie-punteria-raton.md`.
-- Decisiones de arquitectura: `docs/adr/` (se crea con la primera decisión que lo merezca; la
-  primera pendiente es el sistema de movimiento).
+- Decisiones de arquitectura: `docs/adr/`. La primera es
+  [`0001-sistema-de-movimiento.md`](docs/adr/0001-sistema-de-movimiento.md).
 
 ## Reglas de producto (no se negocian dentro de un juego)
 
