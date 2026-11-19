@@ -2,9 +2,12 @@ import { cargarKaplay } from './kaplay-carga.js';
 import { crearHover } from './hover.js';
 import { crearMarcador } from './sesion.js';
 import { calcularRadio } from './objetivo.js';
+import { animarAparicion, animarAcierto, progreso, APARICION_MS, ACIERTO_MS } from './animaciones.js';
+import { prefiereMenosMovimiento } from './movimiento-reducido.js';
 
-export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar }) {
+export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, alEstallar }) {
   const kaplay = await cargarKaplay();
+  const menosMovimiento = prefiereMenosMovimiento();
   const hover = crearHover({ llenadoMs: mecanica.llenadoMs, vaciadoMs: mecanica.vaciadoMs });
   const marcador = crearMarcador({ meta: mecanica.meta ?? 6 });
   const V_MIN = () => Math.min(window.innerWidth, window.innerHeight) / 100;
@@ -31,6 +34,8 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
   let objetivo;
   let puntero = null;
   const colorEstela = mundo.acento;
+  let apareceEn = 0;
+  let aciertoPendiente = null;
   const tam = () =>
     calcularRadio({
       vmin: V_MIN(),
@@ -84,6 +89,7 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
     if (objetivo) {
       objetivo.pos = juego.vec2(x, y);
       objetivo.use(juego.circle(radio));
+      apareceEn = juego.time();
     }
   }
 
@@ -104,8 +110,39 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
       juego.onUpdate(() => {
         const e = hover.avanzar(juego.dt() * 1000);
         estado.hoverLleno = e.lleno;
-        const escala = 1 + 0.08 * e.lleno;
-        objetivo.scale = juego.vec2(escala, escala);
+
+        const ahora = juego.time();
+        const pAp = progreso((ahora - apareceEn) * 1000, APARICION_MS);
+        const a = animarAparicion(pAp);
+        let ac = null;
+        if (aciertoPendiente) {
+          const pAc = progreso((ahora - aciertoPendiente.en) * 1000, ACIERTO_MS);
+          if (pAc >= 1) {
+            aciertoPendiente = null;
+          } else {
+            ac = animarAcierto(pAc);
+          }
+        }
+
+        if (ac) {
+          objetivo.scale = juego.vec2(1, 1);
+          objetivo.angle = 0;
+          objetivo.opacity = ac.opacidad;
+        } else if (menosMovimiento) {
+          // Menos movimiento: el objetivo no se deforma ni gira; el hover sí responde
+          // (es la señal de que va a acertar) y la aparición es instantánea.
+          const pulso = 1 + 0.12 * e.lleno;
+          objetivo.scale = juego.vec2(pulso, pulso);
+          objetivo.angle = 0;
+          objetivo.opacity = 1;
+          if (e.lleno > 0) dibujarAro(e.lleno);
+        } else {
+          const pulso = 1 + 0.12 * e.lleno + 0.03 * Math.sin(ahora * 7);
+          objetivo.scale = juego.vec2(a.escalaX * pulso, a.escalaY * pulso);
+          objetivo.angle = (a.giro * 180) / Math.PI;
+          objetivo.opacity = a.opacidad;
+          if (e.lleno > 0) dibujarAro(e.lleno);
+        }
 
         if (e.completado) {
           const m = marcador.anotarAcierto();
@@ -114,8 +151,14 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
           hover.salir();
           estado.hoverLleno = 0;
           estado.hoverCompletado = false;
+          const x = estado.objetivo.x;
+          const y = estado.objetivo.y;
+          const radio = estado.objetivo.radio;
+          // Un estallido por acierto, no uno por fotograma. Con menos movimiento no hay partículas.
+          if (!menosMovimiento) alEstallar?.({ x, y, radio });
           colocarObjetivo();
-          objetivo.scale = juego.vec2(1, 1);
+          apareceEn = ahora + ACIERTO_MS * 0.5;
+          aciertoPendiente = { en: ahora, x, y, radio };
           alTerminar?.({ acierto: true, aciertos: m.aciertos, terminada: m.terminada });
           if (m.terminada) {
             objetivo.hidden = true;
@@ -131,6 +174,33 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar })
     });
     juego.go('hover');
   });
+
+  function dibujarAro(lleno) {
+    const o = estado.objetivo;
+    if (!o) return;
+    const color = juego.Color.fromHex('#ffffff');
+    juego.drawCircle({
+      radius: o.radio * 1.22,
+      pos: juego.vec2(o.x, o.y),
+      color: juego.rgb(color.r, color.g, color.b),
+      opacity: 0.18,
+      outline: { width: 7, color: juego.rgb(color.r, color.g, color.b) },
+    });
+    const giro = -Math.PI / 2 + lleno * Math.PI * 2;
+    const pasos = 48;
+    for (let i = 0; i < pasos * lleno; i++) {
+      const a1 = -Math.PI / 2 + (i / pasos) * Math.PI * 2;
+      const a2 = -Math.PI / 2 + ((i + 1.4) / pasos) * Math.PI * 2;
+      const r = o.radio * 1.22;
+      juego.drawLine({
+        p1: juego.vec2(o.x + Math.cos(a1) * r, o.y + Math.sin(a1) * r),
+        p2: juego.vec2(o.x + Math.cos(Math.min(a2, giro)) * r, o.y + Math.sin(Math.min(a2, giro)) * r),
+        width: 9,
+        color: juego.rgb(color.r, color.g, color.b),
+        opacity: 0.95,
+      });
+    }
+  }
 
   function dentro(x, y) {
     const o = estado.objetivo;

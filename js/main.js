@@ -5,6 +5,7 @@ import { accionDeDestino, guardarMundo, leerMundo } from './menu.js';
 import { crearEstela } from './estela.js';
 import { crearConfeti, avanzarConfeti, quedanVisibles } from './confeti.js';
 import { fanfarria, asegurarAudio } from './audio.js';
+import { prefiereMenosMovimiento, cantidadConfeti } from './movimiento-reducido.js';
 
 const CLAVE_AVATAR = 'juegos.avatar';
 
@@ -95,8 +96,28 @@ function iconoMecanica(id) {
 function animarMenu() {
   const gsap = window.gsap;
   if (!gsap) return;
-  gsap.from('.mundo', { scale: 0.75, duration: 0.3, stagger: 0.05, ease: 'back.out(2)' });
-  gsap.from('.juego', { y: 24, duration: 0.35, stagger: 0.06, ease: 'power2.out' });
+  if (prefiereMenosMovimiento()) {
+    // Menos movimiento: aparece y ya está. Sin rebotes ni latido en bucle.
+    gsap.from('.avatar, .mundo, .juego', { opacity: 0, duration: 0.2, ease: 'power1.out' });
+    return;
+  }
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+  tl.from('.avatar', { scale: 0.6, opacity: 0, duration: 0.4, ease: 'back.out(3)' })
+    .from(
+      '.mundo',
+      { scale: 0.7, y: -18, duration: 0.42, stagger: { each: 0.05, from: 'center' }, ease: 'back.out(2.6)' },
+      '-=0.15',
+    )
+    .from('.juego', { scale: 0.75, opacity: 0, duration: 0.45, ease: 'back.out(2.4)' }, '-=0.1');
+  gsap.to('.juego', {
+    scale: 1.06,
+    duration: 0.55,
+    yoyo: true,
+    repeat: 3,
+    ease: 'sine.inOut',
+    delay: 1.2,
+    onComplete: () => gsap.set('.juego', { scale: 1 }),
+  });
 }
 
 function elegirMundo(id) {
@@ -124,6 +145,7 @@ async function jugar(mecanicaId) {
              style="--fondo:${mundo.fondo};--acento:${mundo.acento}">
       <canvas id="lienzo" class="lienzo"></canvas>
       <canvas class="estela" id="estela" aria-hidden="true"></canvas>
+      <canvas class="estallidos" id="estallidos" aria-hidden="true"></canvas>
       <div class="puntero" id="puntero" aria-hidden="true"></div>
       <button class="salir" id="otro-juego" data-accion="otro-juego" aria-label="Otro juego">
         <svg viewBox="0 0 100 100" aria-hidden="true">
@@ -144,6 +166,9 @@ async function jugar(mecanicaId) {
     alCambiar: (e) => {
       if (partida === generacion && estado.vista === 'juego') publicar({ escena: e });
     },
+    alEstallar: (punto, ac) => {
+      if (partida === generacion) pintarEstallido(punto, ac);
+    },
     alTerminar: (r) => {
       if (partida !== generacion || estado.vista !== 'juego') return;
       publicar({ ultimo: r });
@@ -156,6 +181,61 @@ async function jugar(mecanicaId) {
   }
   estado.escenaLista = true;
   publicar();
+}
+
+const estallidosActivos = [];
+
+function pintarEstallido(punto, ac) {
+  estallidosActivos.push({ ...punto, ac, desde: performance.now() });
+  if (!estallidosActivos.loop) {
+    estallidosActivos.loop = requestAnimationFrame(pintarEstallidos);
+  }
+}
+
+function pintarEstallidos() {
+  const lienzo = document.getElementById('estallidos');
+  if (!lienzo || estallidosActivos.length === 0) {
+    estallidosActivos.loop = null;
+    estallidosActivos.length = 0;
+    return;
+  }
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const ancho = window.innerWidth;
+  const alto = window.innerHeight;
+  if (lienzo.width !== ancho * dpr) {
+    lienzo.width = ancho * dpr;
+    lienzo.height = alto * dpr;
+  }
+  const ctx = lienzo.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, ancho, alto);
+
+  for (let i = estallidosActivos.length - 1; i >= 0; i--) {
+    const e = estallidosActivos[i];
+    const t = Math.min(1, (performance.now() - e.desde) / 520);
+    if (t >= 1 || e.ac?.opacidad <= 0.01) {
+      estallidosActivos.splice(i, 1);
+      continue;
+    }
+    const vida = e.ac?.opacidad ?? 1 - t;
+    const r = e.radio * (1.05 + 1.4 * (1 - vida));
+    ctx.globalAlpha = Math.min(1, vida);
+    ctx.lineWidth = 4 + 14 * vida;
+    ctx.strokeStyle = '#ffffff';
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 18 * vida;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = vida * 0.35;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.radio * (0.6 + 0.4 * vida), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  estallidosActivos.loop = requestAnimationFrame(pintarEstallidos);
 }
 
 function celebrarYVolver(partida) {
@@ -178,7 +258,7 @@ function celebrarYVolver(partida) {
   const ctx = lienzo.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const piezas = crearConfeti({ ancho, alto, cantidad: 220 });
+  const piezas = crearConfeti({ ancho, alto, cantidad: cantidadConfeti() });
   let ultimo = performance.now();
   let terminado = false;
 
@@ -222,7 +302,24 @@ function celebrarYVolver(partida) {
 function animarSalida() {
   const gsap = window.gsap;
   if (!gsap) return;
-  gsap.from('.salir', { scale: 0, duration: 0.35, delay: 0.15, ease: 'back.out(3)' });
+  const cortina = document.createElement('div');
+  cortina.className = 'cortina';
+  cortina.style.background = getComputedStyle(document.body).getPropertyValue('--fondo') || '#10231d';
+  document.body.appendChild(cortina);
+  if (prefiereMenosMovimiento()) {
+    // Sin círculo que se cierra ni botón girando: fundido corto y listo.
+    gsap.fromTo(cortina, { opacity: 0 }, { opacity: 1, duration: 0.15, onComplete: () => cortina.remove() });
+    return;
+  }
+  gsap
+    .timeline()
+    .fromTo(
+      cortina,
+      { clipPath: 'circle(150% at 50% 50%)' },
+      { clipPath: 'circle(0% at 50% 50%)', duration: 0.55, ease: 'power3.inOut' },
+    )
+    .add(() => cortina.remove())
+    .from('.salir', { scale: 0, rotate: -45, duration: 0.5, ease: 'back.out(3.2)' }, '-=0.3');
 }
 
 function seguirPuntero() {
