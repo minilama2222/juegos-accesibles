@@ -142,3 +142,25 @@ test('al llegar a la meta el juego termina y vuelve al menú', async () => {
   assert.equal(await p.locator('[data-mundo]').count(), 4);
   await b.close();
 });
+
+test('tras un acierto el objetivo vuelve a ser visible (no se queda apagado)', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+  await p.goto(URL_BASE());
+  await p.click('[data-juego="hover"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+
+  const o = await p.evaluate(() => window.juego.escena.objetivo);
+  await p.mouse.move(o.x, o.y);
+  await p.mouse.move(o.x + 1, o.y);
+  await p.mouse.move(o.x, o.y);
+  await p.waitForFunction(({ n }) => window.juego?.escena?.aciertos === n, { n: 1 }, { timeout: 6000 });
+
+  // Antes del arreglo, apareceEn quedaba 240 s en el futuro y la bola no volvía a verse.
+  // Se espera a que termine el refuerzo del acierto (480 ms) antes de mirar.
+  await p.waitForTimeout(1200);
+  const e = await p.evaluate(() => window.juego.escena);
+  assert.equal(e.visible, true, 'el objetivo debe volver a verse tras el acierto');
+  assert.ok(e.objetivo, 'el objetivo sigue colocado');
+  await b.close();
+});

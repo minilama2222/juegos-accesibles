@@ -53,6 +53,8 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
     meta: marcador.leer().meta,
     terminada: marcador.leer().terminada,
     lista: estado.lista,
+    // Regresión: tras un acierto el objetivo debe volver a verse (opacidad > 0).
+    visible: !!objetivo && objetivo.opacity > 0.01 && !objetivo.hidden,
   });
 
   function colocarObjetivo() {
@@ -157,7 +159,7 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
           // Un estallido por acierto, no uno por fotograma. Con menos movimiento no hay partículas.
           if (!menosMovimiento) alEstallar?.({ x, y, radio });
           colocarObjetivo();
-          apareceEn = ahora + ACIERTO_MS * 0.5;
+          apareceEn = ahora + ACIERTO_MS / 2000; // segundos: medio acierto de retraso
           aciertoPendiente = { en: ahora, x, y, radio };
           alTerminar?.({ acierto: true, aciertos: m.aciertos, terminada: m.terminada });
           if (m.terminada) {
