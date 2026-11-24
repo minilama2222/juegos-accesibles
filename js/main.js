@@ -263,6 +263,7 @@ function iconoMecanica(id, parejas) {
   if (id === 'hover') return 'aguantar';
   if (id === 'clickEstatico') return 'balon';
   if (id === 'aparicion') return 'aparicion';
+  if (id === 'movimientoLento') return 'movimiento';
   if (id === 'tiroAPorteria') return 'porteria';
   if (id === 'parejas') return `parejas${parejas ?? MECANICAS.parejas.parejasPorDefecto}`;
   return 'regalo';

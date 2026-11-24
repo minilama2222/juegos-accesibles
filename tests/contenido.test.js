@@ -6,8 +6,16 @@ test('las mecánicas implementadas van de más fácil a más difícil', () => {
   const implementadas = ORDEN.filter((id) => MECANICAS[id]?.implementada);
   assert.deepEqual(
     implementadas,
-    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'tiroAPorteria', 'parejas'],
-    'causa-efecto, hover, click estático, aparición con tiempo, tiro a portería y parejas',
+    [
+      'causaEfecto',
+      'hover',
+      'clickEstatico',
+      'aparicion',
+      'movimientoLento',
+      'tiroAPorteria',
+      'parejas',
+    ],
+    'causa-efecto, hover, click estático, aparición, movimiento lento, tiro a portería y parejas',
   );
 });
 
@@ -27,6 +35,19 @@ test('aparición declara ventana, hueco y meta de aciertos', () => {
   assert.ok(m.huecoMs > 0);
   assert.ok(m.objetivoMinVmin >= 10);
   assert.ok(m.objetivoMaxVmin > m.objetivoMinVmin);
+});
+
+test('movimiento lento va después de aparición y antes del tiro a portería', () => {
+  assert.ok(ORDEN.indexOf('movimientoLento') > ORDEN.indexOf('aparicion'));
+  assert.ok(ORDEN.indexOf('movimientoLento') < ORDEN.indexOf('tiroAPorteria'));
+
+  const m = MECANICAS.movimientoLento;
+  assert.equal(m.implementada, true);
+  assert.ok(m.meta >= 4);
+  assert.ok(m.objetivoMinVmin >= 10, 'el objetivo es grande para poder seguirlo');
+  assert.ok(m.objetivoMaxVmin > m.objetivoMinVmin);
+  assert.ok(m.velocidadBase > 0);
+  assert.ok(m.velocidadMax > m.velocidadBase, 'la velocidad sube con aciertos hasta un techo');
 });
 
 test('tiro a portería pide una meta de goles y huecos grandes', () => {
