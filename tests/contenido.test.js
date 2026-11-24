@@ -6,9 +6,15 @@ test('las mecánicas implementadas van de más fácil a más difícil', () => {
   const implementadas = ORDEN.filter((id) => MECANICAS[id]?.implementada);
   assert.deepEqual(
     implementadas,
-    ['causaEfecto', 'hover', 'clickEstatico'],
-    'causa-efecto (cualquier clic) antes que hover (acertar y aguantar) y click estático',
+    ['causaEfecto', 'hover', 'clickEstatico', 'tiroAPorteria'],
+    'causa-efecto, hover, click estático y, al final, tiro a portería',
   );
+});
+
+test('tiro a portería pide una meta de goles y huecos grandes', () => {
+  assert.equal(MECANICAS.tiroAPorteria.meta, 6);
+  assert.ok(MECANICAS.tiroAPorteria.objetivoMinVmin > 0);
+  assert.ok(MECANICAS.tiroAPorteria.objetivoMaxVmin > MECANICAS.tiroAPorteria.objetivoMinVmin);
 });
 
 test('click estático pide un objetivo grande y una meta de aciertos', () => {

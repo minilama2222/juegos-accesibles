@@ -237,6 +237,7 @@ function iconoMecanica(id) {
   if (id === 'causaEfecto') return 'destello';
   if (id === 'hover') return 'aguantar';
   if (id === 'clickEstatico') return 'balon';
+  if (id === 'tiroAPorteria') return 'porteria';
   return 'regalo';
 }
 function animarColeccion() {

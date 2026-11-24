@@ -64,7 +64,7 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
   const juegos = await p.$$eval('[data-juego]', (n) => n.map((x) => x.dataset.juego));
   assert.deepEqual(
     juegos,
-    ['causaEfecto', 'hover', 'clickEstatico'],
+    ['causaEfecto', 'hover', 'clickEstatico', 'tiroAPorteria'],
     'sólo se ofrecen mecánicas implementadas y de más fácil a más difícil',
   );
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());
@@ -338,6 +338,118 @@ test('click estático: al llegar a la meta termina y vuelve al menú', async () 
     }
     assert.equal(await p.evaluate(() => window.juego.escena.terminada), true);
     await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  } finally {
+    await b.close();
+  }
+});
+
+
+test('tiro a portería: clico el hueco y el balón entra', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="tiroAPorteria"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+
+    const antes = await p.evaluate(() => window.juego.escena);
+    assert.equal(antes.huecos.length, 6, 'la portería tiene seis huecos');
+    assert.ok(
+      antes.huecos.every((h) => h.radio * 2 >= 44),
+      'ningún hueco baja de 44 px',
+    );
+
+    const hueco = antes.huecos[0];
+    await p.mouse.click(hueco.x, hueco.y);
+    await p.waitForFunction(() => window.juego?.escena?.aciertos === 1, null, { timeout: 4000 });
+
+    const durante = await p.evaluate(() => window.juego.escena);
+    assert.equal(durante.fallos, 0, 'el gol no cuenta como fallo');
+    assert.equal(durante.ultimoTiro.acierto, true);
+    assert.equal(durante.ultimoTiro.hueco, 0);
+    assert.ok(durante.balon, 'el balón está volando');
+    assert.equal(durante.terminada, false);
+  } finally {
+    await b.close();
+  }
+});
+
+test('tiro a portería: un clic fuera lanza el balón despacio y no penaliza', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="tiroAPorteria"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+
+    const antes = await p.evaluate(() => window.juego.escena);
+    await p.mouse.click(12, 12);
+    await p.waitForFunction(() => window.juego?.escena?.fallos === 1, null, { timeout: 3000 });
+
+    let e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.aciertos, 0, 'el fallo no resta ni da progreso');
+    assert.equal(e.ultimoTiro.acierto, false);
+    assert.deepEqual(
+      e.huecos.map((h) => [h.x, h.y]),
+      antes.huecos.map((h) => [h.x, h.y]),
+      'los huecos no se mueven',
+    );
+    assert.equal(e.ayuda.nivel, 0, 'un fallo suelto no sube la ayuda');
+    assert.ok(e.balon, 'aun fallando, el balón sale hacia una zona vacía');
+
+    // Dos fallos seguidos piden ayuda: los huecos se agrandan sin moverse.
+    await p.waitForTimeout(400);
+    await p.mouse.click(12, 12);
+    await p.waitForFunction(() => window.juego?.escena?.fallos === 2, null, { timeout: 3000 });
+    e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.ayuda.nivel, 1);
+    assert.ok(e.huecos.every((h) => h.radio > h.radioBase), 'la ayuda agranda los huecos');
+    assert.deepEqual(
+      e.huecos.map((h) => [h.x, h.y]),
+      antes.huecos.map((h) => [h.x, h.y]),
+      'la ayuda no los recoloca',
+    );
+  } finally {
+    await b.close();
+  }
+});
+
+test('tiro a portería: al llegar a la meta termina y vuelve al menú', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1400, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="tiroAPorteria"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+    const meta = await p.evaluate(() => window.juego.escena.meta);
+
+    for (let i = 0; i < meta; i++) {
+      const h = await p.evaluate((n) => window.juego.escena.huecos[n % 6], i);
+      await p.mouse.click(h.x, h.y);
+      await p.waitForFunction(({ n }) => window.juego?.escena?.aciertos === n, { n: i + 1 }, { timeout: 4000 });
+    }
+    assert.equal(await p.evaluate(() => window.juego.escena.terminada), true);
+    await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  } finally {
+    await b.close();
+  }
+});
+
+test('tiro a portería está disponible en los cuatro mundos', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+    await p.goto(URL_BASE());
+    for (const id of ['navidad', 'animalitos', 'futbol', 'amarillo']) {
+      await p.click(`[data-mundo="${id}"]`);
+      await p.click('[data-juego="tiroAPorteria"]');
+      await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+      const e = await p.evaluate(() => window.juego.escena);
+      assert.equal(e.mundo, id, `${id}: la escena usa el mundo elegido`);
+      assert.equal(e.huecos.length, 6);
+      await p.click('[data-accion="otro-juego"]');
+      await p.waitForSelector('[data-mundo]');
+    }
   } finally {
     await b.close();
   }

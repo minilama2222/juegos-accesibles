@@ -66,4 +66,18 @@ export function progreso(transcurrido, duracion) {
   return Math.max(0, Math.min(1, transcurrido / duracion));
 }
 
+// Tiro a portería: el balón sale rápido, frena al llegar (slow out) y dibuja
+// un arco. La altura vuelve a 0 al final; la escena decide cuánto mide el arco.
+export function animarTiro(progreso) {
+  const t = Math.max(0, Math.min(1, progreso));
+  const salida = t <= 0.75 ? 0 : (t - 0.75) / 0.25;
+  return {
+    avance: cubicOut(t),
+    altura: t <= 0 || t >= 1 ? 0 : Math.sin(t * Math.PI),
+    giro: t * Math.PI * 2,
+    escala: 1 + 0.14 * Math.sin(t * Math.PI),
+    opacidad: 1 - suave(salida),
+  };
+}
+
 export { cubicIn, cubicOut, suave };
