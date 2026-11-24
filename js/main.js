@@ -78,12 +78,26 @@ function dibujoPegatina(p) {
 
 function publicar(extra = {}) {
   const mundo = mundoActual();
+  const escenaEstado = escena?.estado?.() ?? null;
+  // En parejas, la escena publica también el tablero en la raíz de window.juego:
+  // cartas, parejas encontradas, si ha terminado y la ayuda vigente.
+  const parejas =
+    escenaEstado?.mecanica === 'parejas'
+      ? {
+          cartas: escenaEstado.cartas,
+          parejas: escenaEstado.parejas,
+          encontradas: escenaEstado.encontradas,
+          terminada: escenaEstado.terminada,
+          bloqueada: escenaEstado.bloqueada,
+          tiempoVisibleMs: escenaEstado.tiempoVisibleMs,
+        }
+      : {};
   window.juego = {
     vista: estado.vista,
     mundo: estado.mundoId,
     avatar: estado.avatarId,
     mecanica: estado.mecanicaId,
-    escena: escena?.estado() ?? null,
+    escena: escenaEstado,
     sonido: estadoSonido(),
     pegatinas: { ...estado.coleccion },
     ultimaPegatina: estado.ultimaPegatina,
@@ -96,6 +110,7 @@ function publicar(extra = {}) {
     ultimoRefuerzo: estado.ultimoRefuerzo,
     estallidos: estallidosActivos.length,
     exportarMetricas,
+    ...parejas,
     ...extra,
   };
 }
@@ -221,25 +236,36 @@ function render() {
         </div>
       </header>
       <main class="juegos">
-        ${ORDEN.filter((id) => MECANICAS[id]?.implementada).map(
-          (id) => `
-          <button class="juego" data-juego="${id}">
-            <span class="juego__icono"><img alt="" src="${svg(iconoMecanica(id))}"></span>
-          </button>`,
-        ).join('')}
+        ${ORDEN.filter((id) => MECANICAS[id]?.implementada)
+          .flatMap((id) =>
+            id === 'parejas'
+              ? MECANICAS.parejas.tableros.map((n) => botonJuego(id, n))
+              : [botonJuego(id)],
+          )
+          .join('')}
       </main>
     </section>`;
   animarMenu();
   publicar({ escena: null, ultimo: null });
 }
 
-function iconoMecanica(id) {
+function botonJuego(id, parejas) {
+  const extra = parejas ? ` data-parejas="${parejas}"` : '';
+  const nombre = parejas ? `${parejas} parejas` : id;
+  return `
+    <button class="juego" data-juego="${id}"${extra} aria-label="${nombre}">
+      <span class="juego__icono"><img alt="" src="${svg(iconoMecanica(id, parejas))}"></span>
+    </button>`;
+}
+
+function iconoMecanica(id, parejas) {
   if (id === 'causaEfecto') return 'destello';
   if (id === 'hover') return 'aguantar';
   if (id === 'clickEstatico') return 'balon';
   if (id === 'aparicion') return 'aparicion';
   if (id === 'movimientoLento') return 'movimiento';
   if (id === 'tiroAPorteria') return 'porteria';
+  if (id === 'parejas') return `parejas${parejas ?? MECANICAS.parejas.parejasPorDefecto}`;
   if (id === 'arrastre') return 'arrastre';
   return 'regalo';
 }
@@ -382,7 +408,7 @@ function elegirMundo(id) {
   publicar();
 }
 
-async function jugar(mecanicaId) {
+async function jugar(mecanicaId, opciones = {}) {
   terminarPartidaActual();
   const partida = ++generacion;
   estado.ultimaPegatina = null;
@@ -426,6 +452,7 @@ async function jugar(mecanicaId) {
   escena = await arrancarEscena({
     mundo,
     mecanica,
+    parejas: opciones.parejas,
     ayuda: estado.ayuda,
     alCambiar: (e) => {
       if (partida === generacion && estado.vista === 'juego') publicar({ escena: e });
@@ -778,7 +805,8 @@ document.addEventListener('click', (ev) => {
       asegurarAudio();
       iniciarMusica();
     } catch {}
-    return jugar(j.dataset.juego);
+    const cuantas = j.dataset.parejas ? Number(j.dataset.parejas) : undefined;
+    return jugar(j.dataset.juego, { parejas: cuantas });
   }
 });
 

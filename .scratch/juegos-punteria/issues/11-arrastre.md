@@ -15,7 +15,7 @@
 ## Hecho
 
 - **Registro:** `MECANICAS.arrastre` (`meta: 4`, dibujo grande de 12–16 vmin) y
-  `ORDEN` lo coloca al final, después de tiro a portería y movimiento lento. Las mecánicas
+  `ORDEN` lo coloca al final, después de parejas, tiro a portería y movimiento lento. Las mecánicas
   anteriores no cambian; solo se añade una entrada y su icono de menú.
 - **Lógica pura (`js/arrastre.js`):** reparto del dibujo y su zona (horizontal en pantalla
   ancha, vertical en pantalla alta), regla de soltado con tolerancia del 25 % más allá del
@@ -30,4 +30,4 @@
   `arrastrando`, `soltado`), `inicio`, `objetivo`, `zona` y `soltado` (`{x, y, acierto}`).
 - **Tests:** `tests/arrastre.test.js` (reparto, tolerancia, agarre y umbral) y tres pruebas de
   Playwright en `tests/navegador.test.js` (arrastre completo, fallo suave y los cuatro mundos).
-  Suite completa en verde: 177 tests.
+  Suite completa en verde: 196 tests.

@@ -9,6 +9,35 @@ function boca(x, y, r) {
   return `<circle cx="${x}" cy="${y}" r="${r}" fill="#222"/>`;
 }
 
+// Icono del menú para elegir tablero: la rejilla de cartas ya dice cuántas
+// parejas hay, sin usar texto.
+function iconoParejas(filas) {
+  const columnas = 4;
+  const margen = 9;
+  const hueco = 6;
+  const ancho = (S - margen * 2 - hueco * (columnas - 1)) / columnas;
+  const alto = (S - margen * 2 - hueco * (filas - 1)) / filas;
+  let cuerpo = '';
+  for (let f = 0; f < filas; f++) {
+    for (let c = 0; c < columnas; c++) {
+      const x = margen + c * (ancho + hueco);
+      const y = margen + f * (alto + hueco);
+      const visible = (f + c) % 3 !== 1;
+      cuerpo += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${ancho.toFixed(1)}"
+        height="${alto.toFixed(1)}" rx="${Math.min(8, ancho / 5).toFixed(1)}"
+        fill="${visible ? '#ffd54f' : '#ffffff'}" stroke="#ffffff"
+        stroke-width="${visible ? 2 : 3}" opacity="${visible ? 1 : 0.35}"/>`;
+      if (visible) {
+        const cx = x + ancho / 2;
+        const cy = y + alto / 2;
+        cuerpo += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}"
+          r="${Math.min(ancho, alto) * 0.2}" fill="#1b5e20"/>`;
+      }
+    }
+  }
+  return svg(cuerpo);
+}
+
 export const PICTOGRAMAS = {
   regalo: svg(`
     <rect x="22" y="46" width="76" height="54" rx="6" fill="#e53935"/>
@@ -204,6 +233,54 @@ export const PICTOGRAMAS = {
     <g fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
       <path d="M44 22v22H22M76 22v22h22M44 98V76H22M76 98V76h22"/>
     </g>`),
+  // Dibujos de las parejas: completan el paquete de cada mundo hasta ocho.
+  campana: svg(`
+    <path d="M38 78c4-10 6-20 6-30 0-14 7-24 16-24s16 10 16 24c0 10 2 20 6 30z"
+          fill="#ffd54f" stroke="#b8860b" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="34" y="76" width="52" height="8" rx="4" fill="#b8860b"/>
+    <circle cx="60" cy="90" r="7" fill="#b8860b"/>`),
+  galleta: svg(`
+    <circle cx="60" cy="62" r="38" fill="#d7a86e" stroke="#8d6e63" stroke-width="4"/>
+    <g fill="#6d4c41">
+      <circle cx="45" cy="48" r="6"/><circle cx="74" cy="54" r="5"/>
+      <circle cx="54" cy="76" r="6"/><circle cx="80" cy="74" r="4"/>
+      <circle cx="36" cy="66" r="4"/>
+    </g>`),
+  calcetin: svg(`
+    <path d="M42 18h30v48c0 6 6 10 16 14 12 4 14 16 4 22-12 8-34 4-46-8-6-6-4-14-4-22z"
+          fill="#e53935" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="38" y="16" width="38" height="12" rx="6" fill="#ffffff"/>`),
+  hueso: svg(`
+    <path d="M30 44c-10-8-6-22 6-22 6 0 10 4 12 8h24c2-4 6-8 12-8 12 0 16 14 6 22 4 4 4 12 0 16 10 8 6 22-6 22-6 0-10-4-12-8H48c-2 4-6 8-12 8-12 0-16-14-6-22-4-4-4-12 0-16z"
+          fill="#fafafa" stroke="#222" stroke-width="4" stroke-linejoin="round"/>`),
+  pez: svg(`
+    <path d="M20 60c14-20 30-28 50-28 18 0 32 12 36 28-4 16-18 28-36 28-20 0-36-8-50-28z"
+          fill="#4fc3f7" stroke="#01579b" stroke-width="4"/>
+    <path d="M104 60l16-18v36z" fill="#4fc3f7" stroke="#01579b" stroke-width="4"/>
+    <circle cx="82" cy="52" r="6" fill="#fff"/><circle cx="82" cy="52" r="3" fill="#222"/>`),
+  guante: svg(`
+    <path d="M34 78V40c0-6 8-6 8 0v12-26c0-6 8-6 8 0v24-30c0-6 8-6 8 0v30-24c0-6 8-6 8 0v38l10-10c5-5 12 0 8 7L66 92c-4 6-10 8-16 6L34 92z"
+          fill="#ffd54f" stroke="#e65100" stroke-width="4" stroke-linejoin="round"/>`),
+  camiseta: svg(`
+    <path d="M40 26l20 8 20-8 22 14-10 18-12-6v44H40V52l-12 6-10-18z"
+          fill="#4fc3f7" stroke="#01579b" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M60 34v12" stroke="#ffffff" stroke-width="5"/>`),
+  cono: svg(`
+    <path d="M60 16l26 74H34z" fill="#fb8c00" stroke="#e65100" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M44 58h32M38 76h44" stroke="#ffffff" stroke-width="7"/>
+    <rect x="26" y="88" width="68" height="12" rx="6" fill="#e65100"/>`),
+  corazon: svg(`
+    <path d="M60 96C30 76 18 60 18 44c0-14 10-24 24-24 10 0 16 6 18 12 2-6 8-12 18-12 14 0 24 10 24 24 0 16-12 32-42 52z"
+          fill="#e53935" stroke="#ffffff" stroke-width="5" stroke-linejoin="round"/>`),
+  nube: svg(`
+    <path d="M28 76c-12 0-16-16-4-22-2-14 12-24 24-18 6-12 24-12 30 0 14-2 22 12 14 22 10 4 6 18-6 18z"
+          fill="#ffffff" stroke="#90a4ae" stroke-width="4" stroke-linejoin="round"/>`),
+  rayo: svg(`
+    <path d="M68 12L30 66h22l-6 42 40-58H62z" fill="#ffeb3b" stroke="#ffffff" stroke-width="5"
+          stroke-linejoin="round"/>`),
+  parejas4: iconoParejas(2),
+  parejas6: iconoParejas(3),
+  parejas8: iconoParejas(4),
 };
 
 export function pictograma(nombre) {

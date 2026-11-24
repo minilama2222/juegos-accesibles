@@ -71,10 +71,15 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
       'aparicion',
       'movimientoLento',
       'tiroAPorteria',
+      'parejas',
+      'parejas',
+      'parejas',
       'arrastre',
     ],
     'sólo se ofrecen mecánicas implementadas y de más fácil a más difícil',
   );
+  const tableros = await p.$$eval('[data-juego="parejas"]', (n) => n.map((x) => Number(x.dataset.parejas)));
+  assert.deepEqual(tableros, [4, 6, 8], 'el menú deja elegir 4, 6 u 8 parejas');
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());
   assert.equal(textosVisibles, '');
   await b.close();
@@ -1108,4 +1113,132 @@ test('las métricas se guardan por juego y se exportan sin verse en el juego', a
   const [descarga] = await Promise.all([p.waitForEvent('download'), p.keyboard.press('e')]);
   assert.ok(descarga.suggestedFilename().startsWith('juegos-metricas-'));
   await b.close();
+});
+
+test('parejas: elijo 6 parejas, giro dos iguales y se quedan visibles', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="parejas"][data-parejas="6"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+
+    const antes = await p.evaluate(() => window.juego.escena);
+    assert.equal(antes.mecanica, 'parejas');
+    assert.equal(antes.parejas, 6);
+    assert.equal(antes.cartas.length, 12);
+    assert.equal(antes.encontradas, 0);
+    assert.equal(antes.terminada, false);
+    assert.ok(antes.cartas.every((c) => c.lado >= 44), 'las cartas son grandes');
+    assert.equal(await p.evaluate(() => window.juego.cartas.length), 12, 'el tablero también en window.juego');
+    assert.equal(await p.evaluate(() => window.juego.parejas), 6);
+    assert.equal(await p.evaluate(() => window.juego.encontradas), 0);
+    assert.equal(await p.evaluate(() => window.juego.terminada), false);
+    assert.ok(await p.evaluate(() => window.juego.ayuda));
+    assert.ok(
+      antes.cartas.every((c) => c.x - c.lado / 2 >= 0 && c.x + c.lado / 2 <= 1600),
+      'el tablero cabe a lo ancho',
+    );
+    assert.ok(
+      antes.cartas.every((c) => c.y - c.lado / 2 >= 0 && c.y + c.lado / 2 <= 900),
+      'el tablero cabe a lo alto',
+    );
+
+    const pareja = antes.cartas.find((c) => c.pareja === antes.cartas[0].pareja && c.id !== antes.cartas[0].id);
+    const primera = antes.cartas[0];
+    await p.mouse.click(primera.x, primera.y);
+    await p.waitForFunction(({ id }) => window.juego.escena.cartas[id].estado === 'visible', { id: primera.id });
+    await p.mouse.click(pareja.x, pareja.y);
+    await p.waitForFunction(() => window.juego.escena.encontradas === 1, null, { timeout: 3000 });
+
+    const despues = await p.evaluate(() => window.juego.escena);
+    assert.equal(despues.cartas[primera.id].estado, 'encontrada');
+    assert.equal(despues.cartas[pareja.id].estado, 'encontrada');
+    assert.equal(despues.fallos, 0);
+    assert.equal(despues.terminada, false);
+  } finally {
+    await b.close();
+  }
+});
+
+test('parejas: fallar un par no quita progreso y la ayuda alarga el tiempo visible', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1400, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="parejas"][data-parejas="4"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+
+    const cartas = await p.evaluate(() => window.juego.escena.cartas);
+    const a = cartas[0];
+    const b1 = cartas.find((c) => c.pareja !== a.pareja);
+    const c = cartas.find((x) => x.pareja !== a.pareja && x.pareja !== b1.pareja);
+
+    await p.mouse.click(a.x, a.y);
+    await p.mouse.click(b1.x, b1.y);
+    await p.waitForFunction(() => window.juego.escena.fallos === 1, null, { timeout: 3000 });
+    let e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.bloqueada, true, 'el par fallido se queda a la vista un momento');
+    assert.equal(e.encontradas, 0, 'fallar no da ni quita progreso');
+    assert.equal(e.tiempoVisibleMs, 1500);
+
+    await p.waitForFunction(() => window.juego.escena.bloqueada === false, null, { timeout: 5000 });
+    e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.cartas[a.id].estado, 'oculta', 'las cartas se vuelven a esconder');
+
+    // Segundo fallo seguido: sube la ayuda y el próximo par se ve más tiempo.
+    await p.waitForTimeout(200);
+    const d = cartas.find((x) => x.pareja !== c.pareja && x.pareja !== a.pareja);
+    await p.mouse.click(c.x, c.y);
+    await p.mouse.click(d.x, d.y);
+    await p.waitForFunction(() => window.juego.escena.fallos === 2, null, { timeout: 3000 });
+    e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.ayuda.nivel, 1);
+    assert.ok(e.tiempoVisibleMs > 1500, `la ayuda alarga el tiempo visible (${e.tiempoVisibleMs} ms)`);
+    assert.equal(e.encontradas, 0);
+  } finally {
+    await b.close();
+  }
+});
+
+test('parejas: al encontrar todas las parejas termina y vuelve al menú', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1400, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="parejas"][data-parejas="4"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+
+    for (let pareja = 0; pareja < 4; pareja++) {
+      const dos = await p.evaluate((n) => window.juego.escena.cartas.filter((c) => c.pareja === n), pareja);
+      await p.mouse.click(dos[0].x, dos[0].y);
+      await p.mouse.click(dos[1].x, dos[1].y);
+      await p.waitForFunction(({ n }) => window.juego.escena.encontradas === n, { n: pareja + 1 }, { timeout: 3000 });
+    }
+    assert.equal(await p.evaluate(() => window.juego.escena.terminada), true);
+    await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  } finally {
+    await b.close();
+  }
+});
+
+test('parejas está disponible en los cuatro mundos desde el menú', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+    await p.goto(URL_BASE());
+    for (const id of ['navidad', 'animalitos', 'futbol', 'amarillo']) {
+      await p.click(`[data-mundo="${id}"]`);
+      await p.click('[data-juego="parejas"][data-parejas="8"]');
+      await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+      const e = await p.evaluate(() => window.juego.escena);
+      assert.equal(e.mundo, id, `${id}: usa el mundo elegido`);
+      assert.equal(e.parejas, 8);
+      assert.equal(e.cartas.length, 16);
+      await p.click('[data-accion="otro-juego"]');
+      await p.waitForSelector('[data-mundo]');
+    }
+  } finally {
+    await b.close();
+  }
 });
