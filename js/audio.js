@@ -1,8 +1,9 @@
-// Sonido del juego: refuerzos, avisos y música de fondo suave.
-// Todo pasa por un único nodo maestro, para que el botón de silencio corte de golpe.
+// Sonido del juego: efectos (refuerzos y avisos) y música de fondo, en dos buses
+// separados. El altavoz silencia los efectos; la nota controla la música.
 // Sin audio (o con la preferencia apagada) las funciones no hacen nada: el juego sigue.
 
-export const CLAVE_SONIDO = 'juegos.sonido.v1';
+export const CLAVE_EFECTOS = 'juegos.efectos.v1';
+export const CLAVE_EFECTOS_ANTERIOR = 'juegos.sonido.v1';
 export const CLAVE_MUSICA = 'juegos.musica.v1';
 
 function almacen() {
@@ -13,17 +14,20 @@ function almacen() {
   }
 }
 
-export function leerSilenciado(a = almacen()) {
+export function leerEfectosSilenciados(a = almacen()) {
   try {
-    return a?.getItem?.(CLAVE_SONIDO) === 'apagado';
+    const actual = a?.getItem?.(CLAVE_EFECTOS);
+    if (actual === 'apagado' || actual === 'encendido') return actual === 'apagado';
+    // Migración: antes el altavoz y la música compartían este ajuste.
+    return a?.getItem?.(CLAVE_EFECTOS_ANTERIOR) === 'apagado';
   } catch {
     return false;
   }
 }
 
-export function guardarSilenciado(valor, a = almacen()) {
+export function guardarEfectosSilenciados(valor, a = almacen()) {
   try {
-    a?.setItem?.(CLAVE_SONIDO, valor ? 'apagado' : 'encendido');
+    a?.setItem?.(CLAVE_EFECTOS, valor ? 'apagado' : 'encendido');
   } catch {}
   return !!valor;
 }
@@ -44,8 +48,9 @@ export function guardarMusica(valor, a = almacen()) {
 }
 
 let ctx = null;
-let maestro = null;
-let silenciado = leerSilenciado();
+let maestroEfectos = null;
+let maestroMusica = null;
+let efectosSilenciados = leerEfectosSilenciados();
 let musicaPermitida = leerMusica();
 let musicaTimer = null;
 let musicaPaso = 0;
@@ -55,21 +60,24 @@ function contexto() {
     const AC = globalThis.AudioContext ?? globalThis.webkitAudioContext;
     if (!AC) return null;
     ctx = new AC();
-    maestro = ctx.createGain();
-    maestro.gain.value = silenciado ? 0 : 0.9;
-    maestro.connect(ctx.destination);
+    maestroEfectos = ctx.createGain();
+    maestroEfectos.gain.value = efectosSilenciados ? 0 : 0.9;
+    maestroEfectos.connect(ctx.destination);
+    maestroMusica = ctx.createGain();
+    maestroMusica.gain.value = 0.9;
+    maestroMusica.connect(ctx.destination);
   }
   if (ctx.state === 'suspended') ctx.resume();
   return ctx;
 }
 
-function aplicarVolumen() {
-  if (!maestro || !ctx) return;
-  maestro.gain.setTargetAtTime(silenciado ? 0 : 0.9, ctx.currentTime, 0.01);
+function aplicarVolumenEfectos() {
+  if (!maestroEfectos || !ctx) return;
+  maestroEfectos.gain.setTargetAtTime(efectosSilenciados ? 0 : 0.9, ctx.currentTime, 0.01);
 }
 
 export function estadoSonido() {
-  return { silenciado, musica: musicaPermitida, reproduciendo: !!musicaTimer };
+  return { efectos: efectosSilenciados, musica: musicaPermitida, reproduciendo: !!musicaTimer };
 }
 
 export function asegurarAudio() {
@@ -77,7 +85,7 @@ export function asegurarAudio() {
 }
 
 // Un tono corto. Ataque suave para que ningún sonido sea un golpe seco.
-function tono(ac, { frecuencia, duracion = 0.16, tipo = 'triangle', volumen = 0.12, inicio, deslizA, ataque = 0.012 }) {
+function tono(ac, { frecuencia, duracion = 0.16, tipo = 'triangle', volumen = 0.12, inicio, deslizA, ataque = 0.012, destino = maestroEfectos }) {
   const t = inicio ?? ac.currentTime;
   const osc = ac.createOscillator();
   const gan = ac.createGain();
@@ -90,7 +98,7 @@ function tono(ac, { frecuencia, duracion = 0.16, tipo = 'triangle', volumen = 0.
   gan.gain.setValueAtTime(volumen * 0.8, t + duracion * 0.65);
   gan.gain.exponentialRampToValueAtTime(0.0008, t + duracion);
 
-  osc.connect(gan).connect(maestro);
+  osc.connect(gan).connect(destino);
   osc.start(t);
   osc.stop(t + duracion + 0.05);
 }
@@ -99,7 +107,7 @@ function tono(ac, { frecuencia, duracion = 0.16, tipo = 'triangle', volumen = 0.
 // Se limita para que pulsar rápido no apile osciladores ni sature la salida.
 let ultimoAcierto = -Infinity;
 export function acierto(frecuencia = 660) {
-  if (silenciado) return;
+  if (efectosSilenciados) return;
   const ac = contexto();
   if (!ac) return;
   if (ac.currentTime - ultimoAcierto < 0.09) return;
@@ -113,7 +121,7 @@ export function acierto(frecuencia = 660) {
 // Se limita para que pulsar rápido de desahogo no se convierta en una alarma.
 let ultimoError = -Infinity;
 export function error(frecuencia = 240) {
-  if (silenciado) return;
+  if (efectosSilenciados) return;
   const ac = contexto();
   if (!ac) return;
   if (ac.currentTime - ultimoError < 0.35) return;
@@ -124,7 +132,7 @@ export function error(frecuencia = 240) {
 
 // Entrada: un brillo breve cuando aparece una pieza nueva.
 export function entrada() {
-  if (silenciado) return;
+  if (efectosSilenciados) return;
   const ac = contexto();
   if (!ac) return;
   const t = ac.currentTime + 0.01;
@@ -147,7 +155,7 @@ function trompeta(ac, inicio, frecuencia, duracion, volumen) {
   gan.gain.setValueAtTime(volumen * 0.85, inicio + duracion * 0.7);
   gan.gain.exponentialRampToValueAtTime(0.0008, inicio + duracion);
 
-  osc.connect(filtro).connect(gan).connect(maestro);
+  osc.connect(filtro).connect(gan).connect(maestroEfectos);
   osc.start(inicio);
   osc.stop(inicio + duracion + 0.05);
 }
@@ -160,13 +168,13 @@ function bombo(ac, inicio) {
   osc.frequency.exponentialRampToValueAtTime(45, inicio + 0.18);
   gan.gain.setValueAtTime(0.5, inicio);
   gan.gain.exponentialRampToValueAtTime(0.001, inicio + 0.3);
-  osc.connect(gan).connect(maestro);
+  osc.connect(gan).connect(maestroEfectos);
   osc.start(inicio);
   osc.stop(inicio + 0.32);
 }
 
 export function fanfarria() {
-  if (silenciado) return;
+  if (efectosSilenciados) return;
   const ac = contexto();
   if (!ac) return;
   const t = ac.currentTime + 0.02;
@@ -191,7 +199,7 @@ const NOTAS_MUSICA = [261.63, 329.63, 392, 523.25, 392, 329.63, 293.66, 349.23];
 const BAJOS_MUSICA = [130.81, 164.81, 196, 146.83];
 
 function pasoDeMusica() {
-  if (silenciado || !musicaPermitida) return;
+  if (!musicaPermitida) return;
   const ac = contexto();
   if (!ac) return;
   const t = ac.currentTime + 0.05;
@@ -202,6 +210,7 @@ function pasoDeMusica() {
     volumen: 0.035,
     inicio: t,
     ataque: 0.04,
+    destino: maestroMusica,
   });
   if (musicaPaso % 4 === 0) {
     tono(ac, {
@@ -211,13 +220,14 @@ function pasoDeMusica() {
       volumen: 0.028,
       inicio: t,
       ataque: 0.06,
+      destino: maestroMusica,
     });
   }
   musicaPaso += 1;
 }
 
 export function iniciarMusica() {
-  if (silenciado || !musicaPermitida) return false;
+  if (!musicaPermitida) return false;
   if (!contexto()) return false;
   if (!musicaTimer) {
     pasoDeMusica();
@@ -243,7 +253,7 @@ export function alternarMusica() {
   }
   musicaPermitida = !musicaPermitida;
   guardarMusica(musicaPermitida);
-  if (musicaPermitida && !silenciado) {
+  if (musicaPermitida) {
     asegurarAudio();
     iniciarMusica();
   } else {
@@ -252,12 +262,11 @@ export function alternarMusica() {
   return musicaPermitida;
 }
 
-export function alternarSonido() {
-  silenciado = !silenciado;
-  guardarSilenciado(silenciado);
+// El altavoz solo afecta a los efectos; la música sigue sonando si está encendida.
+export function alternarEfectos() {
+  efectosSilenciados = !efectosSilenciados;
+  guardarEfectosSilenciados(efectosSilenciados);
   asegurarAudio();
-  aplicarVolumen();
-  if (silenciado) pararMusica();
-  else if (musicaPermitida) iniciarMusica();
-  return silenciado;
+  aplicarVolumenEfectos();
+  return efectosSilenciados;
 }

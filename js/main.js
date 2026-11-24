@@ -4,7 +4,7 @@ import { pictograma } from './pictogramas.js';
 import { accionDeDestino, guardarMundo, leerMundo, leerAvatar, guardarAvatar, siguienteAvatar } from './menu.js';
 import { crearEstela } from './estela.js';
 import { crearConfeti, avanzarConfeti, quedanVisibles } from './confeti.js';
-import { fanfarria, asegurarAudio, iniciarMusica, alternarSonido, alternarMusica, estadoSonido } from './audio.js';
+import { fanfarria, asegurarAudio, iniciarMusica, alternarEfectos, alternarMusica, estadoSonido } from './audio.js';
 import { PEGATINAS, leerColeccion, ganarPegatina, coleccionVisible } from './pegatinas.js';
 import { prefiereMenosMovimiento, cantidadConfeti } from './movimiento-reducido.js';
 
@@ -64,11 +64,11 @@ function salirDePartida() {
   document.body.dataset.vista = 'menu';
 }
 
-function botonSonido() {
-  const { silenciado } = estadoSonido();
-  return `<button class="herramienta" data-accion="silencio" data-estado="${silenciado ? 'apagado' : 'encendido'}"
-            aria-pressed="${silenciado}" aria-label="${silenciado ? 'Activar sonido' : 'Silenciar'}">
-            <img alt="" src="${svg(silenciado ? 'silencio' : 'sonido')}">
+function botonEfectos() {
+  const { efectos } = estadoSonido();
+  return `<button class="herramienta" data-accion="efectos" data-estado="${efectos ? 'apagado' : 'encendido'}"
+            aria-pressed="${efectos}" aria-label="${efectos ? 'Activar los efectos de sonido' : 'Silenciar los efectos de sonido'}">
+            <img alt="" src="${svg(efectos ? 'silencio' : 'sonido')}">
           </button>`;
 }
 
@@ -105,7 +105,7 @@ function render() {
                   data-ganadas="${ganadas}" aria-label="Mis pegatinas">
             <img alt="" src="${svg('coleccion')}">
           </button>
-          ${botonSonido()}
+          ${botonEfectos()}
           ${botonMusica()}
         </div>
       </header>
@@ -160,7 +160,7 @@ function renderColeccion() {
           <circle cx="20" cy="50" r="9" fill="currentColor"/>
         </svg>
       </button>
-      <div class="herramientas herramientas--coleccion">${botonSonido()}${botonMusica()}</div>
+      <div class="herramientas herramientas--coleccion">${botonEfectos()}${botonMusica()}</div>
       <div class="pegatinas" role="list" aria-label="Mis pegatinas">
         ${visibles
           .map(
@@ -179,13 +179,13 @@ function renderColeccion() {
 }
 
 function actualizarControlesSonido() {
-  const { silenciado, musica } = estadoSonido();
-  document.querySelectorAll('[data-accion="silencio"]').forEach((b) => {
-    b.dataset.estado = silenciado ? 'apagado' : 'encendido';
-    b.setAttribute('aria-pressed', String(silenciado));
-    b.setAttribute('aria-label', silenciado ? 'Activar sonido' : 'Silenciar');
+  const { efectos, musica } = estadoSonido();
+  document.querySelectorAll('[data-accion="efectos"]').forEach((b) => {
+    b.dataset.estado = efectos ? 'apagado' : 'encendido';
+    b.setAttribute('aria-pressed', String(efectos));
+    b.setAttribute('aria-label', efectos ? 'Activar los efectos de sonido' : 'Silenciar los efectos de sonido');
     const img = b.querySelector('img');
-    if (img) img.src = svg(silenciado ? 'silencio' : 'sonido');
+    if (img) img.src = svg(efectos ? 'silencio' : 'sonido');
   });
   document.querySelectorAll('[data-accion="musica"]').forEach((b) => {
     b.dataset.estado = musica ? 'encendida' : 'apagada';
@@ -280,7 +280,7 @@ async function jugar(mecanicaId) {
           <circle cx="80" cy="50" r="9" fill="currentColor"/>
         </svg>
       </button>
-      <div class="herramientas herramientas--juego">${botonSonido()}${botonMusica()}</div>
+      <div class="herramientas herramientas--juego">${botonEfectos()}${botonMusica()}</div>
     </section>`;
 
   animarSalida();
@@ -541,8 +541,8 @@ function seguirPuntero() {
 }
 
 document.addEventListener('click', (ev) => {
-  if (accionDeDestino(ev, '[data-accion="silencio"]')) {
-    alternarSonido();
+  if (accionDeDestino(ev, '[data-accion="efectos"]')) {
+    alternarEfectos();
     actualizarControlesSonido();
     publicar();
     return;

@@ -271,23 +271,48 @@ test('el avatar se elige con un clic y se recuerda al recargar', async () => {
   await b.close();
 });
 
-test('el botón de silencio corta el sonido y la preferencia persiste', async () => {
+test('el botón de efectos corta solo los efectos y la preferencia persiste', async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
   await p.goto(URL_BASE());
-  assert.equal(await p.evaluate(() => window.juego.sonido.silenciado), false);
-  await p.click('[data-accion="silencio"]');
-  assert.equal(await p.evaluate(() => window.juego.sonido.silenciado), true);
-  assert.equal(await p.evaluate(() => localStorage.getItem('juegos.sonido.v1')), 'apagado');
-  assert.equal(await p.$eval('[data-accion="silencio"]', (n) => n.dataset.estado), 'apagado');
+  assert.equal(await p.evaluate(() => window.juego.sonido.efectos), false);
+  await p.click('[data-accion="efectos"]');
+  assert.equal(await p.evaluate(() => window.juego.sonido.efectos), true);
+  assert.equal(await p.evaluate(() => localStorage.getItem('juegos.efectos.v1')), 'apagado');
+  assert.equal(await p.$eval('[data-accion="efectos"]', (n) => n.dataset.estado), 'apagado');
 
   await p.reload();
   await p.waitForFunction(() => !!window.juego);
-  assert.equal(await p.evaluate(() => window.juego.sonido.silenciado), true, 'se recuerda al recargar');
+  assert.equal(await p.evaluate(() => window.juego.sonido.efectos), true, 'se recuerda al recargar');
 
-  await p.click('[data-accion="silencio"]');
-  assert.equal(await p.evaluate(() => window.juego.sonido.silenciado), false);
-  assert.equal(await p.evaluate(() => localStorage.getItem('juegos.sonido.v1')), 'encendido');
+  await p.click('[data-accion="efectos"]');
+  assert.equal(await p.evaluate(() => window.juego.sonido.efectos), false);
+  assert.equal(await p.evaluate(() => localStorage.getItem('juegos.efectos.v1')), 'encendido');
+  await b.close();
+});
+
+test('el altavoz y la nota de música son controles distintos', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+  await p.goto(URL_BASE());
+
+  await p.click('[data-accion="musica"]');
+  let s = await p.evaluate(() => window.juego.sonido);
+  assert.equal(s.musica, true);
+  assert.equal(s.reproduciendo, true);
+  assert.equal(s.efectos, false, 'encender la música no silencia los efectos');
+
+  await p.click('[data-accion="efectos"]');
+  s = await p.evaluate(() => window.juego.sonido);
+  assert.equal(s.efectos, true);
+  assert.equal(s.musica, true, 'silenciar los efectos no apaga la música');
+  assert.equal(s.reproduciendo, true);
+
+  await p.click('[data-accion="musica"]');
+  s = await p.evaluate(() => window.juego.sonido);
+  assert.equal(s.musica, false);
+  assert.equal(s.reproduciendo, false);
+  assert.equal(s.efectos, true, 'apagar la música no reactiva los efectos');
   await b.close();
 });
 

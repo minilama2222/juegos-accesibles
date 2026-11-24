@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  CLAVE_SONIDO,
+  CLAVE_EFECTOS,
+  CLAVE_EFECTOS_ANTERIOR,
   CLAVE_MUSICA,
-  leerSilenciado,
-  guardarSilenciado,
+  leerEfectosSilenciados,
+  guardarEfectosSilenciados,
   leerMusica,
   guardarMusica,
   estadoSonido,
@@ -22,29 +23,31 @@ function almacenFalso(inicial = {}) {
   };
 }
 
-test('sin preferencia guardada el sonido está encendido y la música apagada', () => {
+test('sin preferencia guardada los efectos están encendidos y la música apagada', () => {
   const almacen = almacenFalso();
-  assert.equal(leerSilenciado(almacen), false);
+  assert.equal(leerEfectosSilenciados(almacen), false);
   assert.equal(leerMusica(almacen), false);
-  assert.deepEqual(estadoSonido(), { silenciado: false, musica: false, reproduciendo: false });
+  assert.deepEqual(estadoSonido(), { efectos: false, musica: false, reproduciendo: false });
 });
 
-test('el silencio se guarda y se lee', () => {
+test('los efectos se silencian y se leen por separado de la música', () => {
   const almacen = almacenFalso();
-  assert.equal(guardarSilenciado(true, almacen), true);
-  assert.equal(almacen.getItem(CLAVE_SONIDO), 'apagado');
-  assert.equal(leerSilenciado(almacen), true);
+  assert.equal(guardarEfectosSilenciados(true, almacen), true);
+  assert.equal(almacen.getItem(CLAVE_EFECTOS), 'apagado');
+  assert.equal(leerEfectosSilenciados(almacen), true);
+  assert.equal(leerMusica(almacen), false, 'silenciar efectos no toca la música');
 
-  guardarSilenciado(false, almacen);
-  assert.equal(almacen.getItem(CLAVE_SONIDO), 'encendido');
-  assert.equal(leerSilenciado(almacen), false);
+  guardarEfectosSilenciados(false, almacen);
+  assert.equal(almacen.getItem(CLAVE_EFECTOS), 'encendido');
+  assert.equal(leerEfectosSilenciados(almacen), false);
 });
 
-test('la música es opt-in y se guarda', () => {
+test('la música es opt-in y se guarda aparte de los efectos', () => {
   const almacen = almacenFalso();
   assert.equal(guardarMusica(true, almacen), true);
   assert.equal(almacen.getItem(CLAVE_MUSICA), 'si');
   assert.equal(leerMusica(almacen), true);
+  assert.equal(leerEfectosSilenciados(almacen), false, 'encender música no toca los efectos');
 
   guardarMusica(false, almacen);
   assert.equal(almacen.getItem(CLAVE_MUSICA), 'no');
@@ -52,8 +55,17 @@ test('la música es opt-in y se guarda', () => {
 });
 
 test('sin almacén no se rompe y mantiene los valores por defecto', () => {
-  assert.equal(leerSilenciado(null), false);
+  assert.equal(leerEfectosSilenciados(null), false);
   assert.equal(leerMusica(null), false);
-  assert.doesNotThrow(() => guardarSilenciado(true, null));
+  assert.doesNotThrow(() => guardarEfectosSilenciados(true, null));
   assert.doesNotThrow(() => guardarMusica(true, null));
+});
+
+test('la preferencia antigua de sonido se hereda como preferencia de efectos', () => {
+  const almacen = almacenFalso({ [CLAVE_EFECTOS_ANTERIOR]: 'apagado' });
+  assert.equal(leerEfectosSilenciados(almacen), true);
+
+  // Lo nuevo manda sobre lo antiguo.
+  almacen.setItem(CLAVE_EFECTOS, 'encendido');
+  assert.equal(leerEfectosSilenciados(almacen), false);
 });
