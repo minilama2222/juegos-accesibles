@@ -65,6 +65,22 @@ img {
   border: 0.6vmin solid var(--acento);
   padding: 1.4vmin;
   flex: none;
+  display: grid;
+  place-items: center;
+  transition:
+    transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 160ms ease;
+}
+
+.avatar:hover,
+.avatar:focus-visible {
+  transform: scale(1.08) rotate(-2deg);
+  border-color: #ffffff;
+}
+
+.avatar:active {
+  transform: scale(1.02, 0.96);
+  transition-duration: 90ms;
 }
 
 .mundos {
@@ -209,6 +225,7 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .avatar,
   .mundo,
   .juego,
   .salir {

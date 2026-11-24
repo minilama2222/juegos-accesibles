@@ -7,6 +7,9 @@
 **Hecho en:** `f188236` … `e91b461` (refinamientos incluidos: estela del puntero, tamaños
 aleatorios, confeti y fanfarria, pictogramas ARASAAC en la bola y en el menú).
 
+El avatar **se elige con un clic** (gato, perro, pato, bicho) y se recuerda entre sesiones;
+antes era un balón decorativo que no hacía nada. Cubre la historia 22 de la spec.
+
 **Status:** done
 
 - [x] La página arranca servida estáticamente, sin build y sin `npm install` para jugar.

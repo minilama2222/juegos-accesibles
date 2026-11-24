@@ -1,25 +1,28 @@
 import { arrancarEscena } from './escena.js';
 import { MUNDOS, MECANICAS, ORDEN } from './contenido.js';
 import { pictograma } from './pictogramas.js';
-import { accionDeDestino, guardarMundo, leerMundo } from './menu.js';
+import { accionDeDestino, guardarMundo, leerMundo, leerAvatar, guardarAvatar, siguienteAvatar } from './menu.js';
 import { crearEstela } from './estela.js';
 import { crearConfeti, avanzarConfeti, quedanVisibles } from './confeti.js';
 import { fanfarria, asegurarAudio } from './audio.js';
 import { prefiereMenosMovimiento, cantidadConfeti } from './movimiento-reducido.js';
 
-const CLAVE_AVATAR = 'juegos.avatar';
-
+// El avatar es del niño (historia 22): se elige con un clic y se recuerda.
+// Nada de bolas raras: solo caras que se entienden.
 const AVATARES = [
-  { id: 'balon', nombre: 'Balón' },
   { id: 'gato', nombre: 'Gato' },
-  { id: 'estrella', nombre: 'Estrella' },
+  { id: 'perro', nombre: 'Perro' },
+  { id: 'pato', nombre: 'Pato' },
   { id: 'bicho', nombre: 'Bicho' },
 ];
+
+const avatarGuardado = leerAvatar();
+const avatarValido = AVATARES.some((a) => a.id === avatarGuardado) ? avatarGuardado : AVATARES[0].id;
 
 const estado = {
   vista: 'menu',
   mundoId: leerMundo() ?? MUNDOS[0].id,
-  avatarId: localStorage.getItem(CLAVE_AVATAR) ?? AVATARES[0].id,
+  avatarId: avatarValido,
   mecanicaId: null,
 };
 
@@ -60,9 +63,10 @@ function render() {
   document.getElementById('app').innerHTML = `
     <section class="menu">
       <header class="menu__cabecera">
-        <div class="avatar" data-avatar="${estado.avatarId}">
+        <button class="avatar" data-accion="avatar" data-avatar="${estado.avatarId}"
+                aria-label="Cambiar mi avatar">
           <img class="avatar__img" alt="" src="${svg(estado.avatarId)}">
-        </div>
+        </button>
         <nav class="mundos" aria-label="Elige un mundo">
           ${MUNDOS.map(
             (m) => `
@@ -118,6 +122,28 @@ function animarMenu() {
     delay: 1.2,
     onComplete: () => gsap.set('.juego', { scale: 1 }),
   });
+}
+
+function cambiarAvatar() {
+  const ids = AVATARES.map((a) => a.id);
+  estado.avatarId = siguienteAvatar(estado.avatarId, ids);
+  guardarAvatar(estado.avatarId);
+
+  const boton = document.querySelector('[data-accion="avatar"]');
+  const img = boton?.querySelector('img');
+  if (boton) boton.dataset.avatar = estado.avatarId;
+  if (img) {
+    img.src = svg(estado.avatarId);
+    const gsap = window.gsap;
+    if (gsap && !prefiereMenosMovimiento()) {
+      gsap.fromTo(
+        img,
+        { scale: 0.5, rotate: -14 },
+        { scale: 1, rotate: 0, duration: 0.4, ease: 'back.out(3)' },
+      );
+    }
+  }
+  publicar();
 }
 
 function elegirMundo(id) {
@@ -396,6 +422,7 @@ document.addEventListener('click', (ev) => {
     escena?.clic?.(ev.clientX, ev.clientY);
     return;
   }
+  if (accionDeDestino(ev, '[data-accion="avatar"]')) return cambiarAvatar();
   const m = accionDeDestino(ev, '[data-mundo]');
   if (m) return elegirMundo(m.dataset.mundo);
   const j = accionDeDestino(ev, '[data-juego]');

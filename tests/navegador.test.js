@@ -244,3 +244,25 @@ test('causa-efecto: al llegar a la meta termina y vuelve al menú', async () => 
   await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 8000 });
   await b.close();
 });
+
+
+test('el avatar se elige con un clic y se recuerda al recargar', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+  await p.goto(URL_BASE());
+  const antes = await p.evaluate(() => window.juego.avatar);
+  await p.click('[data-accion="avatar"]');
+  const despues = await p.evaluate(() => window.juego.avatar);
+  assert.notEqual(despues, antes, 'el avatar cambia');
+  assert.equal(await p.evaluate(() => localStorage.getItem('juegos.avatar')), despues);
+
+  await p.reload();
+  await p.waitForFunction(() => !!window.juego);
+  assert.equal(await p.evaluate(() => window.juego.avatar), despues, 'se recuerda al recargar');
+  assert.equal(
+    await p.$eval('[data-accion="avatar"]', (n) => n.dataset.avatar),
+    despues,
+    'el dibujo del menú es el avatar guardado',
+  );
+  await b.close();
+});
