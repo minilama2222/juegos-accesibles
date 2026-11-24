@@ -106,7 +106,7 @@ export async function arrancarClickEstatico({ mundo, mecanica, alCambiar, alTerm
       apareceEn = juego.time();
       colocarDibujo();
     }
-    entrada();
+    entrada(mundo.sonidos?.entrada);
   }
 
   // La ayuda solo hace el dibujo más grande, sin moverlo del sitio.
@@ -128,14 +128,14 @@ export async function arrancarClickEstatico({ mundo, mecanica, alCambiar, alTerm
     const nivelAntes = ayuda.leer().nivel;
     ayuda.anotarFallo();
     if (ayuda.leer().nivel > nivelAntes) aplicarAyudaAlObjetivo();
-    error(mundo.sonidoError ?? 240);
+    error(mundo.sonidos?.error ?? 240);
   }
 
   function acertar() {
     const m = marcador.anotarAcierto();
     estado.aciertos = m.aciertos;
     ayuda.anotarAcierto();
-    acierto(mundo.sonidoAcierto ?? 660);
+    acierto(mundo.sonidos?.acierto ?? 660);
 
     const anterior = estado.objetivo;
     if (!menosMovimiento && anterior) {
