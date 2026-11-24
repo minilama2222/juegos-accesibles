@@ -10,13 +10,13 @@ Trabajar **de bloqueante en bloqueante**. Cualquier ticket cuyos bloqueantes est
 | 02 | Causa-efecto | hecho | 01 |
 | 03 | Refuerzo, sonido y pegatinas | hecho | 02 |
 | 04 | Ayuda adaptativa y métricas | hecho | 03 |
-| 05 | Click estático | siguiente | 04 |
-| 06 | Aparición con tiempo | pendiente | 05 |
-| 07 | Parejas de 4, 6 y 8 | pendiente | 06 |
-| 08 | Movimiento lento | pendiente | 06 |
-| 09 | Tiro a portería | pendiente | 05 |
-| 10 | Cuatro mundos completos y accesibilidad | pendiente | 03 |
-| 11 | Arrastre — juego avanzado | pendiente | 08 |
+| 05 | Click estático | hecho | 04 |
+| 06 | Aparición con tiempo | hecho | 05 |
+| 07 | Parejas de 4, 6 y 8 | hecho | 06 |
+| 08 | Movimiento lento | hecho | 06 |
+| 09 | Tiro a portería | hecho | 05 |
+| 10 | Cuatro mundos completos y accesibilidad | hecho | 03 |
+| 11 | Arrastre — juego avanzado | hecho | 08 |
 
 ## Despliegue continuo
 
