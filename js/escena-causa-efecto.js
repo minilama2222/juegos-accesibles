@@ -2,6 +2,7 @@ import { cargarKaplay } from './kaplay-carga.js';
 import { crearMarcador } from './sesion.js';
 import { animarBrote, progreso, BROTE_MS } from './animaciones.js';
 import { prefiereMenosMovimiento } from './movimiento-reducido.js';
+import { acierto, entrada } from './audio.js';
 
 // Causa-efecto: cualquier clic hace aparecer el objeto del mundo en ese punto.
 // No hay forma de fallar; el juego termina al llegar a la meta de toques.
@@ -73,6 +74,7 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
   juego.onLoad(() => {
     juego.scene('causaEfecto', () => {
       estado.lista = true;
+      entrada();
       alCambiar?.(oficial());
 
       juego.onUpdate(() => {
@@ -112,6 +114,7 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
       estado.aciertos = m.aciertos;
       ultimoToque = { x: Math.round(x), y: Math.round(y) };
       brotar(x, y);
+      acierto(mundo.sonidoAcierto ?? 660);
       // Un anillo por toque en el sitio exacto, además del objeto. Con menos
       // movimiento no hay partículas: el objeto que aparece ya es la respuesta.
       if (!menosMovimiento) alEstallar?.({ x, y, radio: V_MIN() * 5, color: mundo.acento });

@@ -4,7 +4,8 @@ import { pictograma } from './pictogramas.js';
 import { accionDeDestino, guardarMundo, leerMundo, leerAvatar, guardarAvatar, siguienteAvatar } from './menu.js';
 import { crearEstela } from './estela.js';
 import { crearConfeti, avanzarConfeti, quedanVisibles } from './confeti.js';
-import { fanfarria, asegurarAudio } from './audio.js';
+import { fanfarria, asegurarAudio, iniciarMusica, alternarSonido, alternarMusica, estadoSonido } from './audio.js';
+import { PEGATINAS, leerColeccion, ganarPegatina, coleccionVisible } from './pegatinas.js';
 import { prefiereMenosMovimiento, cantidadConfeti } from './movimiento-reducido.js';
 
 // El avatar es del niño (historia 22): se elige con un clic y se recuerda.
@@ -24,6 +25,8 @@ const estado = {
   mundoId: leerMundo() ?? MUNDOS[0].id,
   avatarId: avatarValido,
   mecanicaId: null,
+  coleccion: leerColeccion(),
+  ultimaPegatina: null,
 };
 
 let escena = null;
@@ -41,6 +44,9 @@ function publicar(extra = {}) {
     avatar: estado.avatarId,
     mecanica: estado.mecanicaId,
     escena: escena?.estado() ?? null,
+    sonido: estadoSonido(),
+    pegatinas: { ...estado.coleccion },
+    ultimaPegatina: estado.ultimaPegatina,
     ...extra,
   };
 }
@@ -58,8 +64,25 @@ function salirDePartida() {
   document.body.dataset.vista = 'menu';
 }
 
+function botonSonido() {
+  const { silenciado } = estadoSonido();
+  return `<button class="herramienta" data-accion="silencio" data-estado="${silenciado ? 'apagado' : 'encendido'}"
+            aria-pressed="${silenciado}" aria-label="${silenciado ? 'Activar sonido' : 'Silenciar'}">
+            <img alt="" src="${svg(silenciado ? 'silencio' : 'sonido')}">
+          </button>`;
+}
+
+function botonMusica() {
+  const { musica } = estadoSonido();
+  return `<button class="herramienta" data-accion="musica" data-estado="${musica ? 'encendida' : 'apagada'}"
+            aria-pressed="${musica}" aria-label="${musica ? 'Quitar la música' : 'Poner música'}">
+            <img alt="" src="${svg(musica ? 'musica' : 'musicaApagada')}">
+          </button>`;
+}
+
 function render() {
   salirDePartida();
+  const ganadas = Object.values(estado.coleccion).filter((n) => n > 0).length;
   document.getElementById('app').innerHTML = `
     <section class="menu">
       <header class="menu__cabecera">
@@ -77,6 +100,14 @@ function render() {
             </button>`,
           ).join('')}
         </nav>
+        <div class="herramientas">
+          <button class="herramienta herramienta--premio" data-accion="coleccion"
+                  data-ganadas="${ganadas}" aria-label="Mis pegatinas">
+            <img alt="" src="${svg('coleccion')}">
+          </button>
+          ${botonSonido()}
+          ${botonMusica()}
+        </div>
       </header>
       <main class="juegos">
         ${ORDEN.filter((id) => MECANICAS[id]?.implementada).map(
@@ -97,6 +128,74 @@ function iconoMecanica(id) {
   if (id === 'clickEstatico') return 'balon';
   return 'regalo';
 }
+function animarColeccion() {
+  const gsap = window.gsap;
+  if (!gsap) return;
+  if (prefiereMenosMovimiento()) {
+    gsap.from('.pegatina, .volver', { opacity: 0, duration: 0.2, ease: 'power1.out' });
+    return;
+  }
+  gsap.from('.volver', { scale: 0.6, opacity: 0, duration: 0.35, ease: 'back.out(2.5)' });
+  gsap.from('.pegatina', {
+    scale: 0.4,
+    opacity: 0,
+    rotate: -12,
+    duration: 0.45,
+    stagger: 0.05,
+    ease: 'back.out(2.2)',
+  });
+}
+
+function renderColeccion() {
+  salirDePartida();
+  estado.vista = 'coleccion';
+  document.body.dataset.vista = 'coleccion';
+  const visibles = coleccionVisible(estado.coleccion);
+  document.getElementById('app').innerHTML = `
+    <section class="coleccion">
+      <button class="volver" data-accion="volver" aria-label="Volver al menú">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <path d="M78 50H34M48 36L34 50l14 14" fill="none" stroke="currentColor" stroke-width="9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="20" cy="50" r="9" fill="currentColor"/>
+        </svg>
+      </button>
+      <div class="herramientas herramientas--coleccion">${botonSonido()}${botonMusica()}</div>
+      <div class="pegatinas" role="list" aria-label="Mis pegatinas">
+        ${visibles
+          .map(
+            (p) => `
+          <figure class="pegatina ${p.ganada ? 'pegatina--ganada' : ''}"
+                  role="listitem" data-pegatina="${p.id}" data-ganada="${p.ganada}"
+                  aria-label="${p.nombre}${p.ganada ? '' : ': por conseguir'}">
+            <span class="pegatina__icono"><img alt="" src="${svg(p.icono)}"></span>
+          </figure>`,
+          )
+          .join('')}
+      </div>
+    </section>`;
+  animarColeccion();
+  publicar({ escena: null });
+}
+
+function actualizarControlesSonido() {
+  const { silenciado, musica } = estadoSonido();
+  document.querySelectorAll('[data-accion="silencio"]').forEach((b) => {
+    b.dataset.estado = silenciado ? 'apagado' : 'encendido';
+    b.setAttribute('aria-pressed', String(silenciado));
+    b.setAttribute('aria-label', silenciado ? 'Activar sonido' : 'Silenciar');
+    const img = b.querySelector('img');
+    if (img) img.src = svg(silenciado ? 'silencio' : 'sonido');
+  });
+  document.querySelectorAll('[data-accion="musica"]').forEach((b) => {
+    b.dataset.estado = musica ? 'encendida' : 'apagada';
+    b.setAttribute('aria-pressed', String(musica));
+    b.setAttribute('aria-label', musica ? 'Quitar la música' : 'Poner música');
+    const img = b.querySelector('img');
+    if (img) img.src = svg(musica ? 'musica' : 'musicaApagada');
+  });
+}
+
 function animarMenu() {
   const gsap = window.gsap;
   if (!gsap) return;
@@ -159,6 +258,7 @@ function elegirMundo(id) {
 
 async function jugar(mecanicaId) {
   const partida = ++generacion;
+  estado.ultimaPegatina = null;
   const mundo = MUNDOS.find((m) => m.id === estado.mundoId) ?? MUNDOS[0];
   const mecanica = MECANICAS[mecanicaId] ?? MECANICAS.hover;
   estado.mecanicaId = mecanicaId;
@@ -180,6 +280,7 @@ async function jugar(mecanicaId) {
           <circle cx="80" cy="50" r="9" fill="currentColor"/>
         </svg>
       </button>
+      <div class="herramientas herramientas--juego">${botonSonido()}${botonMusica()}</div>
     </section>`;
 
   animarSalida();
@@ -285,9 +386,32 @@ function pintarEstallidos() {
   estallidosActivos.loop = requestAnimationFrame(pintarEstallidos);
 }
 
+function mostrarPremio(contenedor, premio) {
+  const gsap = window.gsap;
+  const p = PEGATINAS.find((x) => x.id === premio.id) ?? PEGATINAS[0];
+  const caja = document.createElement('div');
+  caja.className = 'premio';
+  caja.dataset.premio = premio.id;
+  caja.innerHTML = `<img alt="" src="${svg(p.icono)}">`;
+  contenedor.appendChild(caja);
+  if (gsap && !prefiereMenosMovimiento()) {
+    gsap.fromTo(
+      caja,
+      { scale: 0.2, rotate: -18, opacity: 0 },
+      { scale: 1, rotate: 0, opacity: 1, duration: 0.5, ease: 'back.out(2.4)', delay: 0.15 },
+    );
+  } else if (gsap) {
+    gsap.fromTo(caja, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+  }
+}
+
 function celebrarYVolver(partida) {
   const gsap = window.gsap;
   estado.vista = 'cerrando';
+  const premio = ganarPegatina();
+  estado.coleccion = premio.coleccion;
+  estado.ultimaPegatina = { id: premio.id, nueva: premio.nueva };
+  publicar({ ultimaPegatina: estado.ultimaPegatina, pegatinas: { ...estado.coleccion } });
   try {
     fanfarria();
   } catch {}
@@ -296,6 +420,7 @@ function celebrarYVolver(partida) {
   const lienzo = document.createElement('canvas');
   lienzo.className = 'confeti';
   contenedor.appendChild(lienzo);
+  mostrarPremio(contenedor, premio);
 
   const ancho = window.innerWidth;
   const alto = window.innerHeight;
@@ -416,12 +541,29 @@ function seguirPuntero() {
 }
 
 document.addEventListener('click', (ev) => {
+  if (accionDeDestino(ev, '[data-accion="silencio"]')) {
+    alternarSonido();
+    actualizarControlesSonido();
+    publicar();
+    return;
+  }
+  if (accionDeDestino(ev, '[data-accion="musica"]')) {
+    alternarMusica();
+    actualizarControlesSonido();
+    publicar();
+    return;
+  }
+  if (estado.vista === 'coleccion') {
+    if (accionDeDestino(ev, '[data-accion="volver"]')) return render();
+    return;
+  }
   if (estado.vista === 'juego') {
     if (accionDeDestino(ev, '[data-accion="otro-juego"]')) return render();
     // La mecánica decide qué significa un clic en la escena (en hover, nada).
     escena?.clic?.(ev.clientX, ev.clientY);
     return;
   }
+  if (accionDeDestino(ev, '[data-accion="coleccion"]')) return renderColeccion();
   if (accionDeDestino(ev, '[data-accion="avatar"]')) return cambiarAvatar();
   const m = accionDeDestino(ev, '[data-mundo]');
   if (m) return elegirMundo(m.dataset.mundo);
@@ -429,6 +571,7 @@ document.addEventListener('click', (ev) => {
   if (j) {
     try {
       asegurarAudio();
+      iniciarMusica();
     } catch {}
     return jugar(j.dataset.juego);
   }

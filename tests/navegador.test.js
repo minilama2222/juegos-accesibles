@@ -270,3 +270,64 @@ test('el avatar se elige con un clic y se recuerda al recargar', async () => {
   );
   await b.close();
 });
+
+test('el botón de silencio corta el sonido y la preferencia persiste', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+  await p.goto(URL_BASE());
+  assert.equal(await p.evaluate(() => window.juego.sonido.silenciado), false);
+  await p.click('[data-accion="silencio"]');
+  assert.equal(await p.evaluate(() => window.juego.sonido.silenciado), true);
+  assert.equal(await p.evaluate(() => localStorage.getItem('juegos.sonido.v1')), 'apagado');
+  assert.equal(await p.$eval('[data-accion="silencio"]', (n) => n.dataset.estado), 'apagado');
+
+  await p.reload();
+  await p.waitForFunction(() => !!window.juego);
+  assert.equal(await p.evaluate(() => window.juego.sonido.silenciado), true, 'se recuerda al recargar');
+
+  await p.click('[data-accion="silencio"]');
+  assert.equal(await p.evaluate(() => window.juego.sonido.silenciado), false);
+  assert.equal(await p.evaluate(() => localStorage.getItem('juegos.sonido.v1')), 'encendido');
+  await b.close();
+});
+
+test('la música es opcional, se enciende a mano y se recuerda', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+  await p.goto(URL_BASE());
+  assert.equal(await p.evaluate(() => window.juego.sonido.musica), false, 'apagada por defecto');
+  await p.click('[data-accion="musica"]');
+  assert.equal(await p.evaluate(() => window.juego.sonido.musica), true);
+  assert.equal(await p.evaluate(() => localStorage.getItem('juegos.musica.v1')), 'si');
+  await p.reload();
+  await p.waitForFunction(() => !!window.juego);
+  assert.equal(await p.evaluate(() => window.juego.sonido.musica), true, 'se recuerda al recargar');
+  await b.close();
+});
+
+test('al terminar una partida se gana una pegatina que aparece en la colección', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+  await p.goto(URL_BASE());
+  await p.click('[data-juego="causaEfecto"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  const meta = await p.evaluate(() => window.juego.escena.meta);
+  for (let i = 0; i < meta; i++) {
+    await p.mouse.click(120 + (i % 6) * 160, 200 + Math.floor(i / 6) * 220);
+    await p.waitForFunction(({ n }) => window.juego?.escena?.toques === n, { n: i + 1 }, { timeout: 3000 });
+  }
+
+  await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  const guardadas = await p.evaluate(() => window.juego.pegatinas);
+  assert.equal(Object.values(guardadas).reduce((a, n) => a + n, 0), 1, 'se guarda una pegatina');
+  assert.equal(await p.evaluate(() => window.juego.ultimaPegatina.nueva), true);
+
+  await p.click('[data-accion="coleccion"]');
+  await p.waitForFunction(() => window.juego?.vista === 'coleccion');
+  assert.equal(await p.locator('[data-pegatina][data-ganada="true"]').count(), 1);
+  assert.equal(await p.locator('[data-pegatina]').count(), 8, 'la colección enseña también las que faltan');
+
+  await p.click('[data-accion="volver"]');
+  await p.waitForFunction(() => window.juego?.vista === 'menu');
+  await b.close();
+});

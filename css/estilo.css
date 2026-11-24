@@ -54,7 +54,8 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8vmin;
+  gap: 5vmin;
+  flex-wrap: wrap;
 }
 
 .avatar {
@@ -147,6 +148,147 @@ img {
   gap: 4vmin;
 }
 
+/* Controles sin texto: colección, silencio y música. */
+.herramientas {
+  display: flex;
+  align-items: center;
+  gap: 1.4vmin;
+}
+
+.herramienta {
+  width: 8vmin;
+  height: 8vmin;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 50%;
+  background: #ffffff14;
+  border: 0.5vmin solid #ffffff30;
+  padding: 1.3vmin;
+  display: grid;
+  place-items: center;
+  transition:
+    transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 160ms ease,
+    background 160ms ease;
+  transform-origin: center;
+}
+
+.herramienta:hover,
+.herramienta:focus-visible {
+  transform: scale(1.1) rotate(-2deg);
+  border-color: var(--acento);
+  background: #ffffff22;
+}
+
+.herramienta:active {
+  transform: scale(1.02, 0.94);
+  transition-duration: 90ms;
+}
+
+.herramienta[data-estado='apagado'],
+.herramienta[data-estado='apagada'] {
+  opacity: 0.62;
+}
+
+.herramienta--premio {
+  border-color: var(--acento);
+}
+
+.herramientas--juego {
+  position: fixed;
+  top: 2.5vmin;
+  left: 2.5vmin;
+  z-index: 7;
+}
+
+.herramientas--coleccion {
+  position: fixed;
+  top: 2.5vmin;
+  right: 2.5vmin;
+  z-index: 7;
+}
+
+/* Colección de pegatinas: cada premio se reconoce por su dibujo. */
+.coleccion {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 8vmin;
+}
+
+.volver {
+  position: fixed;
+  top: 2.5vmin;
+  left: 2.5vmin;
+  width: 11vmin;
+  height: 11vmin;
+  min-width: 72px;
+  min-height: 72px;
+  border-radius: 50%;
+  background: var(--acento);
+  color: #1a1a1a;
+  padding: 2vmin;
+  z-index: 7;
+  transition:
+    transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 180ms ease;
+}
+
+.volver:hover,
+.volver:focus-visible {
+  transform: scale(1.1) rotate(-6deg);
+}
+
+.pegatinas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3vmin;
+  width: min(100%, 92vmin);
+}
+
+.pegatina {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 1;
+  padding: 2vmin;
+  border-radius: 4vmin;
+  background: #ffffff0d;
+  border: 0.6vmin solid #ffffff1f;
+  display: grid;
+  place-items: center;
+}
+
+.pegatina--ganada {
+  background: color-mix(in srgb, var(--acento) 24%, #ffffff10);
+  border-color: var(--acento);
+  box-shadow: 0 0 2.4vmin color-mix(in srgb, var(--acento) 45%, transparent);
+}
+
+.pegatina:not(.pegatina--ganada) .pegatina__icono {
+  opacity: 0.16;
+  filter: grayscale(1);
+}
+
+/* Pegatina ganada al terminar la partida. */
+.premio {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 34vmin;
+  height: 34vmin;
+  margin: -17vmin 0 0 -17vmin;
+  padding: 4vmin;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, #ffffff 0 46%, var(--acento) 47% 100%);
+  box-shadow:
+    0 0 4vmin #ffffffee,
+    0 0 8vmin color-mix(in srgb, var(--acento) 75%, transparent);
+  z-index: 10;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+
 .partida {
   position: fixed;
   inset: 0;
@@ -228,7 +370,9 @@ img {
   .avatar,
   .mundo,
   .juego,
-  .salir {
+  .salir,
+  .herramienta,
+  .volver {
     transition: none;
   }
 }

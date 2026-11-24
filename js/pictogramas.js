@@ -96,6 +96,29 @@ export const PICTOGRAMAS = {
     <circle cx="60" cy="66" r="12" fill="#ffeb3b" stroke="#222" stroke-width="3"/>`),
   cola: svg(`
     <path d="M44 90c-8-28 20-40 16-62 14 14 26 34 12 62z" fill="#ffeb3b" stroke="#e6b800" stroke-width="3"/>`),
+  // Controles de sonido: altavoz con ondas, altavoz tachado y nota musical.
+  sonido: svg(`
+    <path d="M18 46h18l20-16v60L36 74H18z" fill="#ffffff"/>
+    <path d="M70 44c8 8 8 24 0 32M82 32c16 16 16 40 0 56" fill="none" stroke="#ffffff"
+          stroke-width="7" stroke-linecap="round"/>`),
+  silencio: svg(`
+    <path d="M18 46h18l20-16v60L36 74H18z" fill="#ffffff"/>
+    <path d="M72 44l24 32M96 44L72 76" fill="none" stroke="#e53935" stroke-width="8"
+          stroke-linecap="round"/>`),
+  musica: svg(`
+    <path d="M48 84V30l40-8v54" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="38" cy="88" rx="14" ry="11" fill="#ffffff"/>
+    <ellipse cx="78" cy="80" rx="14" ry="11" fill="#ffffff"/>`),
+  musicaApagada: svg(`
+    <path d="M48 84V30l40-8v54" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="38" cy="88" rx="14" ry="11" fill="#ffffff"/>
+    <ellipse cx="78" cy="80" rx="14" ry="11" fill="#ffffff"/>
+    <path d="M22 22l76 76" stroke="#e53935" stroke-width="9" stroke-linecap="round"/>`),
+  // Colección: una caja de pegatinas con una estrella, sin texto.
+  coleccion: svg(`
+    <rect x="18" y="30" width="84" height="68" rx="10" fill="#ffffff" opacity=".22"/>
+    <rect x="18" y="30" width="84" height="16" rx="8" fill="#ffd54f"/>
+    <path d="M60 58l7 15 16 2-12 12 3 16-14-8-14 8 3-16-12-12 16-2z" fill="#ffffff"/>`),
 };
 
 export function pictograma(nombre) {

@@ -5,6 +5,7 @@ import { calcularRadio } from './objetivo.js';
 import { animarAparicion, progreso, APARICION_MS } from './animaciones.js';
 import { prefiereMenosMovimiento } from './movimiento-reducido.js';
 import { arrancarCausaEfecto } from './escena-causa-efecto.js';
+import { acierto, entrada } from './audio.js';
 
 export async function arrancarEscena(opciones) {
   // Cada mecánica tiene su escena; aquí solo se elige.
@@ -117,6 +118,7 @@ export async function arrancarEscena(opciones) {
       apareceEn = juego.time();
       colocarDibujo();
     }
+    entrada();
   }
 
 
@@ -168,6 +170,7 @@ export async function arrancarEscena(opciones) {
         if (e.completado) {
           const m = marcador.anotarAcierto();
           estado.aciertos = m.aciertos;
+          acierto(mundo.sonidoAcierto ?? 660);
           hover.reiniciar();
           hover.salir();
           estado.hoverLleno = 0;
