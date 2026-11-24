@@ -35,6 +35,17 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
   await p.goto(URL_BASE());
   const mundos = await p.$$eval('[data-mundo]', (n) => n.map((x) => x.dataset.mundo));
   assert.deepEqual(mundos, ['navidad', 'animalitos', 'futbol', 'amarillo']);
+  const iconos = await p.$$eval('[data-mundo] img', (n) => n.map((x) => x.getAttribute('src')));
+  assert.deepEqual(
+    iconos,
+    [
+      'assets/arasaac/regalo-25381.png',
+      'assets/arasaac/gato-7114.png',
+      'assets/arasaac/balon-2269.png',
+      'assets/arasaac/carita-13354.png',
+    ],
+    'el selector de mundo usa los mismos pictogramas que las bolas',
+  );
   const juegos = await p.$$eval('[data-juego]', (n) => n.map((x) => x.dataset.juego));
   assert.deepEqual(juegos, ['hover'], 'sólo se ofrecen mecánicas implementadas');
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());

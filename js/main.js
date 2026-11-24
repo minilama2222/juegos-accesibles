@@ -69,7 +69,7 @@ function render() {
             <button class="mundo ${m.id === estado.mundoId ? 'mundo--activo' : ''}"
                     data-mundo="${m.id}" style="--fondo:${m.fondo};--acento:${m.acento}"
                     aria-pressed="${m.id === estado.mundoId}">
-              <span class="mundo__icono"><img alt="" src="${svg(m.objetivo)}"></span>
+              <span class="mundo__icono"><img alt="" src="${m.imagen}"></span>
             </button>`,
           ).join('')}
         </nav>
@@ -92,7 +92,6 @@ function iconoMecanica(id) {
   if (id === 'clickEstatico') return 'balon';
   return 'regalo';
 }
-
 function animarMenu() {
   const gsap = window.gsap;
   if (!gsap) return;
