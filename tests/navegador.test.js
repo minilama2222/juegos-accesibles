@@ -173,3 +173,19 @@ test('tras un acierto el objetivo vuelve a ser visible (no se queda apagado)', a
   assert.ok(e.objetivo, 'el objetivo sigue colocado');
   await b.close();
 });
+
+test('el objetivo dibuja el pictograma del mundo elegido', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+  const pedidas = [];
+  p.on('request', (r) => pedidas.push(r.url()));
+  await p.goto(URL_BASE());
+  await p.click('[data-mundo="futbol"]');
+  await p.click('[data-juego="hover"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+  assert.ok(
+    pedidas.some((u) => u.endsWith('/assets/arasaac/balon-2269.png')),
+    'debe cargar el balón de ARASAAC del mundo de fútbol',
+  );
+  await b.close();
+});

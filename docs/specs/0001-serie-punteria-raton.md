@@ -68,7 +68,8 @@ Una serie de juegos web estáticos, sin build, publicada en GitHub Pages, que é
 - **GSAP 3.15.0** (27 KB gz, licencia libre de Webflow desde 2025) vendoreado: UI fuera del canvas (menú, mundos, pegatinas, transiciones, refuerzos DOM).
 - **Separación de capas**: Kaplay posee la escena de juego; GSAP posee la capa de interfaz. No se anima el mismo objeto con ambos.
 - **Registro de mecánicas extensible**: añadir una mecánica (p. ej. arrastre) es añadir una entrada al registro; no altera las existentes ni la progresión ya publicada.
-- **Assets**: SVG propios generados; sin ARASAAC ni descargas externas; sin IP real.
+- **Assets**: los objetos que se tocan son pictogramas de ARASAAC (CC BY-NC-SA, ver
+  `docs/adr/0002-arte-arasaac.md` y `ATTRIBUTION.md`); el resto es SVG propio generado; sin IP real.
 - **Deploy**: GitHub Pages desde `main` del repo `minilama2222/juegos-accesibles`.
 - **Sin backend, sin almacenamiento remoto**: `localStorage` únicamente.
 

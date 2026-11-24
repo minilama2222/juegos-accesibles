@@ -32,9 +32,28 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
   });
 
   let objetivo;
+  let dibujo = null;
   let puntero = null;
   const colorEstela = mundo.acento;
   let apareceEn = 0;
+  // El objeto del mundo va dentro de la bola: la bola da área de clic y contorno,
+  // el pictograma da el significado (ADR: arte ARASAAC para los objetivos).
+  const FACTOR_DIBUJO = 0.78;
+  juego.loadSprite('objeto-mundo', mundo.imagen);
+
+  function colocarDibujo() {
+    if (!dibujo) return;
+    dibujo.pos = juego.vec2(estado.objetivo.x, estado.objetivo.y);
+  }
+
+  function sincronizarDibujo() {
+    if (!dibujo || !objetivo || !objetivo.scale || !estado.objetivo) return;
+    const base = (estado.objetivo.radio * 2 * FACTOR_DIBUJO) / 500; // el PNG mide 500×500
+    dibujo.scale = juego.vec2(objetivo.scale.x * base, objetivo.scale.y * base);
+    dibujo.angle = objetivo.angle;
+    dibujo.opacity = objetivo.opacity;
+    dibujo.hidden = objetivo.hidden;
+  }
   const tam = () =>
     calcularRadio({
       vmin: V_MIN(),
@@ -91,6 +110,7 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
       objetivo.pos = juego.vec2(x, y);
       objetivo.use(juego.circle(radio));
       apareceEn = juego.time();
+      colocarDibujo();
     }
   }
 
@@ -106,6 +126,13 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
         juego.anchor('center'),
         'objetivo',
       ]);
+      dibujo = juego.add([
+        juego.sprite('objeto-mundo'),
+        juego.pos(estado.objetivo.x, estado.objetivo.y),
+        juego.anchor('center'),
+        'dibujo-objetivo',
+      ]);
+      sincronizarDibujo();
       estado.lista = true;
 
       juego.onUpdate(() => {
@@ -131,6 +158,7 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
           objetivo.opacity = a.opacidad;
           if (e.lleno > 0) dibujarAro(e.lleno);
         }
+        sincronizarDibujo();
 
         if (e.completado) {
           const m = marcador.anotarAcierto();
@@ -148,6 +176,7 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
           alTerminar?.({ acierto: true, aciertos: m.aciertos, terminada: m.terminada });
           if (m.terminada) {
             objetivo.hidden = true;
+            if (dibujo) dibujo.hidden = true;
             alTerminar?.({ acierto: true, aciertos: m.aciertos, terminada: true });
             alCambiar?.(oficial());
             return;
