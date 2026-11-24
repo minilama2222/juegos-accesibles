@@ -77,6 +77,13 @@ export const PICTOGRAMAS = {
   chispa: svg(
     `<path d="M60 18l10 28 28 10-28 10-10 28-10-28-28-10 28-10z" fill="#ffeb3b" stroke="#fff" stroke-width="3"/>`,
   ),
+  // Icono del hover: la bola que hay que aguantar, con el aro que se llena.
+  aguantar: svg(`
+    <circle cx="60" cy="60" r="49" fill="none" stroke="#ffffff33" stroke-width="9"/>
+    <circle cx="60" cy="60" r="49" fill="none" stroke="#ffffff" stroke-width="9"
+            stroke-linecap="round" stroke-dasharray="231 308" transform="rotate(-90 60 60)"/>
+    <circle cx="60" cy="60" r="29" fill="#ffd54f" stroke="#ffffff" stroke-width="5"/>
+    <circle cx="51" cy="50" r="7" fill="#ffffff" opacity="0.55"/>`),
   // Icono de la mecánica "causa-efecto": un golpe con chispas, no una estrella.
   // Tiene que distinguirse de un vistazo del de hover sin usar texto.
   destello: svg(`

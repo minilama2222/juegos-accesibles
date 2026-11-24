@@ -47,7 +47,11 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
     'el selector de mundo usa los mismos pictogramas que las bolas',
   );
   const juegos = await p.$$eval('[data-juego]', (n) => n.map((x) => x.dataset.juego));
-  assert.deepEqual(juegos, ['causaEfecto', 'hover'], 'sólo se ofrecen mecánicas implementadas');
+  assert.deepEqual(
+    juegos,
+    ['causaEfecto', 'hover'],
+    'sólo se ofrecen mecánicas implementadas y de más fácil a más difícil',
+  );
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());
   assert.equal(textosVisibles, '');
   await b.close();

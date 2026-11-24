@@ -65,6 +65,8 @@ export const MECANICAS = {
   clickEstatico: { id: 'clickEstatico' },
 };
 
+// De más fácil a más difícil: primero causa-efecto (cualquier clic vale),
+// después hover (hay que acertar y aguantar) y al final click estático.
 export const ORDEN = ['causaEfecto', 'hover', 'clickEstatico'];
 
 export function siguienteMecanica(id) {

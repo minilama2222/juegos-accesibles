@@ -93,7 +93,7 @@ function render() {
 
 function iconoMecanica(id) {
   if (id === 'causaEfecto') return 'destello';
-  if (id === 'hover') return 'estrella';
+  if (id === 'hover') return 'aguantar';
   if (id === 'clickEstatico') return 'balon';
   return 'regalo';
 }
