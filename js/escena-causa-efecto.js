@@ -3,12 +3,14 @@ import { crearMarcador } from './sesion.js';
 import { animarBrote, progreso, BROTE_MS } from './animaciones.js';
 import { prefiereMenosMovimiento } from './movimiento-reducido.js';
 import { acierto, entrada } from './audio.js';
+import { crearAyuda } from './ayuda.js';
 
 // Causa-efecto: cualquier clic hace aparecer el objeto del mundo en ese punto.
 // No hay forma de fallar; el juego termina al llegar a la meta de toques.
 const MAX_BROTES = 10;
 
-export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTerminar, alEstallar }) {
+export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTerminar, alEstallar, ayuda: ayudaEntrada }) {
+  const ayuda = ayudaEntrada ?? crearAyuda({ juego: mecanica.id });
   const kaplay = await cargarKaplay();
   const menosMovimiento = prefiereMenosMovimiento();
   const marcador = crearMarcador({ meta: mecanica.meta ?? 12 });
@@ -18,6 +20,7 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
     mecanica: mecanica.id,
     mundo: mundo.id,
     aciertos: 0,
+    fallos: 0,
     lista: false,
   };
 
@@ -42,6 +45,8 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
     hoverLleno: 0,
     hoverCompletado: false,
     aciertos: estado.aciertos,
+    fallos: estado.fallos,
+    ayuda: ayuda.leer(),
     toques: estado.aciertos,
     meta: marcador.leer().meta,
     terminada: marcador.leer().terminada,
@@ -53,7 +58,7 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
   const diametro = () => {
     const min = Number.isFinite(mecanica.broteMinVmin) ? mecanica.broteMinVmin : 12;
     const max = Number.isFinite(mecanica.broteMaxVmin) ? mecanica.broteMaxVmin : 20;
-    return V_MIN() * (min + Math.random() * (max - min));
+    return V_MIN() * (min + Math.random() * (max - min)) * ayuda.parametros().factorTamano;
   };
 
   function brotar(x, y) {
@@ -112,6 +117,7 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
       if (!estado.lista || marcador.leer().terminada) return;
       const m = marcador.anotarAcierto();
       estado.aciertos = m.aciertos;
+      ayuda.anotarAcierto();
       ultimoToque = { x: Math.round(x), y: Math.round(y) };
       brotar(x, y);
       acierto(mundo.sonidoAcierto ?? 660);

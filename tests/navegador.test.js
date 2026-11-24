@@ -386,3 +386,84 @@ test('la pegatina del balón usa el pictograma ARASAAC, no el SVG propio', async
   assert.equal(enColeccion, 'assets/arasaac/balon-2269.png');
   await b.close();
 });
+
+// Deja que la barra de hover empiece a llenarse y luego se vacíe del todo:
+// eso es un fallo suave para la ayuda, sin quitar progreso.
+async function provocarFallo(p) {
+  const o = await p.evaluate(() => window.juego.escena.objetivo);
+  const fallosAntes = await p.evaluate(() => window.juego.escena.fallos);
+  await p.mouse.move(o.x, o.y);
+  await p.waitForFunction(() => window.juego?.escena?.hoverLleno > 0.25, null, { timeout: 3000 });
+  await p.mouse.move(6, 6);
+  await p.waitForFunction(({ n }) => window.juego?.escena?.fallos > n, { n: fallosAntes }, { timeout: 5000 });
+}
+
+test('fallar repetidamente agranda el objetivo y la ayuda persiste', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+  await p.goto(URL_BASE());
+  await p.click('[data-juego="hover"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+
+  assert.equal(await p.evaluate(() => window.juego.escena.ayuda.nivel), 0);
+  await provocarFallo(p);
+  assert.equal(
+    await p.evaluate(() => window.juego.escena.ayuda.nivel),
+    0,
+    'un fallo suelto no sube la ayuda',
+  );
+  await provocarFallo(p);
+
+  const escena = await p.evaluate(() => window.juego.escena);
+  assert.equal(escena.fallos, 2);
+  assert.equal(escena.ayuda.nivel, 1);
+  assert.ok(escena.ayuda.factorTamano > 1);
+  assert.ok(
+    escena.objetivo.radio > escena.objetivo.radioBase,
+    'el objetivo se agranda de forma observable en window.juego',
+  );
+  assert.deepEqual(await p.evaluate(() => JSON.parse(localStorage.getItem('juegos.ayuda.v1'))), {
+    hover: 1,
+  });
+
+  await p.reload();
+  await p.click('[data-juego="hover"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  const otra = await p.evaluate(() => window.juego.escena);
+  assert.equal(otra.ayuda.nivel, 1, 'la ayuda se recuerda entre sesiones');
+  assert.ok(otra.objetivo.radio > otra.objetivo.radioBase);
+  await b.close();
+});
+
+test('las métricas se guardan por juego y se exportan sin verse en el juego', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 }, acceptDownloads: true });
+  await p.goto(URL_BASE());
+  await p.click('[data-juego="causaEfecto"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  await p.mouse.click(300, 250);
+  await p.mouse.click(700, 450);
+  await p.waitForFunction(() => window.juego.escena.toques === 2);
+
+  assert.equal(await p.evaluate(() => document.body.innerText.trim()), '', 'nada visible en el juego');
+  assert.equal(await p.locator('[data-accion="exportar"]').count(), 0, 'sin botón de exportar');
+
+  await p.click('[data-accion="otro-juego"]');
+  await p.waitForFunction(() => window.juego.vista === 'menu');
+
+  const guardadas = await p.evaluate(() => JSON.parse(localStorage.getItem('juegos.metricas.v1')));
+  assert.equal(guardadas.partidas, 1);
+  assert.equal(guardadas.aciertos, 2);
+  assert.equal(guardadas.porJuego.causaEfecto.partidas, 1);
+  assert.equal(guardadas.porJuego.causaEfecto.aciertos, 2);
+  assert.equal(guardadas.porJuego.causaEfecto.ayudaFinal, 0);
+  assert.ok(guardadas.duracionMs >= 0);
+
+  const exportado = await p.evaluate(() => window.juego.exportarMetricas());
+  assert.equal(exportado.aciertos, 2);
+  assert.ok(exportado.exportadoEn);
+
+  const [descarga] = await Promise.all([p.waitForEvent('download'), p.keyboard.press('e')]);
+  assert.ok(descarga.suggestedFilename().startsWith('juegos-metricas-'));
+  await b.close();
+});

@@ -7,6 +7,8 @@ import { crearConfeti, avanzarConfeti, quedanVisibles } from './confeti.js';
 import { fanfarria, asegurarAudio, iniciarMusica, alternarEfectos, alternarMusica, estadoSonido } from './audio.js';
 import { PEGATINAS, leerColeccion, ganarPegatina, coleccionVisible } from './pegatinas.js';
 import { prefiereMenosMovimiento, cantidadConfeti } from './movimiento-reducido.js';
+import { crearAyuda } from './ayuda.js';
+import { crearMetricas } from './metricas.js';
 
 // El avatar es del niño (historia 22): se elige con un clic y se recuerda.
 // Nada de bolas raras: solo caras que se entienden.
@@ -19,6 +21,7 @@ const AVATARES = [
 
 const avatarGuardado = leerAvatar();
 const avatarValido = AVATARES.some((a) => a.id === avatarGuardado) ? avatarGuardado : AVATARES[0].id;
+const metricas = crearMetricas();
 
 const estado = {
   vista: 'menu',
@@ -27,6 +30,8 @@ const estado = {
   mecanicaId: null,
   coleccion: leerColeccion(),
   ultimaPegatina: null,
+  ayuda: null,
+  partidaActiva: false,
 };
 
 let escena = null;
@@ -52,11 +57,27 @@ function publicar(extra = {}) {
     sonido: estadoSonido(),
     pegatinas: { ...estado.coleccion },
     ultimaPegatina: estado.ultimaPegatina,
+    ayuda: estado.ayuda?.leer() ?? null,
+    exportarMetricas,
     ...extra,
   };
 }
 
+// Cierra la partida en curso y deja las métricas en el almacén. Se llama al
+// salir, al terminar y al cerrar la pestaña; nunca se muestra en pantalla.
+function terminarPartidaActual() {
+  if (!estado.partidaActiva) return;
+  const e = escena?.estado?.() ?? null;
+  metricas.terminar({
+    aciertos: e?.aciertos ?? 0,
+    fallos: e?.fallos ?? 0,
+    ayudaFinal: e?.ayuda?.nivel ?? estado.ayuda?.leer().nivel ?? 0,
+  });
+  estado.partidaActiva = false;
+}
+
 function salirDePartida() {
+  terminarPartidaActual();
   generacion += 1;
   escena?.detener?.();
   escena = null;
@@ -65,8 +86,31 @@ function salirDePartida() {
     punteroHandler = null;
   }
   estado.mecanicaId = null;
+  estado.ayuda = null;
   estado.vista = 'menu';
   document.body.dataset.vista = 'menu';
+}
+
+// El padre exporta las métricas con la tecla E. No hay botón ni texto dentro
+// del juego: el niño nunca ve esta parte.
+function exportarMetricas() {
+  const datos = {
+    exportadoEn: new Date().toISOString(),
+    ...metricas.exportar(),
+  };
+  try {
+    const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `juegos-metricas-${new Date().toISOString().slice(0, 10)}.json`;
+    enlace.style.display = 'none';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  } catch {}
+  return datos;
 }
 
 function botonEfectos() {
@@ -262,11 +306,15 @@ function elegirMundo(id) {
 }
 
 async function jugar(mecanicaId) {
+  terminarPartidaActual();
   const partida = ++generacion;
   estado.ultimaPegatina = null;
   const mundo = MUNDOS.find((m) => m.id === estado.mundoId) ?? MUNDOS[0];
   const mecanica = MECANICAS[mecanicaId] ?? MECANICAS.hover;
   estado.mecanicaId = mecanicaId;
+  estado.ayuda = crearAyuda({ juego: mecanicaId });
+  metricas.empezar(mecanicaId);
+  estado.partidaActiva = true;
   estado.vista = 'juego';
   escena = null;
 
@@ -295,6 +343,7 @@ async function jugar(mecanicaId) {
   escena = await arrancarEscena({
     mundo,
     mecanica,
+    ayuda: estado.ayuda,
     alCambiar: (e) => {
       if (partida === generacion && estado.vista === 'juego') publicar({ escena: e });
     },
@@ -304,7 +353,11 @@ async function jugar(mecanicaId) {
     alTerminar: (r) => {
       if (partida !== generacion || estado.vista !== 'juego') return;
       publicar({ ultimo: r });
-      if (r.terminada) celebrarYVolver(partida);
+      if (r.terminada) {
+        // Cierra las métricas al terminar de jugar, no tras el confeti.
+        terminarPartidaActual();
+        celebrarYVolver(partida);
+      }
     },
   });
   if (partida !== generacion) {
@@ -581,5 +634,15 @@ document.addEventListener('click', (ev) => {
     return jugar(j.dataset.juego);
   }
 });
+
+document.addEventListener('keydown', (ev) => {
+  if (ev.repeat) return;
+  if (ev.key?.toLowerCase() !== 'e') return;
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  ev.preventDefault();
+  exportarMetricas();
+});
+
+window.addEventListener('pagehide', () => terminarPartidaActual());
 
 render();

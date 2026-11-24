@@ -9,8 +9,8 @@ Trabajar **de bloqueante en bloqueante**. Cualquier ticket cuyos bloqueantes est
 | 01 | Maqueta jugable — menú, mundo y hover | hecho | — |
 | 02 | Causa-efecto | hecho | 01 |
 | 03 | Refuerzo, sonido y pegatinas | hecho | 02 |
-| 04 | Ayuda adaptativa y métricas | siguiente | 03 |
-| 05 | Click estático | pendiente | 04 |
+| 04 | Ayuda adaptativa y métricas | hecho | 03 |
+| 05 | Click estático | siguiente | 04 |
 | 06 | Aparición con tiempo | pendiente | 05 |
 | 07 | Parejas de 4, 6 y 8 | pendiente | 06 |
 | 08 | Movimiento lento | pendiente | 06 |
