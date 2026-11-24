@@ -1,7 +1,8 @@
 export const COLORES = ['#ffd54f', '#e53935', '#4fc3f7', '#aed581', '#f06292', '#ffffff'];
 
-export function crearConfeti({ ancho, alto, cantidad = 160, azar = Math.random }) {
+export function crearConfeti({ ancho, alto, cantidad = 160, azar = Math.random, colores = COLORES }) {
   const piezas = [];
+  const paleta = Array.isArray(colores) && colores.length > 0 ? colores : COLORES;
   for (let i = 0; i < cantidad; i++) {
     piezas.push({
       x: azar() * ancho,
@@ -12,7 +13,7 @@ export function crearConfeti({ ancho, alto, cantidad = 160, azar = Math.random }
       velGiro: (azar() - 0.5) * 14,
       ancho: 8 + azar() * 12,
       alto: 5 + azar() * 8,
-      color: COLORES[Math.floor(azar() * COLORES.length)],
+      color: paleta[Math.floor(azar() * paleta.length)],
       vaiven: azar() * Math.PI * 2,
     });
   }

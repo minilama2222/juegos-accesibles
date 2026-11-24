@@ -1,6 +1,7 @@
 import { arrancarEscena } from './escena.js';
-import { MUNDOS, MECANICAS, ORDEN } from './contenido.js';
+import { MUNDOS, MECANICAS, ORDEN, mundoPorId } from './contenido.js';
 import { pictograma } from './pictogramas.js';
+import { fondoSvg } from './fondos.js';
 import { accionDeDestino, guardarMundo, leerMundo, leerAvatar, guardarAvatar, siguienteAvatar } from './menu.js';
 import { crearEstela } from './estela.js';
 import { crearConfeti, avanzarConfeti, quedanVisibles } from './confeti.js';
@@ -9,6 +10,8 @@ import { PEGATINAS, leerColeccion, ganarPegatina, coleccionVisible } from './peg
 import { prefiereMenosMovimiento, cantidadConfeti } from './movimiento-reducido.js';
 import { crearAyuda } from './ayuda.js';
 import { crearMetricas } from './metricas.js';
+import { alternarPantallaCompleta, estaEnPantallaCompleta } from './pantalla.js';
+import { crearGuardaUnica } from './partida.js';
 
 // El avatar es del niño (historia 22): se elige con un clic y se recuerda.
 // Nada de bolas raras: solo caras que se entienden.
@@ -32,11 +35,37 @@ const estado = {
   ultimaPegatina: null,
   ayuda: null,
   partidaActiva: false,
+  confeti: null,
+  ultimoRefuerzo: null,
 };
 
 let escena = null;
 let generacion = 0;
 let punteroHandler = null;
+const cierreUnico = crearGuardaUnica();
+
+function mundoActual() {
+  return mundoPorId(estado.mundoId);
+}
+
+// Lo que se ve y se oye del mundo, observable desde los tests (window.juego).
+function aparienciaMundo(m) {
+  return {
+    fondo: m.fondo,
+    acento: m.acento,
+    paleta: [...m.paleta],
+    fondoArte: m.fondoArte,
+    objetivo: m.objetivo,
+    imagen: m.imagen,
+    refuerzo: m.refuerzo,
+    puntero: m.puntero,
+    sonidos: { ...m.sonidos, fanfarria: [...m.sonidos.fanfarria] },
+  };
+}
+
+function fondoDe(m) {
+  return `<div class="fondo${estado.vista === 'menu' ? ' fondo--menu' : ''}" aria-hidden="true">${fondoSvg(m)}</div>`;
+}
 
 function svg(nombre) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(pictograma(nombre));
@@ -48,6 +77,7 @@ function dibujoPegatina(p) {
 }
 
 function publicar(extra = {}) {
+  const mundo = mundoActual();
   window.juego = {
     vista: estado.vista,
     mundo: estado.mundoId,
@@ -58,6 +88,13 @@ function publicar(extra = {}) {
     pegatinas: { ...estado.coleccion },
     ultimaPegatina: estado.ultimaPegatina,
     ayuda: estado.ayuda?.leer() ?? null,
+    apariencia: aparienciaMundo(mundo),
+    movimiento: {
+      reducido: prefiereMenosMovimiento(),
+      confeti: estado.confeti,
+    },
+    ultimoRefuerzo: estado.ultimoRefuerzo,
+    estallidos: estallidosActivos.length,
     exportarMetricas,
     ...extra,
   };
@@ -129,11 +166,35 @@ function botonMusica() {
           </button>`;
 }
 
+function botonPantalla() {
+  const activa = estaEnPantallaCompleta();
+  return `<button class="herramienta" data-accion="pantalla-completa"
+            data-estado="${activa ? 'activa' : 'inactiva'}" aria-pressed="${activa}"
+            aria-label="${activa ? 'Salir de pantalla completa' : 'Pantalla completa'}">
+            <img alt="" src="${svg(activa ? 'pantallaSalir' : 'pantalla')}">
+          </button>`;
+}
+
+function actualizarControlesPantalla() {
+  const activa = estaEnPantallaCompleta();
+  document.querySelectorAll('[data-accion="pantalla-completa"]').forEach((b) => {
+    b.dataset.estado = activa ? 'activa' : 'inactiva';
+    b.setAttribute('aria-pressed', String(activa));
+    b.setAttribute('aria-label', activa ? 'Salir de pantalla completa' : 'Pantalla completa');
+    const img = b.querySelector('img');
+    if (img) img.src = svg(activa ? 'pantallaSalir' : 'pantalla');
+  });
+}
+
 function render() {
   salirDePartida();
+  estado.confeti = null;
+  estado.ultimoRefuerzo = null;
   const ganadas = Object.values(estado.coleccion).filter((n) => n > 0).length;
+  const mundoMenu = mundoActual();
   document.getElementById('app').innerHTML = `
-    <section class="menu">
+    <section class="menu" style="--fondo:${mundoMenu.fondo};--acento:${mundoMenu.acento}">
+      ${fondoDe(mundoMenu)}
       <header class="menu__cabecera">
         <button class="avatar" data-accion="avatar" data-avatar="${estado.avatarId}"
                 aria-label="Cambiar mi avatar">
@@ -156,6 +217,7 @@ function render() {
           </button>
           ${botonEfectos()}
           ${botonMusica()}
+          ${botonPantalla()}
         </div>
       </header>
       <main class="juegos">
@@ -198,10 +260,13 @@ function animarColeccion() {
 function renderColeccion() {
   salirDePartida();
   estado.vista = 'coleccion';
+  estado.confeti = null;
   document.body.dataset.vista = 'coleccion';
   const visibles = coleccionVisible(estado.coleccion);
+  const mundoMenu = mundoActual();
   document.getElementById('app').innerHTML = `
-    <section class="coleccion">
+    <section class="coleccion" style="--fondo:${mundoMenu.fondo};--acento:${mundoMenu.acento}">
+      ${fondoDe(mundoMenu)}
       <button class="volver" data-accion="volver" aria-label="Volver al menú">
         <svg viewBox="0 0 100 100" aria-hidden="true">
           <path d="M78 50H34M48 36L34 50l14 14" fill="none" stroke="currentColor" stroke-width="9"
@@ -209,7 +274,7 @@ function renderColeccion() {
           <circle cx="20" cy="50" r="9" fill="currentColor"/>
         </svg>
       </button>
-      <div class="herramientas herramientas--coleccion">${botonEfectos()}${botonMusica()}</div>
+      <div class="herramientas herramientas--coleccion">${botonEfectos()}${botonMusica()}${botonPantalla()}</div>
       <div class="pegatinas" role="list" aria-label="Mis pegatinas">
         ${visibles
           .map(
@@ -297,6 +362,14 @@ function cambiarAvatar() {
 function elegirMundo(id) {
   estado.mundoId = id;
   guardarMundo(id);
+  const mundo = mundoPorId(id);
+  const menu = document.querySelector('.menu');
+  if (menu) {
+    menu.style.setProperty('--fondo', mundo.fondo);
+    menu.style.setProperty('--acento', mundo.acento);
+    const fondo = menu.querySelector('.fondo--menu');
+    if (fondo) fondo.innerHTML = fondoSvg(mundo);
+  }
   document.querySelectorAll('[data-mundo]').forEach((b) => {
     const activo = b.dataset.mundo === id;
     b.classList.toggle('mundo--activo', activo);
@@ -309,7 +382,9 @@ async function jugar(mecanicaId) {
   terminarPartidaActual();
   const partida = ++generacion;
   estado.ultimaPegatina = null;
-  const mundo = MUNDOS.find((m) => m.id === estado.mundoId) ?? MUNDOS[0];
+  estado.confeti = null;
+  estado.ultimoRefuerzo = null;
+  const mundo = mundoActual();
   const mecanica = MECANICAS[mecanicaId] ?? MECANICAS.hover;
   estado.mecanicaId = mecanicaId;
   estado.ayuda = crearAyuda({ juego: mecanicaId });
@@ -320,12 +395,16 @@ async function jugar(mecanicaId) {
 
   document.body.dataset.vista = 'juego';
   document.getElementById('app').innerHTML = `
-    <section class="partida" data-vista="juego" data-mundo="${mundo.id}"
+    <section class="partida" data-vista="juego" data-mundo="${mundo.id}" data-fondo="${mundo.fondoArte}"
              style="--fondo:${mundo.fondo};--acento:${mundo.acento}">
+      ${fondoDe(mundo)}
       <canvas id="lienzo" class="lienzo"></canvas>
       <canvas class="estela" id="estela" aria-hidden="true"></canvas>
       <canvas class="estallidos" id="estallidos" aria-hidden="true"></canvas>
-      <div class="puntero" id="puntero" aria-hidden="true"></div>
+      <div class="sellos" id="sellos" aria-hidden="true"></div>
+      <div class="puntero" id="puntero" aria-hidden="true">
+        <img alt="" data-puntero="${mundo.puntero}" src="${svg(mundo.puntero)}">
+      </div>
       <button class="salir" id="otro-juego" data-accion="otro-juego" aria-label="Otro juego">
         <svg viewBox="0 0 100 100" aria-hidden="true">
           <path d="M22 50h44M52 36l14 14-14 14" fill="none" stroke="currentColor" stroke-width="9"
@@ -333,7 +412,7 @@ async function jugar(mecanicaId) {
           <circle cx="80" cy="50" r="9" fill="currentColor"/>
         </svg>
       </button>
-      <div class="herramientas herramientas--juego">${botonEfectos()}${botonMusica()}</div>
+      <div class="herramientas herramientas--juego">${botonEfectos()}${botonMusica()}${botonPantalla()}</div>
     </section>`;
 
   animarSalida();
@@ -381,6 +460,43 @@ function pintarEstallido(punto, ac) {
   if (!estallidosActivos.loop) {
     estallidosActivos.loop = requestAnimationFrame(pintarEstallidos);
   }
+  const mundo = mundoActual();
+  estado.ultimoRefuerzo = {
+    mundo: mundo.id,
+    refuerzo: mundo.refuerzo,
+    x: Math.round(punto.x),
+    y: Math.round(punto.y),
+  };
+  if (!prefiereMenosMovimiento()) mostrarSello(punto, mundo);
+}
+
+// El refuerzo del mundo: un sello corto (<0,5 s) en el punto del acierto.
+// Es DOM (capa de interfaz, ADR 0001) para que cada mundo tenga su dibujo.
+function mostrarSello(punto, mundo) {
+  const capa = document.getElementById('sellos');
+  if (!capa) return;
+  const caja = document.createElement('span');
+  caja.className = 'sello';
+  caja.style.left = `${punto.x}px`;
+  caja.style.top = `${punto.y}px`;
+  const img = document.createElement('img');
+  img.alt = '';
+  img.dataset.refuerzo = mundo.refuerzo;
+  img.src = svg(mundo.refuerzo);
+  caja.appendChild(img);
+  capa.appendChild(caja);
+
+  const quitar = () => caja.remove();
+  const gsap = window.gsap;
+  if (gsap) {
+    gsap.fromTo(
+      caja,
+      { scale: 0.3, rotate: -18, opacity: 0 },
+      { scale: 1.1, rotate: 0, opacity: 1, duration: 0.16, ease: 'back.out(2)' },
+    );
+    gsap.to(caja, { scale: 1.8, opacity: 0, duration: 0.28, delay: 0.18, onComplete: quitar });
+  }
+  setTimeout(quitar, 620); // red de seguridad aunque GSAP no esté
 }
 
 function pintarEstallidos() {
@@ -464,14 +580,17 @@ function mostrarPremio(contenedor, premio) {
 }
 
 function celebrarYVolver(partida) {
+  // Un solo cierre por partida: los avisos repetidos y los clics de más no
+  // entregan dos pegatinas ni montan dos confetis.
+  if (!cierreUnico.reclamar(partida)) return;
   const gsap = window.gsap;
+  const mundo = mundoActual();
   estado.vista = 'cerrando';
   const premio = ganarPegatina();
   estado.coleccion = premio.coleccion;
   estado.ultimaPegatina = { id: premio.id, nueva: premio.nueva };
-  publicar({ ultimaPegatina: estado.ultimaPegatina, pegatinas: { ...estado.coleccion } });
   try {
-    fanfarria();
+    fanfarria(mundo.sonidos?.fanfarria);
   } catch {}
 
   const contenedor = document.querySelector('.partida') ?? document.body;
@@ -488,7 +607,9 @@ function celebrarYVolver(partida) {
   const ctx = lienzo.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const piezas = crearConfeti({ ancho, alto, cantidad: cantidadConfeti() });
+  const piezas = crearConfeti({ ancho, alto, cantidad: cantidadConfeti(), colores: mundo.paleta });
+  estado.confeti = piezas.length;
+  publicar({ ultimaPegatina: estado.ultimaPegatina, pegatinas: { ...estado.coleccion } });
   let ultimo = performance.now();
   let terminado = false;
 
@@ -599,6 +720,10 @@ function seguirPuntero() {
 }
 
 document.addEventListener('click', (ev) => {
+  if (accionDeDestino(ev, '[data-accion="pantalla-completa"]')) {
+    alternarPantallaCompleta().then(actualizarControlesPantalla);
+    return;
+  }
   if (accionDeDestino(ev, '[data-accion="efectos"]')) {
     alternarEfectos();
     actualizarControlesSonido();
@@ -644,5 +769,6 @@ document.addEventListener('keydown', (ev) => {
 });
 
 window.addEventListener('pagehide', () => terminarPartidaActual());
+document.addEventListener('fullscreenchange', actualizarControlesPantalla);
 
 render();

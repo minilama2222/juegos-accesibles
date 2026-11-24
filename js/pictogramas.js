@@ -119,6 +119,56 @@ export const PICTOGRAMAS = {
     <rect x="18" y="30" width="84" height="68" rx="10" fill="#ffffff" opacity=".22"/>
     <rect x="18" y="30" width="84" height="16" rx="8" fill="#ffd54f"/>
     <path d="M60 58l7 15 16 2-12 12 3 16-14-8-14 8 3-16-12-12 16-2z" fill="#ffffff"/>`),
+  // Refuerzos propios de cada mundo: no son el objetivo, son la celebración.
+  copo: svg(`
+    <g stroke="#ffffff" stroke-width="7" stroke-linecap="round">
+      <path d="M60 14v92M20 37l80 46M100 37L20 83"/>
+      <path d="M60 30l-12-10M60 30l12-10M60 90l-12 10M60 90l12 10"/>
+      <path d="M34 47l-15 3M34 47l-3-15M86 73l15-3M86 73l3 15"/>
+      <path d="M34 73l-15-3M34 73l-3 15M86 47l15 3M86 47l3-15"/>
+    </g>
+    <circle cx="60" cy="60" r="9" fill="#4fc3f7"/>`),
+  huella: svg(`
+    <ellipse cx="60" cy="76" rx="25" ry="20" fill="#f9a825" stroke="#ffffff" stroke-width="5"/>
+    <g fill="#f9a825" stroke="#ffffff" stroke-width="4">
+      <circle cx="31" cy="47" r="9"/><circle cx="49" cy="35" r="9"/>
+      <circle cx="71" cy="35" r="9"/><circle cx="89" cy="47" r="9"/>
+    </g>`),
+  silbato: svg(`
+    <path d="M22 48h46c14 0 24 8 24 20 0 12-10 20-24 20H46c-14 0-24-8-24-20z"
+          fill="#ffffff" stroke="#222" stroke-width="4"/>
+    <rect x="22" y="52" width="20" height="10" rx="5" fill="#e53935"/>
+    <circle cx="70" cy="60" r="7" fill="#222"/>
+    <path d="M92 62h16" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>`),
+  // Punteros propios: una forma distinta por mundo, siempre con contorno claro.
+  punteroEstrella: svg(`
+    <path d="M60 10l14 32 35 4-26 25 7 35-30-16-30 16 7-35-26-25 35-4z"
+          fill="#e53935" stroke="#ffffff" stroke-width="6" stroke-linejoin="round"/>
+    <circle cx="60" cy="60" r="8" fill="#ffd54f"/>`),
+  punteroHuella: svg(`
+    <ellipse cx="60" cy="72" rx="24" ry="19" fill="#f9a825" stroke="#ffffff" stroke-width="6"/>
+    <g fill="#f9a825" stroke="#ffffff" stroke-width="5">
+      <circle cx="32" cy="46" r="9"/><circle cx="50" cy="34" r="9"/>
+      <circle cx="70" cy="34" r="9"/><circle cx="88" cy="46" r="9"/>
+    </g>`),
+  punteroBalon: svg(`
+    <circle cx="60" cy="60" r="44" fill="#ffffff" stroke="#1b5e20" stroke-width="5"/>
+    <path d="M60 33l18 13-7 21H49l-7-21z" fill="#1b5e20"/>
+    <circle cx="28" cy="68" r="9" fill="#1b5e20"/>
+    <circle cx="92" cy="68" r="9" fill="#1b5e20"/>
+    <circle cx="60" cy="98" r="9" fill="#1b5e20"/>`),
+  punteroRayo: svg(`
+    <path d="M72 8L30 66h24l-6 46 44-62H68z"
+          fill="#ffeb3b" stroke="#ffffff" stroke-width="6" stroke-linejoin="round"/>`),
+  // Pantalla completa: esquinas hacia fuera para entrar, hacia dentro para salir.
+  pantalla: svg(`
+    <g fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 44V22h22M98 44V22H76M22 76v22h22M98 76v22H76"/>
+    </g>`),
+  pantallaSalir: svg(`
+    <g fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M44 22v22H22M76 22v22h22M44 98V76H22M76 98V76h22"/>
+    </g>`),
 };
 
 export function pictograma(nombre) {

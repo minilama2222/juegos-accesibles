@@ -46,7 +46,9 @@ export async function arrancarEscena(opciones) {
     global: false,
     width: window.innerWidth,
     height: window.innerHeight,
-    background: mundo.fondo,
+    // Canvas transparente: el color y el arte del mundo viven detrás (CSS/SVG).
+    // Sin esto Kaplay pinta su tablero de transparencia por defecto.
+    background: [0, 0, 0, 0],
     touchToMouse: false,
   });
 
@@ -142,7 +144,7 @@ export async function arrancarEscena(opciones) {
       apareceEn = juego.time();
       colocarDibujo();
     }
-    entrada();
+    entrada(mundo.sonidos?.entrada);
   }
 
   function aplicarAyudaAlObjetivo() {
@@ -219,7 +221,7 @@ export async function arrancarEscena(opciones) {
           const m = marcador.anotarAcierto();
           estado.aciertos = m.aciertos;
           ayuda.anotarAcierto();
-          acierto(mundo.sonidoAcierto ?? 660);
+          acierto(mundo.sonidos?.acierto ?? 660);
           hover.reiniciar();
           hover.salir();
           estado.hoverLleno = 0;

@@ -21,6 +21,12 @@ test('no quedan visibles cuando todo ha caído fuera', () => {
   assert.equal(quedanVisibles(piezas, 600), false);
 });
 
+test('el confeti usa la paleta del mundo elegido', () => {
+  const paleta = ['#010203', '#0a0b0c'];
+  const piezas = crearConfeti({ ancho: 800, alto: 600, cantidad: 30, azar: () => 0.5, colores: paleta });
+  assert.ok(piezas.every((p) => paleta.includes(p.color)));
+});
+
 test('las piezas se reparten por todo el ancho de la pantalla', () => {
   let n = 0;
   const azar = () => {
