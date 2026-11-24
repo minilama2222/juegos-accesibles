@@ -29,7 +29,9 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
     global: false,
     width: window.innerWidth,
     height: window.innerHeight,
-    background: mundo.fondo,
+    // Canvas transparente: el color y el arte del mundo viven detrás (CSS/SVG).
+    // Sin esto Kaplay pinta su tablero de transparencia por defecto.
+    background: [0, 0, 0, 0],
     touchToMouse: false,
   });
 
@@ -79,7 +81,7 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
   juego.onLoad(() => {
     juego.scene('causaEfecto', () => {
       estado.lista = true;
-      entrada();
+      entrada(mundo.sonidos?.entrada);
       alCambiar?.(oficial());
 
       juego.onUpdate(() => {
@@ -120,7 +122,7 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
       ayuda.anotarAcierto();
       ultimoToque = { x: Math.round(x), y: Math.round(y) };
       brotar(x, y);
-      acierto(mundo.sonidoAcierto ?? 660);
+      acierto(mundo.sonidos?.acierto ?? 660);
       // Un anillo por toque en el sitio exacto, además del objeto. Con menos
       // movimiento no hay partículas: el objeto que aparece ya es la respuesta.
       if (!menosMovimiento) alEstallar?.({ x, y, radio: V_MIN() * 5, color: mundo.acento });

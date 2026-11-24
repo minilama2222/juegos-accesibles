@@ -402,6 +402,116 @@ test('la pegatina del balón usa el pictograma ARASAAC, no el SVG propio', async
   await b.close();
 });
 
+test('el menú ofrece pantalla completa con icono y sin texto', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+  await p.goto(URL_BASE());
+  const boton = p.locator('[data-accion="pantalla-completa"]');
+  assert.equal(await boton.count(), 1, 'hay un botón de pantalla completa en el menú');
+  assert.equal(await boton.isVisible(), true);
+  assert.match(await boton.getAttribute('aria-label'), /pantalla completa/i);
+  assert.equal((await boton.innerText()).trim(), '', 'sin texto visible');
+
+  // En headless la API real puede no estar disponible: se comprueba que el clic la pide.
+  await p.evaluate(() => {
+    window.__pantallaPedida = 0;
+    document.documentElement.requestFullscreen = () => {
+      window.__pantallaPedida += 1;
+      return Promise.resolve();
+    };
+  });
+  await boton.click();
+  await p.waitForFunction(() => window.__pantallaPedida === 1);
+  await b.close();
+});
+
+test('cada mundo cambia fondo, refuerzo, puntero y sonido en la partida', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+  await p.goto(URL_BASE());
+
+  const vistos = [];
+  for (const id of ['navidad', 'animalitos', 'futbol', 'amarillo']) {
+    await p.click(`[data-mundo="${id}"]`);
+    await p.click('[data-juego="causaEfecto"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true);
+    const e = await p.evaluate(() => window.juego);
+    assert.equal(e.apariencia.fondoArte, id);
+    assert.ok(e.apariencia.refuerzo, `${id}: refuerzo propio`);
+    assert.ok(e.apariencia.puntero, `${id}: puntero propio`);
+    assert.ok(e.apariencia.sonidos.acierto > 0);
+
+    const fondo = await p.$eval('.fondo svg', (n) => n.outerHTML);
+    assert.ok(fondo.length > 100, `${id}: el fondo es arte, no un color plano`);
+    const puntero = await p.$eval('#puntero img', (n) => n.dataset.puntero);
+    assert.equal(puntero, e.apariencia.puntero);
+
+    await p.mouse.click(620, 420);
+    await p.waitForFunction(() => !!window.juego?.ultimoRefuerzo);
+    const refuerzo = await p.evaluate(() => window.juego.ultimoRefuerzo);
+    assert.equal(refuerzo.refuerzo, e.apariencia.refuerzo, `${id}: el refuerzo es el del mundo`);
+
+    vistos.push(`${e.apariencia.fondoArte}|${e.apariencia.refuerzo}|${e.apariencia.puntero}|${e.apariencia.sonidos.acierto}`);
+    await p.click('[data-accion="otro-juego"]');
+    await p.waitForSelector('[data-mundo]');
+  }
+  assert.equal(new Set(vistos).size, 4, 'los cuatro paquetes visuales son distintos');
+  await b.close();
+});
+
+test('pulsar muy rápido al final no rompe la partida ni duplica pegatinas', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+  await p.goto(URL_BASE());
+  await p.click('[data-juego="causaEfecto"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  const meta = await p.evaluate(() => window.juego.escena.meta);
+
+  // Más clics que la meta, disparados en el mismo instante: el desahogo no rompe nada.
+  await p.evaluate((n) => {
+    for (let i = 0; i < n; i++) {
+      document.dispatchEvent(new MouseEvent('click', { clientX: 200 + (i % 30) * 20, clientY: 300, bubbles: true }));
+    }
+  }, meta + 24);
+
+  await p.waitForFunction(() => window.juego?.ultimaPegatina, null, { timeout: 5000 });
+  assert.equal(await p.evaluate(() => window.juego.ultimaPegatina.nueva), true);
+  await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  const total = await p.evaluate(() =>
+    Object.values(window.juego.pegatinas).reduce((a, n) => a + n, 0),
+  );
+  assert.equal(total, 1, 'una partida entrega una sola pegatina aunque se pulse de más');
+  await b.close();
+});
+
+test('con reducedMotion reduce baja la animación y el resultado no cambia', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 }, reducedMotion: 'reduce' });
+  await p.goto(URL_BASE());
+  assert.equal(await p.evaluate(() => window.juego.movimiento.reducido), true);
+
+  await p.click('[data-juego="causaEfecto"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  const meta = await p.evaluate(() => window.juego.escena.meta);
+  for (let i = 0; i < meta; i++) {
+    await p.mouse.click(120 + (i % 6) * 160, 200 + Math.floor(i / 6) * 220);
+    await p.waitForFunction(({ n }) => window.juego?.escena?.toques === n, { n: i + 1 }, { timeout: 3000 });
+  }
+
+  const confeti = await p
+    .waitForFunction(() => Number.isInteger(window.juego?.movimiento?.confeti), null, { timeout: 5000 })
+    .then((h) => h.jsonValue());
+  assert.ok(confeti > 0 && confeti <= 40, `se recorta el confeti (${confeti} piezas)`);
+  assert.equal(await p.evaluate(() => window.juego.estallidos), 0, 'sin partículas de estallido');
+
+  await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  const total = await p.evaluate(() =>
+    Object.values(window.juego.pegatinas).reduce((a, n) => a + n, 0),
+  );
+  assert.equal(total, 1, 'el resultado de la partida es el mismo: una pegatina');
+  await b.close();
+});
+
 // Deja que la barra de hover empiece a llenarse y luego se vacíe del todo:
 // eso es un fallo suave para la ayuda, sin quitar progreso.
 async function provocarFallo(p) {

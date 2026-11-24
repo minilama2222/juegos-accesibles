@@ -130,13 +130,13 @@ export function error(frecuencia = 240) {
   tono(ac, { frecuencia, deslizA: frecuencia * 0.7, duracion: 0.22, tipo: 'sine', volumen: 0.07, inicio: t });
 }
 
-// Entrada: un brillo breve cuando aparece una pieza nueva.
-export function entrada() {
+// Entrada: un brillo breve cuando aparece una pieza nueva. Cada mundo elige su tono.
+export function entrada(frecuencia = 880) {
   if (efectosSilenciados) return;
   const ac = contexto();
   if (!ac) return;
   const t = ac.currentTime + 0.01;
-  tono(ac, { frecuencia: 880, deslizA: 990, duracion: 0.1, tipo: 'sine', volumen: 0.055, inicio: t });
+  tono(ac, { frecuencia, deslizA: frecuencia * 1.125, duracion: 0.1, tipo: 'sine', volumen: 0.055, inicio: t });
 }
 
 function trompeta(ac, inicio, frecuencia, duracion, volumen) {
@@ -173,24 +173,24 @@ function bombo(ac, inicio) {
   osc.stop(inicio + 0.32);
 }
 
-export function fanfarria() {
+export const FANFARRIA_POR_DEFECTO = [261.63, 329.63, 392, 523.25];
+
+export function fanfarria(notas = FANFARRIA_POR_DEFECTO) {
   if (efectosSilenciados) return;
   const ac = contexto();
   if (!ac) return;
   const t = ac.currentTime + 0.02;
-  const do4 = 261.63;
-  const mi4 = 329.63;
-  const sol4 = 392;
-  const do5 = 523.25;
+  // Cada mundo trae sus cuatro notas; si faltan, se usa la fanfarria de siempre.
+  const [n1, n2, n3, n4] = Array.isArray(notas) && notas.length >= 4 ? notas : FANFARRIA_POR_DEFECTO;
 
   bombo(ac, t);
-  trompeta(ac, t, do4, 0.14, 0.16);
-  trompeta(ac, t + 0.16, mi4, 0.14, 0.16);
-  trompeta(ac, t + 0.32, sol4, 0.14, 0.18);
+  trompeta(ac, t, n1, 0.14, 0.16);
+  trompeta(ac, t + 0.16, n2, 0.14, 0.16);
+  trompeta(ac, t + 0.32, n3, 0.14, 0.18);
   bombo(ac, t + 0.5);
-  trompeta(ac, t + 0.5, do5, 0.5, 0.2);
-  trompeta(ac, t + 0.5, sol4, 0.5, 0.1);
-  trompeta(ac, t + 0.5, mi4, 0.5, 0.09);
+  trompeta(ac, t + 0.5, n4, 0.5, 0.2);
+  trompeta(ac, t + 0.5, n3, 0.5, 0.1);
+  trompeta(ac, t + 0.5, n2, 0.5, 0.09);
 }
 
 // ---------- Música de fondo ----------
