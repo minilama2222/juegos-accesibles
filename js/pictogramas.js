@@ -77,6 +77,14 @@ export const PICTOGRAMAS = {
   chispa: svg(
     `<path d="M60 18l10 28 28 10-28 10-10 28-10-28-28-10 28-10z" fill="#ffeb3b" stroke="#fff" stroke-width="3"/>`,
   ),
+  // Icono de la mecánica "causa-efecto": un golpe con chispas, no una estrella.
+  // Tiene que distinguirse de un vistazo del de hover sin usar texto.
+  destello: svg(`
+    <g stroke="#4fc3f7" stroke-width="9" stroke-linecap="round">
+      <path d="M60 12v16M60 92v16M12 60h16M92 60h16"/>
+      <path d="M26 26l11 11M83 83l11 11M94 26L83 37M37 83L26 94"/>
+    </g>
+    <circle cx="60" cy="60" r="17" fill="#4fc3f7" stroke="#fff" stroke-width="4"/>`),
   huevo: svg(`<ellipse cx="60" cy="66" rx="30" ry="38" fill="#fff" stroke="#222" stroke-width="3"/>
     <circle cx="60" cy="66" r="12" fill="#ffeb3b" stroke="#222" stroke-width="3"/>`),
   cola: svg(`

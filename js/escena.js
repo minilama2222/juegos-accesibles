@@ -4,8 +4,13 @@ import { crearMarcador } from './sesion.js';
 import { calcularRadio } from './objetivo.js';
 import { animarAparicion, progreso, APARICION_MS } from './animaciones.js';
 import { prefiereMenosMovimiento } from './movimiento-reducido.js';
+import { arrancarCausaEfecto } from './escena-causa-efecto.js';
 
-export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, alEstallar }) {
+export async function arrancarEscena(opciones) {
+  // Cada mecánica tiene su escena; aquí solo se elige.
+  if (opciones.mecanica?.id === 'causaEfecto') return arrancarCausaEfecto(opciones);
+
+  const { mundo, mecanica, alCambiar, alTerminar, alEstallar } = opciones;
   const kaplay = await cargarKaplay();
   const menosMovimiento = prefiereMenosMovimiento();
   const hover = crearHover({ llenadoMs: mecanica.llenadoMs, vaciadoMs: mecanica.vaciadoMs });
@@ -171,7 +176,7 @@ export async function arrancarEscena({ mundo, mecanica, alCambiar, alTerminar, a
           const y = estado.objetivo.y;
           const radio = estado.objetivo.radio;
           // Un estallido por acierto, no uno por fotograma. Con menos movimiento no hay partículas.
-          if (!menosMovimiento) alEstallar?.({ x, y, radio });
+          if (!menosMovimiento) alEstallar?.({ x, y, radio, color: mundo.acento });
           colocarObjetivo(); // la bola nueva empieza su aparición desde cero, sin saltos
           alTerminar?.({ acierto: true, aciertos: m.aciertos, terminada: m.terminada });
           if (m.terminada) {

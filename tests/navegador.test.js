@@ -47,7 +47,7 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
     'el selector de mundo usa los mismos pictogramas que las bolas',
   );
   const juegos = await p.$$eval('[data-juego]', (n) => n.map((x) => x.dataset.juego));
-  assert.deepEqual(juegos, ['hover'], 'sólo se ofrecen mecánicas implementadas');
+  assert.deepEqual(juegos, ['causaEfecto', 'hover'], 'sólo se ofrecen mecánicas implementadas');
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());
   assert.equal(textosVisibles, '');
   await b.close();
@@ -198,5 +198,49 @@ test('el objetivo dibuja el pictograma del mundo elegido', async () => {
     pedidas.some((u) => u.endsWith('/assets/arasaac/balon-2269.png')),
     'debe cargar el balón de ARASAAC del mundo de fútbol',
   );
+  await b.close();
+});
+
+
+test('causa-efecto: un clic en cualquier sitio hace aparecer el objeto', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+  await p.goto(URL_BASE());
+  await p.click('[data-juego="causaEfecto"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+
+  await p.mouse.click(300, 250);
+  await p.waitForFunction(() => window.juego.escena.toques === 1);
+  const uno = await p.evaluate(() => window.juego.escena);
+  assert.equal(uno.brotes, 1, 'ha aparecido un objeto');
+  assert.deepEqual(uno.ultimoToque, { x: 300, y: 250 });
+
+  // En cualquier otro punto, sin apuntar a nada.
+  await p.mouse.click(1000, 650);
+  await p.waitForFunction(() => window.juego.escena.toques === 2);
+  const dos = await p.evaluate(() => window.juego.escena);
+  assert.deepEqual(dos.ultimoToque, { x: 1000, y: 650 });
+  assert.equal(dos.terminada, false);
+  await b.close();
+});
+
+test('causa-efecto: al llegar a la meta termina y vuelve al menú', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+  await p.goto(URL_BASE());
+  await p.click('[data-juego="causaEfecto"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  const meta = await p.evaluate(() => window.juego.escena.meta);
+
+  for (let i = 0; i < meta; i++) {
+    await p.mouse.click(120 + (i % 6) * 160, 200 + Math.floor(i / 6) * 220);
+    await p.waitForFunction(({ n }) => window.juego?.escena?.toques === n, { n: i + 1 }, { timeout: 3000 });
+  }
+  const final = await p.evaluate(() => window.juego.escena);
+  assert.equal(final.terminada, true);
+  assert.equal(final.toques, meta);
+
+  await p.waitForSelector('.confeti', { timeout: 5000 });
+  await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 8000 });
   await b.close();
 });

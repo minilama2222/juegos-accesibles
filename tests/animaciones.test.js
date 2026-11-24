@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { animarAparicion, animarAcierto, progreso } from '../js/animaciones.js';
+import { animarAparicion, animarAcierto, animarBrote, progreso } from '../js/animaciones.js';
 
 test('la aparición empieza pequeña (anticipación) y acaba en su tamaño', () => {
   const inicio = animarAparicion(0);
@@ -31,6 +31,30 @@ test('el acierto da un salto y termina desvaneciéndose', () => {
   const fin = animarAcierto(1);
   assert.ok(medio.escalaY > 1);
   assert.ok(fin.opacidad < 0.05);
+});
+
+test('el brote aparece con anticipación, se ve entero y se va desvaneciendo', () => {
+  const inicio = animarBrote(0);
+  assert.ok(inicio.escalaX < 1, 'empieza encogiéndose');
+  assert.equal(inicio.opacidad, 0);
+
+  const pico = Math.max(...Array.from({ length: 50 }, (_, i) => animarBrote(i / 60).escalaY));
+  assert.ok(pico > 1.05, 'sobrepasa el tamaño final');
+
+  const medio = animarBrote(0.5);
+  assert.ok(medio.opacidad > 0.9, 'a mitad todavía se ve entero');
+  assert.equal(medio.subida, 0, 'todavía no ha empezado a subir');
+
+  const fin = animarBrote(1);
+  assert.ok(fin.opacidad < 0.02, 'termina invisible');
+  assert.ok(fin.subida > 0.9, 'termina arriba');
+});
+
+test('el brote se queda quieto si se pide menos movimiento', () => {
+  // La escena ignora `subida` con menos movimiento; la función no cambia de forma.
+  const a = animarBrote(0.8);
+  assert.ok(a.opacidad < 1);
+  assert.ok(a.subida > 0);
 });
 
 test('el progreso queda acotado entre 0 y 1', () => {

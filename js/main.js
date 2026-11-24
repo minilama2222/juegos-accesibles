@@ -88,6 +88,7 @@ function render() {
 }
 
 function iconoMecanica(id) {
+  if (id === 'causaEfecto') return 'destello';
   if (id === 'hover') return 'estrella';
   if (id === 'clickEstatico') return 'balon';
   return 'regalo';
@@ -185,7 +186,13 @@ async function jugar(mecanicaId) {
 const estallidosActivos = [];
 
 function pintarEstallido(punto, ac) {
-  estallidosActivos.push({ ...punto, ac, desde: performance.now() });
+  // Chispas repartidas alrededor: cada golpe se ve distinto sin ser ruidoso.
+  const chispas = Array.from({ length: 10 }, (_, i) => ({
+    ang: (i / 10) * Math.PI * 2 + Math.random() * 0.4,
+    dist: 40 + Math.random() * 80,
+    grande: i % 2 === 0,
+  }));
+  estallidosActivos.push({ ...punto, ac, desde: performance.now(), chispas });
   if (!estallidosActivos.loop) {
     estallidosActivos.loop = requestAnimationFrame(pintarEstallidos);
   }
@@ -232,6 +239,21 @@ function pintarEstallidos() {
     ctx.beginPath();
     ctx.arc(e.x, e.y, e.radio * (0.6 + 0.4 * vida), 0, Math.PI * 2);
     ctx.fill();
+
+    // Chispas del color del mundo, saliendo en abanico.
+    const colorChispa = e.color || '#ffd54f';
+    ctx.fillStyle = colorChispa;
+    ctx.shadowColor = colorChispa;
+    ctx.shadowBlur = 14;
+    for (const s of e.chispas) {
+      const d = e.radio * 0.55 + s.dist * t;
+      ctx.globalAlpha = (1 - t) * 0.95;
+      const r = (s.grande ? 6 : 4) + 8 * (1 - t);
+      ctx.beginPath();
+      ctx.arc(e.x + Math.cos(s.ang) * d, e.y + Math.sin(s.ang) * d, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
   }
   ctx.globalAlpha = 1;
   estallidosActivos.loop = requestAnimationFrame(pintarEstallidos);
@@ -370,6 +392,8 @@ function seguirPuntero() {
 document.addEventListener('click', (ev) => {
   if (estado.vista === 'juego') {
     if (accionDeDestino(ev, '[data-accion="otro-juego"]')) return render();
+    // La mecánica decide qué significa un clic en la escena (en hover, nada).
+    escena?.clic?.(ev.clientX, ev.clientY);
     return;
   }
   const m = accionDeDestino(ev, '[data-mundo]');

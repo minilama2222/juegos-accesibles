@@ -42,6 +42,25 @@ export function animarAcierto(progreso) {
   };
 }
 
+// Brote de causa-efecto: aparece con anticipación, se sostiene un instante y se
+// desvanece subiendo. Es el objeto entero, no un refuerzo: dura algo más que 480 ms.
+export const BROTE_MS = 620;
+
+export function animarBrote(progreso) {
+  const t = Math.max(0, Math.min(1, progreso));
+  const entrada = Math.min(1, t / 0.45);
+  const a = animarAparicion(entrada);
+  const salida = t <= 0.55 ? 0 : (t - 0.55) / 0.45;
+  const desvanecido = suave(salida);
+  return {
+    escalaX: a.escalaX * (1 + 0.1 * desvanecido),
+    escalaY: a.escalaY * (1 + 0.1 * desvanecido),
+    opacidad: a.opacidad * (1 - desvanecido),
+    subida: desvanecido, // 0→1: cuánto ha empezado a irse hacia arriba
+    giro: a.giro * (1 - desvanecido),
+  };
+}
+
 export function progreso(transcurrido, duracion) {
   if (duracion <= 0) return 1;
   return Math.max(0, Math.min(1, transcurrido / duracion));

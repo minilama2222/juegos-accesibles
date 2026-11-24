@@ -7,8 +7,8 @@ Trabajar **de bloqueante en bloqueante**. Cualquier ticket cuyos bloqueantes est
 | # | Ticket | Estado | Bloqueado por |
 |---|---|---|---|
 | 01 | Maqueta jugable — menú, mundo y hover | hecho | — |
-| 02 | Causa-efecto | siguiente | 01 |
-| 03 | Refuerzo, sonido y pegatinas | parcial (falta silencio y pegatinas) | 02 |
+| 02 | Causa-efecto | hecho | 01 |
+| 03 | Refuerzo, sonido y pegatinas | siguiente (parcial: falta silencio y pegatinas) | 02 |
 | 04 | Ayuda adaptativa y métricas | pendiente | 03 |
 | 05 | Click estático | pendiente | 04 |
 | 06 | Aparición con tiempo | pendiente | 05 |
