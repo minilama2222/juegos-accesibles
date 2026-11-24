@@ -238,6 +238,7 @@ function iconoMecanica(id) {
   if (id === 'hover') return 'aguantar';
   if (id === 'clickEstatico') return 'balon';
   if (id === 'aparicion') return 'aparicion';
+  if (id === 'movimientoLento') return 'movimiento';
   if (id === 'tiroAPorteria') return 'porteria';
   return 'regalo';
 }

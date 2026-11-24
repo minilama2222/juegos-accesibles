@@ -121,6 +121,20 @@ export const MECANICAS = {
     objetivoMinVmin: 12,
     objetivoMaxVmin: 20,
   },
+  movimientoLento: {
+    id: 'movimientoLento',
+    implementada: true,
+    meta: 6,
+    // El objetivo se sigue con el ratón: grande y con la velocidad controlada.
+    // La velocidad sube cada dos aciertos y nunca pasa del techo humano; la
+    // ayuda adaptativa la frena con `factorVelocidad`.
+    velocidadBase: 0.5,
+    velocidadMax: 1,
+    pasoVelocidad: 0.12,
+    aciertosPorPaso: 2,
+    objetivoMinVmin: 13,
+    objetivoMaxVmin: 20,
+  },
   tiroAPorteria: {
     id: 'tiroAPorteria',
     implementada: true,
@@ -134,9 +148,15 @@ export const MECANICAS = {
 
 // De más fácil a más difícil: primero causa-efecto (cualquier clic vale),
 // después hover (hay que acertar y aguantar), click estático, aparición con
-// tiempo y, por último, tiro a portería. El movimiento lento se insertará
-// antes del tiro cuando llegue, según la progresión de la spec.
-export const ORDEN = ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'tiroAPorteria'];
+// tiempo, movimiento lento (seguir el dibujo) y, por último, tiro a portería.
+export const ORDEN = [
+  'causaEfecto',
+  'hover',
+  'clickEstatico',
+  'aparicion',
+  'movimientoLento',
+  'tiroAPorteria',
+];
 
 export function siguienteMecanica(id) {
   const i = ORDEN.indexOf(id);

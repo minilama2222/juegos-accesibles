@@ -126,6 +126,15 @@ export const PICTOGRAMAS = {
     <rect x="18" y="30" width="84" height="68" rx="10" fill="#ffffff" opacity=".22"/>
     <rect x="18" y="30" width="84" height="16" rx="8" fill="#ffd54f"/>
     <path d="M60 58l7 15 16 2-12 12 3 16-14-8-14 8 3-16-12-12 16-2z" fill="#ffffff"/>`),
+  // Icono del movimiento lento: un recorrido en bucle y la bola en marcha.
+  // Se distingue del reloj de aparición y del marco del tiro a portería.
+  movimiento: svg(`
+    <path d="M20 64c0-24 18-42 40-42s40 18 40 42-18 34-40 34-32-10-32-26"
+          fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"
+          stroke-dasharray="10 13"/>
+    <path d="M96 84l8 12-15-1z" fill="#ffffff"/>
+    <circle cx="60" cy="64" r="20" fill="#ffd54f" stroke="#ffffff" stroke-width="5"/>
+    <circle cx="53" cy="57" r="5" fill="#ffffff" opacity="0.6"/>`),
   // Icono del tiro a portería: un marco con huecos y el balón dentro.
   porteria: svg(`
     <g fill="none" stroke="#ffffff" stroke-width="7" stroke-linejoin="round">

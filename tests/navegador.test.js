@@ -64,7 +64,7 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
   const juegos = await p.$$eval('[data-juego]', (n) => n.map((x) => x.dataset.juego));
   assert.deepEqual(
     juegos,
-    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'tiroAPorteria'],
+    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'movimientoLento', 'tiroAPorteria'],
     'sólo se ofrecen mecánicas implementadas y de más fácil a más difícil',
   );
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());
@@ -544,6 +544,129 @@ test('aparición funciona en los cuatro mundos desde el menú', async () => {
   }
 });
 
+
+test('movimiento lento: sigo el objetivo, clico y la velocidad sube con aciertos', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="movimientoLento"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+
+    const primero = await p.evaluate(() => window.juego.escena);
+    assert.equal(primero.mecanica, 'movimientoLento');
+    assert.ok(primero.objetivo, 'window.juego expone la posición del objetivo');
+    assert.ok(primero.objetivo.radio * 2 >= 44, 'el objetivo es grande y se puede seguir');
+    assert.ok(primero.velocidad > 0, 'window.juego expone la velocidad');
+    assert.equal(primero.aciertos, 0);
+    assert.equal(primero.fallos, 0);
+    assert.equal(primero.terminada, false);
+    assert.ok(primero.ayuda);
+    const inicio = { x: primero.objetivo.x, y: primero.objetivo.y };
+
+    // El objetivo se mueve solo, con una trayectoria suave.
+    await p.waitForFunction(
+      (o) => {
+        const e = window.juego?.escena;
+        return e?.objetivo && Math.hypot(e.objetivo.x - o.x, e.objetivo.y - o.y) > 12;
+      },
+      inicio,
+      { timeout: 4000 },
+    );
+
+    // Sigo el objetivo y clico: dos aciertos para notar la subida de velocidad.
+    for (let i = 0; i < 2; i++) {
+      const o = await p.evaluate(() => window.juego.escena.objetivo);
+      await p.mouse.click(o.x, o.y);
+      await p.waitForFunction(({ n }) => window.juego?.escena?.aciertos === n, { n: i + 1 }, { timeout: 4000 });
+    }
+    const trasAciertos = await p.evaluate(() => window.juego.escena);
+    assert.ok(
+      trasAciertos.velocidad > primero.velocidad,
+      `acertar acelera un poco (${primero.velocidad} → ${trasAciertos.velocidad})`,
+    );
+
+    // Un clic fuera solo cuenta un fallo suave: no resta ni para el paseo.
+    const antesFallo = await p.evaluate(() => window.juego.escena);
+    await p.mouse.click(8, 8);
+    await p.waitForFunction(() => window.juego?.escena?.fallos === 1, null, { timeout: 3000 });
+    const trasFallo = await p.evaluate(() => window.juego.escena);
+    assert.equal(trasFallo.aciertos, 2, 'el fallo no quita progreso');
+    assert.equal(trasFallo.terminada, false);
+    assert.ok(trasFallo.velocidad >= antesFallo.velocidad * 0.99, 'el fallo suelto no frena el juego');
+  } finally {
+    await b.close();
+  }
+});
+
+test('movimiento lento: dos fallos seguidos piden ayuda y la ralentizan', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="movimientoLento"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+
+    const antes = await p.evaluate(() => window.juego.escena);
+    await p.mouse.click(8, 8);
+    await p.waitForFunction(() => window.juego?.escena?.fallos === 1, null, { timeout: 3000 });
+    await p.waitForTimeout(450); // respeta la pausa anti-rebote de los fallos
+    await p.mouse.click(8, 8);
+    await p.waitForFunction(() => window.juego?.escena?.fallos === 2, null, { timeout: 3000 });
+
+    const e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.ayuda.nivel, 1);
+    assert.ok(
+      e.velocidad < antes.velocidad,
+      `la ayuda adaptativa ralentiza con factorVelocidad (${antes.velocidad} → ${e.velocidad})`,
+    );
+    assert.ok(e.objetivo.radio > e.objetivo.radioBase, 'la ayuda también agranda el dibujo');
+  } finally {
+    await b.close();
+  }
+});
+
+test('movimiento lento: al llegar a la meta termina y vuelve al menú', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="movimientoLento"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+    const meta = await p.evaluate(() => window.juego.escena.meta);
+
+    for (let i = 0; i < meta; i++) {
+      const o = await p.evaluate(() => window.juego.escena.objetivo);
+      await p.mouse.click(o.x, o.y);
+      await p.waitForFunction(({ n }) => window.juego?.escena?.aciertos === n, { n: i + 1 }, { timeout: 4000 });
+    }
+    assert.equal(await p.evaluate(() => window.juego.escena.terminada), true);
+    await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  } finally {
+    await b.close();
+  }
+});
+
+test('movimiento lento está disponible en los cuatro mundos', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+    await p.goto(URL_BASE());
+    for (const id of ['navidad', 'animalitos', 'futbol', 'amarillo']) {
+      await p.click(`[data-mundo="${id}"]`);
+      await p.click('[data-juego="movimientoLento"]');
+      await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+      const e = await p.evaluate(() => window.juego);
+      assert.equal(e.mundo, id, `${id}: la escena usa el mundo elegido`);
+      assert.equal(e.escena.mecanica, 'movimientoLento');
+      assert.ok(e.escena.objetivo, `${id}: hay objetivo en movimiento`);
+      await p.click('[data-accion="otro-juego"]');
+      await p.waitForSelector('[data-mundo]');
+    }
+  } finally {
+    await b.close();
+  }
+});
 
 test('el avatar se elige con un clic y se recuerda al recargar', async () => {
   const b = await chromium.launch();
