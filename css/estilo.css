@@ -221,6 +221,17 @@ img {
   border-color: var(--acento);
 }
 
+/* Aviso táctil al padre: discreto, solo icono y aria-label. No bloquea nada. */
+.aviso {
+  width: 6vmin;
+  height: 6vmin;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0.8vmin;
+  opacity: 0.62;
+  pointer-events: none;
+}
+
 .herramientas--juego {
   position: fixed;
   top: 2.5vmin;

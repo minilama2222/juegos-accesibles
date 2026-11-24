@@ -544,6 +544,7 @@ test('aparición funciona en los cuatro mundos desde el menú', async () => {
       await p.click(`[data-mundo="${id}"]`);
       await p.click('[data-juego="aparicion"]');
       await p.waitForFunction(() => window.juego?.escena?.lista === true);
+      await p.waitForFunction(() => window.juego?.escena?.visible === true, null, { timeout: 3000 });
       const e = await p.evaluate(() => window.juego);
       assert.equal(e.mundo, id);
       assert.equal(e.escena.mecanica, 'aparicion');
@@ -753,6 +754,24 @@ test('arrastre: soltar fuera es un fallo suave y el dibujo vuelve a su sitio', a
     assert.equal(e.objetivo.x, inicio.x, 'el dibujo vuelve a su sitio');
     assert.equal(e.objetivo.y, inicio.y, 'el dibujo vuelve a su sitio');
     assert.equal(e.ayuda.nivel, 0, 'un fallo suelto no sube la ayuda');
+
+    // El segundo fallo seguido sube la ayuda: el reparto y el tamaño nuevos se
+    // aplican ya en esta ronda, sin esperar a otro acierto.
+    const zonaAntes = e.arrastre.zona.radio;
+    const radioAntes = e.objetivo.radio;
+    await p.waitForTimeout(450); // respeta la pausa anti-rebote
+    const otraVez = await p.evaluate(() => window.juego.escena.arrastre.inicio);
+    await p.mouse.move(otraVez.x, otraVez.y);
+    await p.mouse.down();
+    await p.mouse.move(800, 80, { steps: 8 });
+    await p.mouse.up();
+    await p.waitForFunction(() => window.juego?.escena?.fallos === 2, null, { timeout: 3000 });
+
+    const conAyuda = await p.evaluate(() => window.juego.escena);
+    assert.equal(conAyuda.ayuda.nivel, 1);
+    assert.ok(conAyuda.objetivo.radio > radioAntes, 'el dibujo crece en la misma ronda');
+    assert.ok(conAyuda.arrastre.zona.radio > zonaAntes, 'la zona también crece ya');
+    assert.equal(conAyuda.aciertos, 0, 'seguir fallando no da progreso');
   } finally {
     await b.close();
   }
@@ -947,6 +966,53 @@ test('el menú ofrece pantalla completa con icono y sin texto', async () => {
   await b.close();
 });
 
+test('en pantalla táctil el menú avisa al padre con un icono, sin texto', async () => {
+  const b = await chromium.launch();
+  try {
+    const contexto = await b.newContext({
+      viewport: { width: 800, height: 600 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    const p = await contexto.newPage();
+    await p.goto(URL_BASE());
+    const grueso = await p.evaluate(() => matchMedia('(pointer: coarse)').matches);
+    if (!grueso) return; // Chromium headless no siempre emula la consulta; sin señal no hay aviso.
+    const aviso = p.locator('.aviso--tactil');
+    assert.equal(await aviso.count(), 1, 'hay un aviso táctil en el menú');
+    assert.match(await aviso.getAttribute('aria-label'), /ratón/i);
+    assert.equal((await aviso.innerText()).trim(), '', 'sin texto visible');
+  } finally {
+    await b.close();
+  }
+});
+
+test('las escenas de clic estático y aparición dejan ver el arte del mundo', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    for (const id of ['clickEstatico', 'aparicion']) {
+      await p.click(`[data-juego="${id}"]`);
+      await p.waitForFunction(() => window.juego?.escena?.lista === true);
+      await p.waitForTimeout(400);
+      const alpha = await p.evaluate(() => {
+        const lienzo = document.getElementById('lienzo');
+        const gl = lienzo.getContext('webgl');
+        const px = new Uint8Array(4);
+        // Una esquina sin objetivos: si el canvas fuera opaco taparía el fondo SVG.
+        gl.readPixels(2, 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+        return px[3];
+      });
+      assert.equal(alpha, 0, `${id}: el canvas es transparente y deja ver el mundo`);
+      await p.click('[data-accion="otro-juego"]');
+      await p.waitForSelector('[data-mundo]');
+    }
+  } finally {
+    await b.close();
+  }
+});
+
 test('cada mundo cambia fondo, refuerzo, puntero y sonido en la partida', async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
@@ -1004,6 +1070,46 @@ test('pulsar muy rápido al final no rompe la partida ni duplica pegatinas', asy
   );
   assert.equal(total, 1, 'una partida entrega una sola pegatina aunque se pulse de más');
   await b.close();
+});
+
+test('pulsar muy rápido en click estático tampoco rompe ni duplica el premio', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="clickEstatico"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true);
+    await p.waitForTimeout(600);
+    const meta = await p.evaluate(() => window.juego.escena.meta);
+
+    // Una ráfaga de clics en el mismo instante sobre el primer objetivo: solo
+    // uno puede acertar y el resto no rompe la partida.
+    await p.evaluate((n) => {
+      const o = window.juego.escena.objetivo;
+      for (let i = 0; i < n; i++) {
+        document.dispatchEvent(new MouseEvent('click', { clientX: o.x, clientY: o.y, bubbles: true }));
+      }
+    }, meta + 24);
+    await p.waitForTimeout(120);
+    const trasRafaga = await p.evaluate(() => window.juego.escena);
+    assert.equal(trasRafaga.aciertos, 1, 'la ráfaga solo suma el primer acierto');
+    assert.equal(trasRafaga.terminada, false);
+
+    // Ahora termina la partida con clics normales, uno por objetivo.
+    for (let i = 1; i < meta; i++) {
+      const o = await p.evaluate(() => window.juego.escena.objetivo);
+      await p.mouse.click(o.x, o.y);
+      await p.waitForFunction(({ n }) => window.juego?.escena?.aciertos === n, { n: i + 1 }, { timeout: 4000 });
+    }
+    assert.equal(await p.evaluate(() => window.juego.escena.terminada), true);
+    await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+    const total = await p.evaluate(() =>
+      Object.values(window.juego.pegatinas).reduce((a, n) => a + n, 0),
+    );
+    assert.equal(total, 1, 'una partida entrega una sola pegatina aunque haya ráfaga');
+  } finally {
+    await b.close();
+  }
 });
 
 test('con reducedMotion reduce baja la animación y el resultado no cambia', async () => {
@@ -1196,6 +1302,50 @@ test('parejas: fallar un par no quita progreso y la ayuda alarga el tiempo visib
     assert.equal(e.ayuda.nivel, 1);
     assert.ok(e.tiempoVisibleMs > 1500, `la ayuda alarga el tiempo visible (${e.tiempoVisibleMs} ms)`);
     assert.equal(e.encontradas, 0);
+  } finally {
+    await b.close();
+  }
+});
+
+test('parejas: un acierto que baja la ayuda recalcula el tiempo visible en la misma partida', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="parejas"][data-parejas="6"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+    const cartas = await p.evaluate(() => window.juego.escena.cartas);
+
+    // Dos fallos seguidos suben la ayuda y alargan el tiempo visible.
+    const a = cartas[0];
+    const b1 = cartas.find((c) => c.pareja !== a.pareja);
+    await p.mouse.click(a.x, a.y);
+    await p.mouse.click(b1.x, b1.y);
+    await p.waitForFunction(() => window.juego.escena.fallos === 1, null, { timeout: 3000 });
+    await p.waitForFunction(() => window.juego.escena.bloqueada === false, null, { timeout: 5000 });
+    await p.waitForTimeout(200);
+    const c = cartas.find((x) => x.pareja !== a.pareja && x.pareja !== b1.pareja);
+    const d = cartas.find((x) => x.pareja !== a.pareja && x.pareja !== b1.pareja && x.pareja !== c.pareja);
+    await p.mouse.click(c.x, c.y);
+    await p.mouse.click(d.x, d.y);
+    await p.waitForFunction(() => window.juego.escena.fallos === 2, null, { timeout: 3000 });
+    await p.waitForFunction(() => window.juego.escena.bloqueada === false, null, { timeout: 5000 });
+
+    let e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.ayuda.nivel, 1);
+    assert.ok(e.tiempoVisibleMs > 1500, 'el fallo alargó el tiempo visible');
+
+    // Cuatro aciertos seguidos bajan la ayuda: el tiempo se recalcula sin
+    // esperar a otro fallo.
+    for (let n = 0; n < 4; n++) {
+      const dos = await p.evaluate((i) => window.juego.escena.cartas.filter((x) => x.pareja === i), n);
+      await p.mouse.click(dos[0].x, dos[0].y);
+      await p.mouse.click(dos[1].x, dos[1].y);
+      await p.waitForFunction(({ i }) => window.juego.escena.encontradas === i, { i: n + 1 }, { timeout: 3000 });
+    }
+    e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.ayuda.nivel, 0, 'cuatro aciertos seguidos bajan la ayuda');
+    assert.equal(e.tiempoVisibleMs, 1500, 'el tiempo visible vuelve al valor del nivel 0');
   } finally {
     await b.close();
   }

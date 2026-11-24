@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { animarAparicion, animarAcierto, animarBrote, animarTiro, progreso } from '../js/animaciones.js';
+import {
+  animarAparicion,
+  animarAcierto,
+  animarBrote,
+  animarTiro,
+  animarVolteo,
+  progreso,
+} from '../js/animaciones.js';
 
 test('la aparición empieza pequeña (anticipación) y acaba en su tamaño', () => {
   const inicio = animarAparicion(0);
@@ -55,6 +62,19 @@ test('el brote se queda quieto si se pide menos movimiento', () => {
   const a = animarBrote(0.8);
   assert.ok(a.opacidad < 1);
   assert.ok(a.subida > 0);
+});
+
+test('el volteo de una carta se estrecha hasta el centro y vuelve', () => {
+  const inicio = animarVolteo(0);
+  const medio = animarVolteo(0.5);
+  const fin = animarVolteo(1);
+
+  assert.ok(Math.abs(inicio.escalaX - 1) < 1e-9, 'empieza de frente');
+  assert.ok(medio.escalaX < 0.1, 'a mitad del giro está casi de canto');
+  assert.ok(Math.abs(fin.escalaX - 1) < 1e-9, 'termina de frente');
+  assert.ok(inicio.escalaY >= 1 && medio.escalaY > 1, 'gana un poco de altura sin deformarse');
+  assert.equal(animarVolteo(-2).escalaX, 1, 'el progreso queda acotado por abajo');
+  assert.ok(animarVolteo(9).escalaX > 0.99, 'el progreso queda acotado por arriba');
 });
 
 test('el tiro avanza con arco y vuelve al suelo al llegar', () => {

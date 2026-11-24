@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  UMBRAL_VISIBLE,
+  decidirClicAparicion,
+  estaVisibleDeVerdad,
   VENTANA_MIN_MS,
   VENTANA_MAX_MS,
   HUECO_MS,
@@ -110,4 +113,26 @@ test('subir la ayuda a mitad de partida alarga la ventana sin acortarla nunca', 
   const yaLarga = { ...estado, ventanaMs: 7000 };
   const sinCambios = reajustarVentana(yaLarga, 1);
   assert.equal(sinCambios.ventanaMs, 7000, 'la ayuda nunca quita tiempo ya ganado');
+});
+
+test('durante la animación de entrada el objetivo todavía no se puede clicar', () => {
+  assert.deepEqual(
+    estaVisibleDeVerdad({ fase: 'visible', opacidad: 0 }),
+    false,
+    'el primer fotograma es transparente: un clic no acierta',
+  );
+  assert.equal(estaVisibleDeVerdad({ fase: 'visible', opacidad: UMBRAL_VISIBLE }), false);
+  assert.equal(estaVisibleDeVerdad({ fase: 'visible', opacidad: 0.9 }), true);
+  assert.equal(estaVisibleDeVerdad({ fase: 'hueco', opacidad: 1 }), false, 'en el hueco no hay objetivo');
+  assert.equal(estaVisibleDeVerdad({ fase: 'visible', opacidad: 1, oculto: true }), false);
+  assert.equal(estaVisibleDeVerdad({ fase: 'visible', opacidad: 1, terminada: true }), false);
+});
+
+test('un clic durante la animación inicial no cuenta acierto', () => {
+  // El objetivo ya ocupa su sitio y el clic cae dentro, pero todavía no se ve:
+  // el resultado es fallo suave, nunca acierto.
+  assert.equal(decidirClicAparicion({ visible: false, dentro: true }), 'fallo');
+  assert.equal(decidirClicAparicion({ visible: true, dentro: true }), 'acierto');
+  assert.equal(decidirClicAparicion({ visible: true, dentro: false }), 'fallo');
+  assert.equal(decidirClicAparicion({ visible: false, dentro: false }), 'fallo');
 });

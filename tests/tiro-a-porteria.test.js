@@ -65,6 +65,27 @@ test('la ayuda agranda los huecos sin moverlos de sitio', () => {
   });
 });
 
+test('la ayuda no permite que dos huecos se solapen aunque crezcan mucho', () => {
+  const cerca = [
+    { id: 0, x: 100, y: 100, radioBase: 40, radio: 40 },
+    { id: 1, x: 180, y: 100, radioBase: 40, radio: 40 },
+    { id: 2, x: 100, y: 180, radioBase: 40, radio: 40 },
+    { id: 3, x: 180, y: 180, radioBase: 40, radio: 40 },
+  ];
+  const crecidos = escalarHuecos(cerca, 10);
+  for (const h of crecidos) {
+    assert.ok(h.radio <= 40, 'el radio se limita a la mitad de la distancia mínima');
+    assert.equal(h.x, cerca[h.id].x, 'el centro no se mueve');
+    assert.equal(h.radioBase, 40, 'el radio base se conserva');
+  }
+  for (let i = 0; i < crecidos.length; i++) {
+    for (let j = i + 1; j < crecidos.length; j++) {
+      const d = Math.hypot(crecidos[i].x - crecidos[j].x, crecidos[i].y - crecidos[j].y);
+      assert.ok(d >= crecidos[i].radio + crecidos[j].radio, 'los huecos no se pisan');
+    }
+  }
+});
+
 test('un clic dentro de un hueco se asigna a ese hueco', () => {
   const huecos = [
     { id: 0, x: 100, y: 100, radio: 40 },

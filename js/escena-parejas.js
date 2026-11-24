@@ -1,5 +1,5 @@
 import { cargarKaplay } from './kaplay-carga.js';
-import { animarAcierto, progreso } from './animaciones.js';
+import { animarAcierto, animarVolteo, progreso } from './animaciones.js';
 import { prefiereMenosMovimiento } from './movimiento-reducido.js';
 import { acierto, entrada, error } from './audio.js';
 import { crearAyuda } from './ayuda.js';
@@ -268,14 +268,13 @@ export async function arrancarParejas({
         volteos.delete(indice);
         continue;
       }
-      // Giro contenido: se estrecha hasta casi cero y vuelve, sin mover la carta.
-      const estrecho = Math.max(0.04, Math.abs(Math.cos(Math.PI * t)));
-      const escalaY = 1 + 0.05 * Math.sin(Math.PI * t);
-      vis.dorso.scale = juego.vec2(estrecho, escalaY);
-      vis.caraFondo.scale = juego.vec2(estrecho, escalaY);
-      vis.plato.scale = juego.vec2(estrecho, escalaY);
-      vis.cara.scale = juego.vec2(vis.escalaIcono * estrecho, vis.escalaIcono * escalaY);
-      vis.iconoDorso.scale = juego.vec2(vis.escalaDorso * estrecho, vis.escalaDorso * escalaY);
+      // Giro contenido: la curva vive en animaciones.js y aquí solo se aplica.
+      const a = animarVolteo(t);
+      vis.dorso.scale = juego.vec2(a.escalaX, a.escalaY);
+      vis.caraFondo.scale = juego.vec2(a.escalaX, a.escalaY);
+      vis.plato.scale = juego.vec2(a.escalaX, a.escalaY);
+      vis.cara.scale = juego.vec2(vis.escalaIcono * a.escalaX, vis.escalaIcono * a.escalaY);
+      vis.iconoDorso.scale = juego.vec2(vis.escalaDorso * a.escalaX, vis.escalaDorso * a.escalaY);
 
       if (t >= 0.5 && !v.aplicado) {
         v.aplicado = true;
@@ -319,6 +318,9 @@ export async function arrancarParejas({
 
   function acertarPareja(resultado) {
     ayuda.anotarAcierto();
+    // Un acierto también puede bajar la ayuda: el tiempo visible se recalcula
+    // en esa misma partida, sin esperar a otro fallo.
+    estado.tiempoVisibleMs = tiempoVisiblePar(ayuda.leer().nivel, baseVisibleMs);
     acierto(mundo.sonidos?.acierto ?? 660);
     const segunda = posicion(resultado.indices[1]);
     if (!menosMovimiento) {
@@ -385,7 +387,6 @@ export async function arrancarParejas({
       }
       alCambiar?.(oficial());
     },
-    moverPuntero() {},
     detener() {
       estado.lista = false;
       juego.quit?.();

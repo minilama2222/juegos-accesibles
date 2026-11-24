@@ -12,6 +12,20 @@ export const HUECO_MS = 1200;
 export const PASO_RETO_MS = 300;
 export const PASO_AYUDA_MS = 600;
 export const ACIERTOS_PARA_ACORTAR = 2;
+// Un objetivo solo cuenta como visible cuando la animación de entrada ya lo
+// ha sacado de la transparencia. Así un clic en el primer fotograma no acierta.
+export const UMBRAL_VISIBLE = 0.5;
+
+export function estaVisibleDeVerdad({ fase, opacidad, oculto = false, terminada = false } = {}) {
+  const o = Number(opacidad);
+  return fase === 'visible' && !oculto && !terminada && Number.isFinite(o) && o > UMBRAL_VISIBLE;
+}
+
+// Traduce un clic a resultado. Aunque el objetivo esté en su sitio, mientras
+// la animación de entrada no lo haya hecho visible el clic nunca es acierto.
+export function decidirClicAparicion({ visible, dentro }) {
+  return visible && dentro ? 'acierto' : 'fallo';
+}
 
 export function acotarVentana(ms) {
   const n = Number(ms);

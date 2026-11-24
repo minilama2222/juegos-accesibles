@@ -255,7 +255,6 @@ export async function arrancarMovimientoLento({
         alCambiar?.(oficial());
       }
     },
-    moverPuntero() {},
     detener() {
       estado.lista = false;
       juego.quit?.();

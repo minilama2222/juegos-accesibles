@@ -94,6 +94,7 @@ export const MECANICAS = {
   causaEfecto: {
     id: 'causaEfecto',
     implementada: true,
+    icono: 'destello',
     meta: 12,
     broteMinVmin: 12,
     broteMaxVmin: 20,
@@ -101,6 +102,7 @@ export const MECANICAS = {
   hover: {
     id: 'hover',
     implementada: true,
+    icono: 'aguantar',
     meta: 6,
     llenadoMs: 800,
     vaciadoMs: 1600,
@@ -110,6 +112,7 @@ export const MECANICAS = {
   clickEstatico: {
     id: 'clickEstatico',
     implementada: true,
+    icono: 'balon',
     meta: 8,
     // Objetivo grande de partida: es el juego de clicar con blanco fácil.
     objetivoMinVmin: 14,
@@ -118,6 +121,7 @@ export const MECANICAS = {
   aparicion: {
     id: 'aparicion',
     implementada: true,
+    icono: 'aparicion',
     meta: 6,
     // Ventana visible y hueco de partida; la ayuda adaptativa alarga la
     // ventana en la escena (4–8 s, ADR 0001).
@@ -129,6 +133,7 @@ export const MECANICAS = {
   movimientoLento: {
     id: 'movimientoLento',
     implementada: true,
+    icono: 'movimiento',
     meta: 6,
     // El objetivo se sigue con el ratón: grande y con la velocidad controlada.
     // La velocidad sube cada dos aciertos y nunca pasa del techo humano; la
@@ -143,6 +148,7 @@ export const MECANICAS = {
   tiroAPorteria: {
     id: 'tiroAPorteria',
     implementada: true,
+    icono: 'porteria',
     meta: 6,
     // Huecos de la portería: grandes, en rejilla y nunca por debajo de 44 px.
     // La ayuda adaptativa los agranda sin cambiar de sitio.
@@ -152,6 +158,8 @@ export const MECANICAS = {
   parejas: {
     id: 'parejas',
     implementada: true,
+    // El icono base se completa con el número de tablero (`parejas4`, ...).
+    icono: 'parejas',
     // El tablero lo elige el niño; la meta es encontrar todas las parejas.
     tableros: [4, 6, 8],
     parejasPorDefecto: 4,
@@ -161,6 +169,7 @@ export const MECANICAS = {
   arrastre: {
     id: 'arrastre',
     implementada: true,
+    icono: 'arrastre',
     meta: 4,
     // Nivel avanzado: hay que pulsar el dibujo, mantenerlo y soltarlo en su
     // zona. El dibujo es grande para agarrarlo sin precisión fina; la zona es

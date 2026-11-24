@@ -39,7 +39,8 @@ export async function arrancarClickEstatico({ mundo, mecanica, alCambiar, alTerm
     global: false,
     width: window.innerWidth,
     height: window.innerHeight,
-    background: mundo.fondo,
+    // Canvas transparente: el fondo SVG del mundo se ve detrás.
+    background: [0, 0, 0, 0],
     touchToMouse: false,
   });
 
@@ -208,7 +209,6 @@ export async function arrancarClickEstatico({ mundo, mecanica, alCambiar, alTerm
         alCambiar?.(oficial());
       }
     },
-    moverPuntero() {},
     detener() {
       estado.lista = false;
       juego.quit?.();

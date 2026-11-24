@@ -12,6 +12,7 @@ import { crearAyuda } from './ayuda.js';
 import { crearMetricas } from './metricas.js';
 import { alternarPantallaCompleta, estaEnPantallaCompleta } from './pantalla.js';
 import { crearGuardaUnica } from './partida.js';
+import { AVISO_TACTIL, hayPunteroGrueso } from './tactil.js';
 
 // El avatar es del niño (historia 22): se elige con un clic y se recuerda.
 // Nada de bolas raras: solo caras que se entienden.
@@ -40,7 +41,7 @@ const estado = {
 };
 
 let escena = null;
-let generacion = 0;
+let generacionActual = 0;
 let punteroHandler = null;
 const cierreUnico = crearGuardaUnica();
 
@@ -130,7 +131,7 @@ function terminarPartidaActual() {
 
 function salirDePartida() {
   terminarPartidaActual();
-  generacion += 1;
+  generacionActual += 1;
   escena?.detener?.();
   escena = null;
   if (punteroHandler) {
@@ -190,6 +191,15 @@ function botonPantalla() {
           </button>`;
 }
 
+// Aviso al padre, no al niño: solo icono, con su aria-label. No cambia nada
+// del juego ni añade texto visible.
+function avisoTactil() {
+  if (!hayPunteroGrueso()) return '';
+  return `<span class="aviso aviso--tactil" role="status" aria-label="${AVISO_TACTIL}">
+            <img alt="" src="${svg('tactil')}">
+          </span>`;
+}
+
 function actualizarControlesPantalla() {
   const activa = estaEnPantallaCompleta();
   document.querySelectorAll('[data-accion="pantalla-completa"]').forEach((b) => {
@@ -233,6 +243,7 @@ function render() {
           ${botonEfectos()}
           ${botonMusica()}
           ${botonPantalla()}
+          ${avisoTactil()}
         </div>
       </header>
       <main class="juegos">
@@ -259,15 +270,10 @@ function botonJuego(id, parejas) {
 }
 
 function iconoMecanica(id, parejas) {
-  if (id === 'causaEfecto') return 'destello';
-  if (id === 'hover') return 'aguantar';
-  if (id === 'clickEstatico') return 'balon';
-  if (id === 'aparicion') return 'aparicion';
-  if (id === 'movimientoLento') return 'movimiento';
-  if (id === 'tiroAPorteria') return 'porteria';
-  if (id === 'parejas') return `parejas${parejas ?? MECANICAS.parejas.parejasPorDefecto}`;
-  if (id === 'arrastre') return 'arrastre';
-  return 'regalo';
+  const mecanica = MECANICAS[id];
+  if (!mecanica?.icono) return 'regalo';
+  // Parejas usa un icono por tablero (`parejas4`, `parejas6`, `parejas8`).
+  return id === 'parejas' ? `${mecanica.icono}${parejas ?? mecanica.parejasPorDefecto}` : mecanica.icono;
 }
 function animarColeccion() {
   const gsap = window.gsap;
@@ -410,7 +416,7 @@ function elegirMundo(id) {
 
 async function jugar(mecanicaId, opciones = {}) {
   terminarPartidaActual();
-  const partida = ++generacion;
+  const partida = ++generacionActual;
   estado.ultimaPegatina = null;
   estado.confeti = null;
   estado.ultimoRefuerzo = null;
@@ -455,13 +461,13 @@ async function jugar(mecanicaId, opciones = {}) {
     parejas: opciones.parejas,
     ayuda: estado.ayuda,
     alCambiar: (e) => {
-      if (partida === generacion && estado.vista === 'juego') publicar({ escena: e });
+      if (partida === generacionActual && estado.vista === 'juego') publicar({ escena: e });
     },
     alEstallar: (punto, ac) => {
-      if (partida === generacion) pintarEstallido(punto, ac);
+      if (partida === generacionActual) pintarEstallido(punto, ac);
     },
     alTerminar: (r) => {
-      if (partida !== generacion || estado.vista !== 'juego') return;
+      if (partida !== generacionActual || estado.vista !== 'juego') return;
       publicar({ ultimo: r });
       if (r.terminada) {
         // Cierra las métricas al terminar de jugar, no tras el confeti.
@@ -470,7 +476,7 @@ async function jugar(mecanicaId, opciones = {}) {
       }
     },
   });
-  if (partida !== generacion) {
+  if (partida !== generacionActual) {
     escena.detener?.();
     return;
   }
@@ -610,10 +616,10 @@ function mostrarPremio(contenedor, premio) {
   }
 }
 
-function celebrarYVolver(partida) {
+function celebrarYVolver(generacion) {
   // Un solo cierre por partida: los avisos repetidos y los clics de más no
   // entregan dos pegatinas ni montan dos confetis.
-  if (!cierreUnico.reclamar(partida)) return;
+  if (!cierreUnico.reclamar(generacion)) return;
   const gsap = window.gsap;
   const mundo = mundoActual();
   estado.vista = 'cerrando';
@@ -647,7 +653,7 @@ function celebrarYVolver(partida) {
   const terminar = () => {
     if (terminado) return;
     terminado = true;
-    if (partida !== generacion) return;
+    if (generacion !== generacionActual) return;
     if (estado.vista !== 'cerrando') return;
     render();
   };

@@ -233,6 +233,14 @@ export const PICTOGRAMAS = {
     <g fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
       <path d="M44 22v22H22M76 22v22h22M44 98V76H22M76 98V76h22"/>
     </g>`),
+  // Aviso táctil: una mano con el dedo índice. Solo aparece en el menú y nunca
+  // dentro de la partida.
+  tactil: svg(`
+    <path d="M48 98V58c0-7 10-7 10 0v12-30c0-7 10-7 10 0v30-22c0-7 10-7 10 0v24-14c0-7 10-7 10 0v30c0 14-10 24-24 24H58c-6 0-10-4-10-14z"
+          fill="#ffd54f" stroke="#e65100" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="46" cy="34" r="18" fill="none" stroke="#ffffff" stroke-width="5"/>
+    <path d="M64 34h18M74 24l8 10-8 10" fill="none" stroke="#ffffff" stroke-width="5"
+          stroke-linecap="round" stroke-linejoin="round"/>`),
   // Dibujos de las parejas: completan el paquete de cada mundo hasta ocho.
   campana: svg(`
     <path d="M38 78c4-10 6-20 6-30 0-14 7-24 16-24s16 10 16 24c0 10 2 20 6 30z"

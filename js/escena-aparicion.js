@@ -6,7 +6,15 @@ import { prefiereMenosMovimiento } from './movimiento-reducido.js';
 import { acierto, entrada, error } from './audio.js';
 import { crearAyuda } from './ayuda.js';
 import { elegirPosicionLejos, estaDentro } from './click-estatico.js';
-import { avanzarAparicion, crearEstadoAparicion, registrarAcierto, registrarFallo, reajustarVentana } from './aparicion.js';
+import {
+  avanzarAparicion,
+  crearEstadoAparicion,
+  decidirClicAparicion,
+  estaVisibleDeVerdad,
+  registrarAcierto,
+  registrarFallo,
+  reajustarVentana,
+} from './aparicion.js';
 
 // Aparición con tiempo: el dibujo se ve unos segundos y luego queda un hueco.
 // Hay que clicarlo mientras está visible. El clic en el hueco (o cuando la
@@ -40,7 +48,8 @@ export async function arrancarAparicion({ mundo, mecanica, alCambiar, alTerminar
     global: false,
     width: window.innerWidth,
     height: window.innerHeight,
-    background: mundo.fondo,
+    // Canvas transparente: el fondo SVG del mundo se ve detrás.
+    background: [0, 0, 0, 0],
     touchToMouse: false,
   });
 
@@ -76,7 +85,14 @@ export async function arrancarAparicion({ mundo, mecanica, alCambiar, alTerminar
     terminada: marcador.leer().terminada,
     lista: estado.lista,
     fase: reloj.fase,
-    visible: reloj.fase === 'visible' && !!objetivo && !objetivo.hidden && !marcador.leer().terminada,
+    // No basta con estar en la fase visible: hasta que la entrada no sale de
+    // la transparencia, el objetivo todavía no se puede clicar.
+    visible: estaVisibleDeVerdad({
+      fase: reloj.fase,
+      opacidad: objetivo?.opacity,
+      oculto: !objetivo || objetivo.hidden,
+      terminada: marcador.leer().terminada,
+    }),
     ventanaMs: Math.round(reloj.ventanaMs),
     restanteMs: Math.max(0, Math.round(reloj.restanteMs)),
     huecoMs: reloj.huecoMs,
@@ -196,6 +212,9 @@ export async function arrancarAparicion({ mundo, mecanica, alCambiar, alTerminar
         juego.anchor('center'),
         'dibujo-objetivo',
       ]);
+      // Hasta el primer fotograma de la animación, la opacidad real es 0 (o 1
+      // si se pidió menos movimiento). Así `visible` nunca miente al empezar.
+      objetivo.opacity = menosMovimiento ? 1 : 0;
       sincronizarDibujo();
       estado.lista = true;
       mostrarObjetivo();
@@ -238,6 +257,9 @@ export async function arrancarAparicion({ mundo, mecanica, alCambiar, alTerminar
           }
           sincronizarDibujo();
         }
+        // La opacidad cambia cada fotograma: la API publica el estado real,
+        // no el de la última transición.
+        alCambiar?.(oficial());
       });
     });
     juego.go('aparicion');
@@ -247,19 +269,27 @@ export async function arrancarAparicion({ mundo, mecanica, alCambiar, alTerminar
     estado: oficial,
     clic(x, y) {
       if (!estado.lista || marcador.leer().terminada) return;
-      if (reloj.fase !== 'visible') {
-        // Clic en el hueco: fallo suave, sin sonido duro ni pérdida de progreso.
-        anotarFallo({ sonido: false });
-        alCambiar?.(oficial());
+      const visible = estaVisibleDeVerdad({
+        fase: reloj.fase,
+        opacidad: objetivo?.opacity,
+        oculto: !objetivo || objetivo.hidden,
+        terminada: marcador.leer().terminada,
+      });
+      const dentro = estaDentro(estado.objetivo, x, y);
+      const resultado = decidirClicAparicion({ visible, dentro });
+      if (resultado === 'acierto') {
+        acertar();
         return;
       }
-      if (estaDentro(estado.objetivo, x, y)) acertar();
-      else {
+      if (!visible) {
+        // Clic en el hueco o durante la entrada: fallo suave, sin sonido duro
+        // ni pérdida de progreso. Nunca cuenta como acierto.
+        anotarFallo({ sonido: false });
+      } else {
         anotarFallo();
-        alCambiar?.(oficial());
       }
+      alCambiar?.(oficial());
     },
-    moverPuntero() {},
     detener() {
       estado.lista = false;
       juego.quit?.();

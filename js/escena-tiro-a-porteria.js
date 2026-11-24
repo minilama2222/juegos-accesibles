@@ -287,7 +287,6 @@ export async function arrancarTiroAPorteria({ mundo, mecanica, alCambiar, alTerm
       if (!estado.lista || marcador.leer().terminada) return;
       lanzar(x, y);
     },
-    moverPuntero() {},
     detener() {
       estado.lista = false;
       juego.quit?.();

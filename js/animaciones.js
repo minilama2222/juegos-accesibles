@@ -66,6 +66,17 @@ export function progreso(transcurrido, duracion) {
   return Math.max(0, Math.min(1, transcurrido / duracion));
 }
 
+// Volteo de carta: se estrecha hasta casi desaparecer en el centro del giro
+// mientras gana un poco de altura, y vuelve. Es pose a pose: la escena solo
+// aplica el resultado, sin reimplementar la curva (ADR 0001, regla 1).
+export function animarVolteo(progreso) {
+  const t = Math.max(0, Math.min(1, progreso));
+  return {
+    escalaX: Math.max(0.04, Math.abs(Math.cos(Math.PI * t))),
+    escalaY: 1 + 0.05 * Math.sin(Math.PI * t),
+  };
+}
+
 // Tiro a portería: el balón sale rápido, frena al llegar (slow out) y dibuja
 // un arco. La altura vuelve a 0 al final; la escena decide cuánto mide el arco.
 export function animarTiro(progreso) {

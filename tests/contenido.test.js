@@ -85,6 +85,14 @@ test('hover sí tiene objetivo y meta de aciertos', () => {
   assert.ok(MECANICAS.hover.objetivoMinVmin > 0);
 });
 
+test('cada mecánica implementada lleva su icono de menú en el registro', () => {
+  for (const id of ORDEN.filter((x) => MECANICAS[x]?.implementada)) {
+    assert.equal(typeof MECANICAS[id].icono, 'string', `${id}: icono declarado`);
+    assert.ok(MECANICAS[id].icono.length > 0);
+  }
+  assert.equal(MECANICAS.parejas.icono, 'parejas', 'parejas completa el icono con el tablero');
+});
+
 test('todos los mundos sirven para las dos mecánicas', () => {
   assert.equal(MUNDOS.length, 4);
   assert.ok(MUNDOS.every((m) => m.imagen && m.fondo && m.acento));

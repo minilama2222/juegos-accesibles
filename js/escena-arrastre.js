@@ -153,11 +153,13 @@ export async function arrancarArrastre({
   function anotarFallo() {
     const ahora = juego.time();
     // Pulsar rápido de desahogo no infla los fallos: como mucho uno cada 350 ms.
-    if ((ahora - ultimoFallo) * 1000 < PAUSA_FALLO_MS) return;
+    if ((ahora - ultimoFallo) * 1000 < PAUSA_FALLO_MS) return false;
     ultimoFallo = ahora;
     estado.fallos += 1;
+    const nivelAntes = ayuda.leer().nivel;
     ayuda.anotarFallo();
     error(mundo.sonidos?.error ?? 240);
+    return ayuda.leer().nivel > nivelAntes;
   }
 
   function acertar() {
@@ -212,8 +214,11 @@ export async function arrancarArrastre({
 
     if (r.acierto) acertar();
     else {
-      anotarFallo();
-      volverAlInicio();
+      // Si el fallo sube la ayuda, el reparto y el tamaño nuevos se aplican ya
+      // en esta ronda; no hay que esperar al siguiente acierto.
+      const subeAyuda = anotarFallo();
+      if (subeAyuda) nuevoReparto();
+      else volverAlInicio();
     }
     alCambiar?.(oficial());
   }

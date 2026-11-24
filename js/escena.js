@@ -22,15 +22,22 @@ function limitarAlBorde(x, y, radio, ancho, alto) {
   };
 }
 
+// Registro de escenas por mecánica. Añadir una mecánica es añadir su arranque
+// aquí (y su entrada en MECANICAS); nada de cadenas de ifs que crezcan sin fin.
+const ARRANQUES = {
+  causaEfecto: arrancarCausaEfecto,
+  clickEstatico: arrancarClickEstatico,
+  aparicion: arrancarAparicion,
+  movimientoLento: arrancarMovimientoLento,
+  tiroAPorteria: arrancarTiroAPorteria,
+  parejas: arrancarParejas,
+  arrastre: arrancarArrastre,
+};
+
 export async function arrancarEscena(opciones) {
-  // Cada mecánica tiene su escena; aquí solo se elige.
-  if (opciones.mecanica?.id === 'causaEfecto') return arrancarCausaEfecto(opciones);
-  if (opciones.mecanica?.id === 'clickEstatico') return arrancarClickEstatico(opciones);
-  if (opciones.mecanica?.id === 'aparicion') return arrancarAparicion(opciones);
-  if (opciones.mecanica?.id === 'movimientoLento') return arrancarMovimientoLento(opciones);
-  if (opciones.mecanica?.id === 'tiroAPorteria') return arrancarTiroAPorteria(opciones);
-  if (opciones.mecanica?.id === 'parejas') return arrancarParejas(opciones);
-  if (opciones.mecanica?.id === 'arrastre') return arrancarArrastre(opciones);
+  // Hover es la mecánica base: si no hay arranque propio, se usa su escena.
+  const arrancar = ARRANQUES[opciones.mecanica?.id];
+  if (arrancar) return arrancar(opciones);
 
   const { mundo, mecanica, alCambiar, alTerminar, alEstallar } = opciones;
   const ayuda = opciones.ayuda ?? crearAyuda({ juego: mecanica.id });

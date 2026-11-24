@@ -135,7 +135,6 @@ export async function arrancarCausaEfecto({ mundo, mecanica, alCambiar, alTermin
       }
       alCambiar?.(oficial());
     },
-    moverPuntero() {},
     detener() {
       estado.lista = false;
       juego.quit?.();

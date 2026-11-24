@@ -69,9 +69,27 @@ export function resultadoTiro(huecos, x, y) {
   return { acierto: hueco >= 0, hueco };
 }
 
+// La ayuda nunca puede hacer que dos huecos se pisen: si el radio pedido
+// llegara a la mitad de la distancia al centro más cercano, se queda ahí.
+function distanciaMinimaEntreCentros(huecos) {
+  let minima = Infinity;
+  for (let i = 0; i < huecos.length; i++) {
+    for (let j = i + 1; j < huecos.length; j++) {
+      const d = Math.hypot(huecos[i].x - huecos[j].x, huecos[i].y - huecos[j].y);
+      if (d < minima) minima = d;
+    }
+  }
+  return minima;
+}
+
 export function escalarHuecos(huecos, factor) {
   const f = Number.isFinite(factor) && factor > 0 ? factor : 1;
-  return huecos.map((h) => ({ ...h, radio: h.radioBase * f }));
+  const tope = distanciaMinimaEntreCentros(huecos) / 2;
+  return huecos.map((h) => {
+    const deseado = h.radioBase * f;
+    const radio = Number.isFinite(tope) ? Math.min(deseado, tope) : deseado;
+    return { ...h, radio };
+  });
 }
 
 // Zona vacía a la que va el balón cuando el clic no entra: el propio punto
