@@ -144,11 +144,22 @@ export const MECANICAS = {
     objetivoMinVmin: 9,
     objetivoMaxVmin: 13,
   },
+  arrastre: {
+    id: 'arrastre',
+    implementada: true,
+    meta: 4,
+    // Nivel avanzado: hay que pulsar el dibujo, mantenerlo y soltarlo en su
+    // zona. El dibujo es grande para agarrarlo sin precisión fina; la zona es
+    // aún mayor y perdona un poco más allá del borde (js/arrastre.js).
+    objetivoMinVmin: 12,
+    objetivoMaxVmin: 16,
+  },
 };
 
 // De más fácil a más difícil: primero causa-efecto (cualquier clic vale),
 // después hover (hay que acertar y aguantar), click estático, aparición con
-// tiempo, movimiento lento (seguir el dibujo) y, por último, tiro a portería.
+// tiempo, movimiento lento (seguir el dibujo), tiro a portería y, al final,
+// arrastre (pulsar, mantener y soltar), que no bloquea a los anteriores.
 export const ORDEN = [
   'causaEfecto',
   'hover',
@@ -156,6 +167,7 @@ export const ORDEN = [
   'aparicion',
   'movimientoLento',
   'tiroAPorteria',
+  'arrastre',
 ];
 
 export function siguienteMecanica(id) {

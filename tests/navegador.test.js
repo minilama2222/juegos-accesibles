@@ -64,7 +64,15 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
   const juegos = await p.$$eval('[data-juego]', (n) => n.map((x) => x.dataset.juego));
   assert.deepEqual(
     juegos,
-    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'movimientoLento', 'tiroAPorteria'],
+    [
+      'causaEfecto',
+      'hover',
+      'clickEstatico',
+      'aparicion',
+      'movimientoLento',
+      'tiroAPorteria',
+      'arrastre',
+    ],
     'sólo se ofrecen mecánicas implementadas y de más fácil a más difícil',
   );
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());
@@ -660,6 +668,112 @@ test('movimiento lento está disponible en los cuatro mundos', async () => {
       assert.equal(e.mundo, id, `${id}: la escena usa el mundo elegido`);
       assert.equal(e.escena.mecanica, 'movimientoLento');
       assert.ok(e.escena.objetivo, `${id}: hay objetivo en movimiento`);
+      await p.click('[data-accion="otro-juego"]');
+      await p.waitForSelector('[data-mundo]');
+    }
+  } finally {
+    await b.close();
+  }
+});
+
+test('arrastre: pulso el dibujo, lo llevo a su zona y suelto', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="arrastre"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+
+    const antes = await p.evaluate(() => window.juego.escena);
+    assert.equal(antes.mecanica, 'arrastre');
+    assert.ok(antes.arrastre.inicio, 'window.juego expone dónde empieza el dibujo');
+    assert.ok(antes.arrastre.zona, 'window.juego expone la zona de destino');
+    assert.equal(antes.arrastre.estado, 'inactivo');
+    assert.equal(antes.arrastre.soltado, null);
+    assert.ok(antes.arrastre.zona.radio * 2 >= 44, 'la zona es grande');
+    assert.ok(antes.arrastre.objetivo, 'window.juego expone el dibujo que se arrastra');
+
+    const { inicio, zona } = antes.arrastre;
+    await p.mouse.move(inicio.x, inicio.y);
+    await p.mouse.down();
+    await p.waitForFunction(() => window.juego?.escena?.arrastre?.estado === 'arrastrando');
+
+    // El dibujo sigue a la mano por el camino.
+    await p.mouse.move((inicio.x + zona.x) / 2, (inicio.y + zona.y) / 2, { steps: 6 });
+    const enMedio = await p.evaluate(() => window.juego.escena.arrastre);
+    assert.equal(enMedio.estado, 'arrastrando');
+    assert.ok(
+      Math.hypot(enMedio.objetivo.x - inicio.x, enMedio.objetivo.y - inicio.y) > 10,
+      'el dibujo se mueve con el puntero',
+    );
+
+    await p.mouse.move(zona.x, zona.y, { steps: 8 });
+    await p.mouse.up();
+    await p.waitForFunction(() => window.juego?.escena?.aciertos === 1, null, { timeout: 4000 });
+
+    const e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.arrastre.estado, 'soltado');
+    assert.equal(e.arrastre.soltado.acierto, true, 'soltar en la zona acierta');
+    assert.equal(e.fallos, 0, 'acertar no cuenta fallo');
+    assert.equal(e.terminada, false);
+    assert.ok(e.arrastre.inicio, 'queda un nuevo dibujo para seguir jugando');
+  } finally {
+    await b.close();
+  }
+});
+
+test('arrastre: soltar fuera es un fallo suave y el dibujo vuelve a su sitio', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="arrastre"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+
+    const antes = await p.evaluate(() => window.juego.escena);
+    const { inicio } = antes.arrastre;
+    await p.mouse.move(inicio.x, inicio.y);
+    await p.mouse.down();
+    await p.mouse.move(800, 80, { steps: 8 }); // lejos de la zona y de los botones
+    await p.mouse.up();
+    await p.waitForFunction(() => window.juego?.escena?.fallos === 1, null, { timeout: 3000 });
+
+    const e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.aciertos, 0, 'soltar fuera no da progreso');
+    assert.equal(e.terminada, false, 'soltar fuera no termina ni bloquea la partida');
+    assert.equal(e.arrastre.estado, 'soltado');
+    assert.equal(e.arrastre.soltado.acierto, false);
+    assert.equal(e.arrastre.inicio.x, inicio.x, 'el sitio de partida no cambia');
+    assert.equal(e.arrastre.inicio.y, inicio.y, 'el sitio de partida no cambia');
+    assert.equal(e.objetivo.x, inicio.x, 'el dibujo vuelve a su sitio');
+    assert.equal(e.objetivo.y, inicio.y, 'el dibujo vuelve a su sitio');
+    assert.equal(e.ayuda.nivel, 0, 'un fallo suelto no sube la ayuda');
+  } finally {
+    await b.close();
+  }
+});
+
+test('arrastre está disponible en los cuatro mundos', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+    await p.goto(URL_BASE());
+    for (const id of ['navidad', 'animalitos', 'futbol', 'amarillo']) {
+      await p.click(`[data-mundo="${id}"]`);
+      await p.click('[data-juego="arrastre"]');
+      await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+      const e = await p.evaluate(() => window.juego);
+      assert.equal(e.mundo, id, `${id}: la escena usa el mundo elegido`);
+      assert.equal(e.escena.mecanica, 'arrastre');
+      assert.ok(e.escena.arrastre.zona, `${id}: hay zona de destino`);
+
+      const { inicio, zona } = e.escena.arrastre;
+      await p.mouse.move(inicio.x, inicio.y);
+      await p.mouse.down();
+      await p.mouse.move(zona.x, zona.y, { steps: 8 });
+      await p.mouse.up();
+      await p.waitForFunction(() => window.juego?.escena?.aciertos === 1, null, { timeout: 4000 });
+
       await p.click('[data-accion="otro-juego"]');
       await p.waitForSelector('[data-mundo]');
     }

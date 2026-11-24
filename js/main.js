@@ -240,6 +240,7 @@ function iconoMecanica(id) {
   if (id === 'aparicion') return 'aparicion';
   if (id === 'movimientoLento') return 'movimiento';
   if (id === 'tiroAPorteria') return 'porteria';
+  if (id === 'arrastre') return 'arrastre';
   return 'regalo';
 }
 function animarColeccion() {
@@ -722,9 +723,27 @@ function seguirPuntero() {
   requestAnimationFrame(dibujar);
 }
 
+// Arrastre (ticket 11): pulsar y soltar llegan a la escena. Las mecánicas
+// anteriores no definen `pulsar`/`soltar`, así que su clic sigue igual.
+document.addEventListener('pointerdown', (ev) => {
+  if (estado.vista !== 'juego') return;
+  escena?.pulsar?.(ev.clientX, ev.clientY);
+});
+
+document.addEventListener('pointerup', (ev) => {
+  if (estado.vista !== 'juego') return;
+  escena?.soltar?.(ev.clientX, ev.clientY);
+});
+
+// Si el sistema cancela el gesto (ventana fuera, pérdida de puntero), el
+// dibujo vuelve a su sitio en silencio: no se queda pegado a la mano.
+document.addEventListener('pointercancel', () => {
+  if (estado.vista !== 'juego') return;
+  escena?.cancelar?.();
+});
+
 document.addEventListener('click', (ev) => {
-  if (accionDeDestino(ev, '[data-accion="pantalla-completa"]')) {
-    alternarPantallaCompleta().then(actualizarControlesPantalla);
+  if (accionDeDestino(ev, '[data-accion="pantalla-completa"]')) {    alternarPantallaCompleta().then(actualizarControlesPantalla);
     return;
   }
   if (accionDeDestino(ev, '[data-accion="efectos"]')) {

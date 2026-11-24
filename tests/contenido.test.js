@@ -6,9 +6,28 @@ test('las mecánicas implementadas van de más fácil a más difícil', () => {
   const implementadas = ORDEN.filter((id) => MECANICAS[id]?.implementada);
   assert.deepEqual(
     implementadas,
-    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'movimientoLento', 'tiroAPorteria'],
-    'causa-efecto, hover, click estático, aparición, movimiento lento y tiro a portería',
+    [
+      'causaEfecto',
+      'hover',
+      'clickEstatico',
+      'aparicion',
+      'movimientoLento',
+      'tiroAPorteria',
+      'arrastre',
+    ],
+    'causa-efecto, hover, click estático, aparición, movimiento lento, tiro a portería y arrastre',
   );
+});
+
+test('el arrastre se registra al final, sin alterar la serie anterior', () => {
+  const m = MECANICAS.arrastre;
+  assert.equal(m.implementada, true);
+  assert.ok(m.meta >= 4, 'una partida corta de arrastre');
+  assert.ok(m.objetivoMinVmin >= 10, 'el dibujo es grande para agarrarlo');
+  assert.ok(m.objetivoMaxVmin > m.objetivoMinVmin);
+  assert.equal(ORDEN[ORDEN.length - 1], 'arrastre', 'llega después de todo lo demás');
+  assert.ok(ORDEN.indexOf('arrastre') > ORDEN.indexOf('tiroAPorteria'));
+  assert.ok(ORDEN.indexOf('arrastre') > ORDEN.indexOf('movimientoLento'));
 });
 
 test('aparición declara ventana, hueco y meta de aciertos', () => {

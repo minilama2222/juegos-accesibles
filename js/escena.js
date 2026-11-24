@@ -9,6 +9,7 @@ import { arrancarClickEstatico } from './escena-click-estatico.js';
 import { arrancarAparicion } from './escena-aparicion.js';
 import { arrancarMovimientoLento } from './escena-movimiento-lento.js';
 import { arrancarTiroAPorteria } from './escena-tiro-a-porteria.js';
+import { arrancarArrastre } from './escena-arrastre.js';
 import { acierto, entrada } from './audio.js';
 import { crearAyuda } from './ayuda.js';
 
@@ -27,6 +28,7 @@ export async function arrancarEscena(opciones) {
   if (opciones.mecanica?.id === 'aparicion') return arrancarAparicion(opciones);
   if (opciones.mecanica?.id === 'movimientoLento') return arrancarMovimientoLento(opciones);
   if (opciones.mecanica?.id === 'tiroAPorteria') return arrancarTiroAPorteria(opciones);
+  if (opciones.mecanica?.id === 'arrastre') return arrancarArrastre(opciones);
 
   const { mundo, mecanica, alCambiar, alTerminar, alEstallar } = opciones;
   const ayuda = opciones.ayuda ?? crearAyuda({ juego: mecanica.id });

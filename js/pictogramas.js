@@ -145,6 +145,15 @@ export const PICTOGRAMAS = {
     <circle cx="82" cy="44" r="13" fill="#08140f" stroke="#ffd54f" stroke-width="4"/>
     <circle cx="60" cy="84" r="8" fill="#ffffff" stroke="#222" stroke-width="3"/>
     <path d="M60 78l5 4-2 6h-6l-2-6z" fill="#222"/>`),
+  // Icono del arrastre: un dibujo que se lleva hasta su zona de guiones.
+  // Se distingue del recorrido en bucle de movimiento lento y del marco del tiro.
+  arrastre: svg(`
+    <circle cx="30" cy="60" r="19" fill="#ffd54f" stroke="#ffffff" stroke-width="5"/>
+    <path d="M54 60h24" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+    <path d="M74 48l14 12-14 12z" fill="#ffffff"/>
+    <circle cx="94" cy="60" r="20" fill="none" stroke="#ffffff" stroke-width="6"
+            stroke-dasharray="8 8"/>
+    <circle cx="94" cy="60" r="7" fill="#ffffff" opacity=".7"/>`),
   // Refuerzos propios de cada mundo: no son el objetivo, son la celebración.
   copo: svg(`
     <g stroke="#ffffff" stroke-width="7" stroke-linecap="round">
