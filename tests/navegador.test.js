@@ -356,3 +356,33 @@ test('al terminar una partida se gana una pegatina que aparece en la colección'
   await p.waitForFunction(() => window.juego?.vista === 'menu');
   await b.close();
 });
+
+test('la pegatina del balón usa el pictograma ARASAAC, no el SVG propio', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+  await p.goto(URL_BASE());
+  // Deja ganadas las tres primeras para que la siguiente sea el balón.
+  await p.evaluate(() =>
+    localStorage.setItem('juegos.pegatinas.v1', JSON.stringify({ estrella: 1, regalo: 1, gato: 1 })),
+  );
+  await p.reload();
+  await p.click('[data-mundo="futbol"]');
+  await p.click('[data-juego="causaEfecto"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  const meta = await p.evaluate(() => window.juego.escena.meta);
+  for (let i = 0; i < meta; i++) {
+    await p.mouse.click(120 + (i % 6) * 160, 200 + Math.floor(i / 6) * 220);
+    await p.waitForFunction(({ n }) => window.juego?.escena?.toques === n, { n: i + 1 }, { timeout: 3000 });
+  }
+
+  await p.waitForSelector('.premio img', { timeout: 5000 });
+  const enPremio = await p.$eval('.premio img', (n) => n.getAttribute('src'));
+  assert.equal(enPremio, 'assets/arasaac/balon-2269.png');
+
+  await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  await p.click('[data-accion="coleccion"]');
+  await p.waitForFunction(() => window.juego?.vista === 'coleccion');
+  const enColeccion = await p.$eval('[data-pegatina="balon"] img', (n) => n.getAttribute('src'));
+  assert.equal(enColeccion, 'assets/arasaac/balon-2269.png');
+  await b.close();
+});

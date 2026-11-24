@@ -3,12 +3,13 @@
 
 export const CLAVE_PEGATINAS = 'juegos.pegatinas.v1';
 
-// Catálogo de pictogramas propios. El niño no lee: cada pegatina se reconoce por su dibujo.
+// Catálogo de pegatinas. El niño no lee: cada pegatina se reconoce por su dibujo.
+// `imagen` manda si existe (mismo pictograma ARASAAC que el objetivo); `icono` es el SVG propio de reserva.
 export const PEGATINAS = [
   { id: 'estrella', nombre: 'Estrella', icono: 'estrella' },
   { id: 'regalo', nombre: 'Regalo', icono: 'regalo' },
   { id: 'gato', nombre: 'Gato', icono: 'gato' },
-  { id: 'balon', nombre: 'Balón', icono: 'balon' },
+  { id: 'balon', nombre: 'Balón', icono: 'balon', imagen: 'assets/arasaac/balon-2269.png' },
   { id: 'bicho', nombre: 'Bicho', icono: 'bicho' },
   { id: 'trofeo', nombre: 'Trofeo', icono: 'trofeo' },
   { id: 'pato', nombre: 'Pato', icono: 'pato' },

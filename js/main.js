@@ -37,6 +37,11 @@ function svg(nombre) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(pictograma(nombre));
 }
 
+// Las pegatinas con pictograma ARASAAC usan su PNG; el resto, el SVG propio.
+function dibujoPegatina(p) {
+  return p.imagen || svg(p.icono);
+}
+
 function publicar(extra = {}) {
   window.juego = {
     vista: estado.vista,
@@ -168,7 +173,7 @@ function renderColeccion() {
           <figure class="pegatina ${p.ganada ? 'pegatina--ganada' : ''}"
                   role="listitem" data-pegatina="${p.id}" data-ganada="${p.ganada}"
                   aria-label="${p.nombre}${p.ganada ? '' : ': por conseguir'}">
-            <span class="pegatina__icono"><img alt="" src="${svg(p.icono)}"></span>
+            <span class="pegatina__icono"><img alt="" src="${dibujoPegatina(p)}"></span>
           </figure>`,
           )
           .join('')}
@@ -392,7 +397,7 @@ function mostrarPremio(contenedor, premio) {
   const caja = document.createElement('div');
   caja.className = 'premio';
   caja.dataset.premio = premio.id;
-  caja.innerHTML = `<img alt="" src="${svg(p.icono)}">`;
+  caja.innerHTML = `<img alt="" src="${dibujoPegatina(p)}">`;
   contenedor.appendChild(caja);
   if (gsap && !prefiereMenosMovimiento()) {
     gsap.fromTo(
