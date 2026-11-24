@@ -1,17 +1,32 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import net from 'node:net';
 import { chromium } from 'playwright';
 
-const PORTA = 8199;
 let servidor;
+let puerto;
+
+// Deja que el sistema elija un puerto libre: así dos worktrees pueden correr
+// la suite de navegador a la vez sin pisarse.
+function puertoLibre() {
+  return new Promise((resolve, reject) => {
+    const s = net.createServer();
+    s.once('error', reject);
+    s.listen(0, '127.0.0.1', () => {
+      const { port } = s.address();
+      s.close(() => resolve(port));
+    });
+  });
+}
 
 test.before(async () => {
-  servidor = spawn('python3', ['-m', 'http.server', String(PORTA), '--bind', '127.0.0.1'], {
+  puerto = await puertoLibre();
+  servidor = spawn('python3', ['-m', 'http.server', String(puerto), '--bind', '127.0.0.1'], {
     cwd: new URL('..', import.meta.url).pathname,
     stdio: 'ignore',
   });
-  await esperar(`http://127.0.0.1:${PORTA}/`);
+  await esperar(`http://127.0.0.1:${puerto}/`);
 });
 
 test.after(() => servidor?.kill());
@@ -27,7 +42,7 @@ async function esperar(url, intentos = 40) {
   throw new Error('servidor no arrancó: ' + url);
 }
 
-const URL_BASE = () => `http://127.0.0.1:${PORTA}/`;
+const URL_BASE = () => `http://127.0.0.1:${puerto}/`;
 
 test('el menú muestra los cuatro mundos y los juegos sin texto visible', async () => {
   const b = await chromium.launch();
