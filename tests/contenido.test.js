@@ -6,9 +6,18 @@ test('las mecánicas implementadas van de más fácil a más difícil', () => {
   const implementadas = ORDEN.filter((id) => MECANICAS[id]?.implementada);
   assert.deepEqual(
     implementadas,
-    ['causaEfecto', 'hover', 'clickEstatico'],
-    'causa-efecto (cualquier clic) antes que hover (acertar y aguantar) y click estático',
+    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion'],
+    'causa-efecto (cualquier clic), hover (aguantar), click estático y aparición con tiempo',
   );
+});
+
+test('aparición declara ventana, hueco y meta de aciertos', () => {
+  const m = MECANICAS.aparicion;
+  assert.equal(m.meta, 6);
+  assert.ok(m.ventanaMs >= 4000 && m.ventanaMs <= 8000);
+  assert.ok(m.huecoMs > 0);
+  assert.ok(m.objetivoMinVmin >= 10);
+  assert.ok(m.objetivoMaxVmin > m.objetivoMinVmin);
 });
 
 test('click estático pide un objetivo grande y una meta de aciertos', () => {

@@ -64,7 +64,7 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
   const juegos = await p.$$eval('[data-juego]', (n) => n.map((x) => x.dataset.juego));
   assert.deepEqual(
     juegos,
-    ['causaEfecto', 'hover', 'clickEstatico'],
+    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion'],
     'sólo se ofrecen mecánicas implementadas y de más fácil a más difícil',
   );
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());
@@ -338,6 +338,95 @@ test('click estático: al llegar a la meta termina y vuelve al menú', async () 
     }
     assert.equal(await p.evaluate(() => window.juego.escena.terminada), true);
     await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  } finally {
+    await b.close();
+  }
+});
+
+
+test('aparición: espero el hueco, aparece y clico; el clic en el hueco no suma', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="aparicion"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true);
+    await p.waitForFunction(() => window.juego?.escena?.visible === true);
+
+    const primero = await p.evaluate(() => window.juego.escena);
+    assert.ok(primero.ventanaMs >= 4000 && primero.ventanaMs <= 8000, 'la ventana está entre 4 y 8 s');
+    assert.ok(primero.objetivo.radio * 2 >= 44, 'el objetivo es grande');
+    assert.equal(primero.fase, 'visible');
+
+    await p.mouse.click(primero.objetivo.x, primero.objetivo.y);
+    await p.waitForFunction(() => window.juego?.escena?.aciertos === 1, null, { timeout: 4000 });
+    await p.waitForFunction(() => window.juego?.escena?.fase === 'hueco', null, { timeout: 3000 });
+    assert.equal(await p.evaluate(() => window.juego.escena.visible), false, 'en el hueco no hay objetivo');
+
+    // Clicar en el hueco no suma ni resta, pero cuenta como fallo suave.
+    const fallosAntes = await p.evaluate(() => window.juego.escena.fallos);
+    await p.mouse.click(8, 8);
+    await p.waitForFunction(({ n }) => window.juego?.escena?.fallos > n, { n: fallosAntes }, { timeout: 3000 });
+    assert.equal(await p.evaluate(() => window.juego.escena.aciertos), 1, 'el hueco no da progreso');
+
+    // Espero a que vuelva a aparecer, en otro sitio, y clico.
+    await p.waitForFunction(() => window.juego?.escena?.visible === true, null, { timeout: 6000 });
+    const segundo = await p.evaluate(() => window.juego.escena);
+    assert.equal(segundo.fase, 'visible');
+    const distancia = Math.hypot(
+      segundo.objetivo.x - primero.objetivo.x,
+      segundo.objetivo.y - primero.objetivo.y,
+    );
+    assert.ok(distancia > primero.objetivo.radio * 2, `reaparece lejos (${distancia} px)`);
+
+    await p.mouse.click(segundo.objetivo.x, segundo.objetivo.y);
+    await p.waitForFunction(() => window.juego?.escena?.aciertos === 2, null, { timeout: 4000 });
+    assert.equal(await p.evaluate(() => window.juego.escena.terminada), false);
+  } finally {
+    await b.close();
+  }
+});
+
+test('aparición: al llegar a la meta termina y vuelve al menú', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="aparicion"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true);
+    const meta = await p.evaluate(() => window.juego.escena.meta);
+
+    for (let i = 0; i < meta; i++) {
+      await p.waitForFunction(() => window.juego?.escena?.visible === true, null, { timeout: 9000 });
+      const o = await p.evaluate(() => window.juego.escena.objetivo);
+      await p.mouse.click(o.x, o.y);
+      await p.waitForFunction(({ n }) => window.juego?.escena?.aciertos === n, { n: i + 1 }, { timeout: 4000 });
+    }
+
+    assert.equal(await p.evaluate(() => window.juego.escena.terminada), true);
+    await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  } finally {
+    await b.close();
+  }
+});
+
+test('aparición funciona en los cuatro mundos desde el menú', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+    await p.goto(URL_BASE());
+    for (const id of ['navidad', 'animalitos', 'futbol', 'amarillo']) {
+      await p.click(`[data-mundo="${id}"]`);
+      await p.click('[data-juego="aparicion"]');
+      await p.waitForFunction(() => window.juego?.escena?.lista === true);
+      const e = await p.evaluate(() => window.juego);
+      assert.equal(e.mundo, id);
+      assert.equal(e.escena.mecanica, 'aparicion');
+      assert.equal(e.escena.visible, true, `${id}: el objetivo aparece`);
+      assert.ok(e.escena.ayuda.nivel >= 0);
+      await p.click('[data-accion="otro-juego"]');
+      await p.waitForSelector('[data-mundo]');
+    }
   } finally {
     await b.close();
   }

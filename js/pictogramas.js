@@ -92,6 +92,13 @@ export const PICTOGRAMAS = {
       <path d="M26 26l11 11M83 83l11 11M94 26L83 37M37 83L26 94"/>
     </g>
     <circle cx="60" cy="60" r="17" fill="#4fc3f7" stroke="#fff" stroke-width="4"/>`),
+  // Icono de "aparición con tiempo": un reloj que marca la espera y una bola
+  // que asoma, para que se distinga del click estático sin usar texto.
+  aparicion: svg(`
+    <circle cx="60" cy="60" r="47" fill="none" stroke="#ffffff" stroke-width="7"/>
+    <path d="M60 28v32l22 14" fill="none" stroke="#ffffff" stroke-width="7"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="60" cy="60" r="16" fill="#ffd54f" stroke="#ffffff" stroke-width="4"/>`),
   huevo: svg(`<ellipse cx="60" cy="66" rx="30" ry="38" fill="#fff" stroke="#222" stroke-width="3"/>
     <circle cx="60" cy="66" r="12" fill="#ffeb3b" stroke="#222" stroke-width="3"/>`),
   cola: svg(`

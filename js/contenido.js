@@ -110,11 +110,23 @@ export const MECANICAS = {
     objetivoMinVmin: 14,
     objetivoMaxVmin: 22,
   },
+  aparicion: {
+    id: 'aparicion',
+    implementada: true,
+    meta: 6,
+    // Ventana visible y hueco de partida; la ayuda adaptativa alarga la
+    // ventana en la escena (4–8 s, ADR 0001).
+    ventanaMs: 4500,
+    huecoMs: 1200,
+    objetivoMinVmin: 12,
+    objetivoMaxVmin: 20,
+  },
 };
 
 // De más fácil a más difícil: primero causa-efecto (cualquier clic vale),
-// después hover (hay que acertar y aguantar) y al final click estático.
-export const ORDEN = ['causaEfecto', 'hover', 'clickEstatico'];
+// después hover (hay que acertar y aguantar), click estático y, por último,
+// aparición con tiempo (esperar y reaccionar).
+export const ORDEN = ['causaEfecto', 'hover', 'clickEstatico', 'aparicion'];
 
 export function siguienteMecanica(id) {
   const i = ORDEN.indexOf(id);
