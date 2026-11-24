@@ -64,7 +64,7 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
   const juegos = await p.$$eval('[data-juego]', (n) => n.map((x) => x.dataset.juego));
   assert.deepEqual(
     juegos,
-    ['causaEfecto', 'hover'],
+    ['causaEfecto', 'hover', 'clickEstatico'],
     'sólo se ofrecen mecánicas implementadas y de más fácil a más difícil',
   );
   const textosVisibles = await p.evaluate(() => document.body.innerText.trim());
@@ -262,6 +262,85 @@ test('causa-efecto: al llegar a la meta termina y vuelve al menú', async () => 
   await p.waitForSelector('.confeti', { timeout: 5000 });
   await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 8000 });
   await b.close();
+});
+
+
+test('click estático: clico el objetivo y avanza, recolocándose lejos', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="clickEstatico"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true);
+    await p.waitForTimeout(600); // deja terminar la aparición del primer objetivo
+
+    const antes = await p.evaluate(() => window.juego.escena.objetivo);
+    assert.ok(antes.radio * 2 >= 44, 'el objetivo es grande');
+    await p.mouse.click(antes.x, antes.y);
+    await p.waitForFunction(() => window.juego?.escena?.aciertos === 1, null, { timeout: 4000 });
+
+    const e = await p.evaluate(() => window.juego.escena);
+    const d = Math.hypot(e.objetivo.x - antes.x, e.objetivo.y - antes.y);
+    assert.ok(d >= antes.radio * 3, `el objetivo nuevo queda lejos (${d} px)`);
+    assert.equal(e.fallos, 0, 'acertar no cuenta fallo');
+    assert.equal(e.terminada, false);
+  } finally {
+    await b.close();
+  }
+});
+
+test('click estático: un clic fuera cuenta fallo suave y no mueve el objetivo', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="clickEstatico"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true);
+
+    const antes = await p.evaluate(() => window.juego.escena.objetivo);
+    // Un punto del borde, lejos del objetivo centrado.
+    await p.mouse.click(10, 10);
+    await p.waitForFunction(() => window.juego?.escena?.fallos === 1, null, { timeout: 3000 });
+
+    let e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.aciertos, 0, 'el fallo no quita ni da progreso');
+    assert.equal(e.objetivo.x, antes.x, 'el objetivo sigue fijo');
+    assert.equal(e.objetivo.y, antes.y, 'el objetivo sigue fijo');
+    assert.equal(e.terminada, false);
+    assert.equal(e.ayuda.nivel, 0, 'un fallo suelto no sube la ayuda');
+
+    // El segundo fallo seguido pide más ayuda: el dibujo se agranda sin moverse.
+    await p.waitForTimeout(400); // respeta la pausa anti-rebote de los fallos
+    await p.mouse.click(10, 10);
+    await p.waitForFunction(() => window.juego?.escena?.fallos === 2, null, { timeout: 3000 });
+    e = await p.evaluate(() => window.juego.escena);
+    assert.equal(e.ayuda.nivel, 1);
+    assert.ok(e.objetivo.radio > e.objetivo.radioBase, 'la ayuda agranda el objetivo');
+    assert.equal(e.objetivo.x, antes.x, 'la ayuda no lo mueve de sitio');
+  } finally {
+    await b.close();
+  }
+});
+
+test('click estático: al llegar a la meta termina y vuelve al menú', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    await p.click('[data-juego="clickEstatico"]');
+    await p.waitForFunction(() => window.juego?.escena?.lista === true);
+    const meta = await p.evaluate(() => window.juego.escena.meta);
+
+    for (let i = 0; i < meta; i++) {
+      const o = await p.evaluate(() => window.juego.escena.objetivo);
+      await p.mouse.click(o.x, o.y);
+      await p.waitForFunction(({ n }) => window.juego?.escena?.aciertos === n, { n: i + 1 }, { timeout: 4000 });
+    }
+    assert.equal(await p.evaluate(() => window.juego.escena.terminada), true);
+    await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
+  } finally {
+    await b.close();
+  }
 });
 
 

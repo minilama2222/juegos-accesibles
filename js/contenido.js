@@ -62,7 +62,14 @@ export const MECANICAS = {
     objetivoMinVmin: 10,
     objetivoMaxVmin: 18,
   },
-  clickEstatico: { id: 'clickEstatico' },
+  clickEstatico: {
+    id: 'clickEstatico',
+    implementada: true,
+    meta: 8,
+    // Objetivo grande de partida: es el juego de clicar con blanco fácil.
+    objetivoMinVmin: 14,
+    objetivoMaxVmin: 22,
+  },
 };
 
 // De más fácil a más difícil: primero causa-efecto (cualquier clic vale),

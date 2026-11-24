@@ -6,9 +6,15 @@ test('las mecánicas implementadas van de más fácil a más difícil', () => {
   const implementadas = ORDEN.filter((id) => MECANICAS[id]?.implementada);
   assert.deepEqual(
     implementadas,
-    ['causaEfecto', 'hover'],
-    'causa-efecto (cualquier clic) antes que hover (acertar y aguantar)',
+    ['causaEfecto', 'hover', 'clickEstatico'],
+    'causa-efecto (cualquier clic) antes que hover (acertar y aguantar) y click estático',
   );
+});
+
+test('click estático pide un objetivo grande y una meta de aciertos', () => {
+  assert.equal(typeof MECANICAS.clickEstatico.meta, 'number');
+  assert.ok(MECANICAS.clickEstatico.objetivoMinVmin >= MECANICAS.hover.objetivoMinVmin);
+  assert.ok(MECANICAS.clickEstatico.objetivoMaxVmin > MECANICAS.clickEstatico.objetivoMinVmin);
 });
 
 test('causa-efecto no pide puntería y termina a los 12 toques', () => {
