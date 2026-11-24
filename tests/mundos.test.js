@@ -25,6 +25,17 @@ test('los cuatro mundos declaran todo el paquete visual y sonoro', () => {
   }
 });
 
+test('cada mundo tiene al menos ocho pictogramas distintos para las parejas', () => {
+  for (const m of MUNDOS) {
+    assert.ok(Array.isArray(m.parejas), `${m.id}: declara sus pictogramas de parejas`);
+    assert.ok(m.parejas.length >= 8, `${m.id}: hay bastantes para el tablero de 8`);
+    assert.equal(new Set(m.parejas).size, m.parejas.length, `${m.id}: sin dibujos repetidos`);
+    for (const nombre of m.parejas) {
+      assert.ok(PICTOGRAMAS[nombre], `${m.id}: falta el pictograma ${nombre}`);
+    }
+  }
+});
+
 test('cada mundo usa un refuerzo y un puntero dibujados, no una forma genérica', () => {
   for (const m of MUNDOS) {
     assert.ok(PICTOGRAMAS[m.refuerzo], `${m.id}: falta el refuerzo ${m.refuerzo}`);

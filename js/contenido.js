@@ -15,6 +15,8 @@ export const MUNDOS = [
     refuerzo: 'copo',
     puntero: 'punteroEstrella',
     sprites: ['regalo', 'estrella', 'bolita', 'reno'],
+    // Ocho dibujos propios del mundo para el tablero de parejas.
+    parejas: ['regalo', 'estrella', 'bolita', 'reno', 'copo', 'campana', 'galleta', 'calcetin'],
     sonidos: {
       acierto: 660,
       entrada: 880,
@@ -34,6 +36,7 @@ export const MUNDOS = [
     refuerzo: 'huella',
     puntero: 'punteroHuella',
     sprites: ['gato', 'perro', 'pato', 'vaca'],
+    parejas: ['gato', 'perro', 'pato', 'vaca', 'huevo', 'hueso', 'pez', 'huella'],
     sonidos: {
       acierto: 587,
       entrada: 784,
@@ -53,6 +56,7 @@ export const MUNDOS = [
     refuerzo: 'silbato',
     puntero: 'punteroBalon',
     sprites: ['balon', 'botas', 'trofeo', 'bandera'],
+    parejas: ['balon', 'botas', 'trofeo', 'bandera', 'silbato', 'guante', 'camiseta', 'cono'],
     sonidos: {
       acierto: 523,
       entrada: 698,
@@ -72,6 +76,7 @@ export const MUNDOS = [
     refuerzo: 'chispa',
     puntero: 'punteroRayo',
     sprites: ['bicho', 'chispa', 'huevo', 'cola'],
+    parejas: ['bicho', 'chispa', 'huevo', 'cola', 'estrella', 'corazon', 'nube', 'rayo'],
     sonidos: {
       acierto: 784,
       entrada: 1046.5,
@@ -130,13 +135,22 @@ export const MECANICAS = {
     objetivoMinVmin: 9,
     objetivoMaxVmin: 13,
   },
+  parejas: {
+    id: 'parejas',
+    implementada: true,
+    // El tablero lo elige el niño; la meta es encontrar todas las parejas.
+    tableros: [4, 6, 8],
+    parejasPorDefecto: 4,
+    // Tiempo que se ven las dos cartas de un par fallido; la ayuda lo alarga.
+    tiempoParMs: 1500,
+  },
 };
 
 // De más fácil a más difícil: primero causa-efecto (cualquier clic vale),
 // después hover (hay que acertar y aguantar), click estático, aparición con
-// tiempo y, por último, tiro a portería. El movimiento lento se insertará
-// antes del tiro cuando llegue, según la progresión de la spec.
-export const ORDEN = ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'tiroAPorteria'];
+// tiempo, tiro a portería y, al final, parejas, el juego tranquilo de memoria.
+// El movimiento lento se insertará antes del tiro cuando llegue.
+export const ORDEN = ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'tiroAPorteria', 'parejas'];
 
 export function siguienteMecanica(id) {
   const i = ORDEN.indexOf(id);

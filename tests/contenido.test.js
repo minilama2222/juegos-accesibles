@@ -6,9 +6,18 @@ test('las mecánicas implementadas van de más fácil a más difícil', () => {
   const implementadas = ORDEN.filter((id) => MECANICAS[id]?.implementada);
   assert.deepEqual(
     implementadas,
-    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'tiroAPorteria'],
-    'causa-efecto, hover, click estático, aparición con tiempo y tiro a portería',
+    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'tiroAPorteria', 'parejas'],
+    'causa-efecto, hover, click estático, aparición con tiempo, tiro a portería y parejas',
   );
+});
+
+test('parejas cierra la serie y ofrece tableros de 4, 6 u 8', () => {
+  const m = MECANICAS.parejas;
+  assert.equal(m.implementada, true);
+  assert.deepEqual(m.tableros, [4, 6, 8]);
+  assert.equal(m.parejasPorDefecto, 4);
+  assert.equal(ORDEN.at(-1), 'parejas', 'parejas va al final de la progresión');
+  assert.ok(m.tiempoParMs > 0);
 });
 
 test('aparición declara ventana, hueco y meta de aciertos', () => {
