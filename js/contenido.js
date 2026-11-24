@@ -121,12 +121,22 @@ export const MECANICAS = {
     objetivoMinVmin: 12,
     objetivoMaxVmin: 20,
   },
+  tiroAPorteria: {
+    id: 'tiroAPorteria',
+    implementada: true,
+    meta: 6,
+    // Huecos de la portería: grandes, en rejilla y nunca por debajo de 44 px.
+    // La ayuda adaptativa los agranda sin cambiar de sitio.
+    objetivoMinVmin: 9,
+    objetivoMaxVmin: 13,
+  },
 };
 
 // De más fácil a más difícil: primero causa-efecto (cualquier clic vale),
-// después hover (hay que acertar y aguantar), click estático y, por último,
-// aparición con tiempo (esperar y reaccionar).
-export const ORDEN = ['causaEfecto', 'hover', 'clickEstatico', 'aparicion'];
+// después hover (hay que acertar y aguantar), click estático, aparición con
+// tiempo y, por último, tiro a portería. El movimiento lento se insertará
+// antes del tiro cuando llegue, según la progresión de la spec.
+export const ORDEN = ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'tiroAPorteria'];
 
 export function siguienteMecanica(id) {
   const i = ORDEN.indexOf(id);

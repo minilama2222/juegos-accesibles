@@ -6,8 +6,8 @@ test('las mecánicas implementadas van de más fácil a más difícil', () => {
   const implementadas = ORDEN.filter((id) => MECANICAS[id]?.implementada);
   assert.deepEqual(
     implementadas,
-    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion'],
-    'causa-efecto (cualquier clic), hover (aguantar), click estático y aparición con tiempo',
+    ['causaEfecto', 'hover', 'clickEstatico', 'aparicion', 'tiroAPorteria'],
+    'causa-efecto, hover, click estático, aparición con tiempo y tiro a portería',
   );
 });
 
@@ -18,6 +18,12 @@ test('aparición declara ventana, hueco y meta de aciertos', () => {
   assert.ok(m.huecoMs > 0);
   assert.ok(m.objetivoMinVmin >= 10);
   assert.ok(m.objetivoMaxVmin > m.objetivoMinVmin);
+});
+
+test('tiro a portería pide una meta de goles y huecos grandes', () => {
+  assert.equal(MECANICAS.tiroAPorteria.meta, 6);
+  assert.ok(MECANICAS.tiroAPorteria.objetivoMinVmin > 0);
+  assert.ok(MECANICAS.tiroAPorteria.objetivoMaxVmin > MECANICAS.tiroAPorteria.objetivoMinVmin);
 });
 
 test('click estático pide un objetivo grande y una meta de aciertos', () => {

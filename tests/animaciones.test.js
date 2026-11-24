@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { animarAparicion, animarAcierto, animarBrote, progreso } from '../js/animaciones.js';
+import { animarAparicion, animarAcierto, animarBrote, animarTiro, progreso } from '../js/animaciones.js';
 
 test('la aparición empieza pequeña (anticipación) y acaba en su tamaño', () => {
   const inicio = animarAparicion(0);
@@ -55,6 +55,34 @@ test('el brote se queda quieto si se pide menos movimiento', () => {
   const a = animarBrote(0.8);
   assert.ok(a.opacidad < 1);
   assert.ok(a.subida > 0);
+});
+
+test('el tiro avanza con arco y vuelve al suelo al llegar', () => {
+  const inicio = animarTiro(0);
+  const medio = animarTiro(0.5);
+  const fin = animarTiro(1);
+
+  assert.equal(inicio.avance, 0);
+  assert.equal(inicio.altura, 0);
+  assert.equal(fin.avance, 1);
+  assert.equal(fin.altura, 0);
+  assert.ok(medio.altura > 0.5, 'el balón sube por el aire a mitad del tiro');
+  assert.ok(medio.avance > 0.5, 'sale rápido y frena: slow out');
+  assert.equal(medio.opacidad, 1, 'durante el vuelo se ve entero');
+  assert.ok(fin.opacidad < 0.02, 'al final se desvanece');
+
+  let anterior = -1;
+  for (let i = 0; i <= 20; i++) {
+    const a = animarTiro(i / 20);
+    assert.ok(a.avance >= anterior, 'el avance nunca retrocede');
+    anterior = a.avance;
+  }
+});
+
+test('el tiro no se sale si el progreso se pasa o falta', () => {
+  assert.deepEqual(animarTiro(-3).avance, 0);
+  assert.equal(animarTiro(9).avance, 1);
+  assert.equal(animarTiro(9).altura, 0);
 });
 
 test('el progreso queda acotado entre 0 y 1', () => {

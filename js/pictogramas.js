@@ -126,6 +126,16 @@ export const PICTOGRAMAS = {
     <rect x="18" y="30" width="84" height="68" rx="10" fill="#ffffff" opacity=".22"/>
     <rect x="18" y="30" width="84" height="16" rx="8" fill="#ffd54f"/>
     <path d="M60 58l7 15 16 2-12 12 3 16-14-8-14 8 3-16-12-12 16-2z" fill="#ffffff"/>`),
+  // Icono del tiro a portería: un marco con huecos y el balón dentro.
+  porteria: svg(`
+    <g fill="none" stroke="#ffffff" stroke-width="7" stroke-linejoin="round">
+      <path d="M16 24h88v76H16z"/>
+      <path d="M16 44h88M16 64h88M16 84h88M38 24v76M60 24v76M82 24v76" stroke-width="2" opacity=".45"/>
+    </g>
+    <circle cx="38" cy="64" r="13" fill="#08140f" stroke="#ffd54f" stroke-width="4"/>
+    <circle cx="82" cy="44" r="13" fill="#08140f" stroke="#ffd54f" stroke-width="4"/>
+    <circle cx="60" cy="84" r="8" fill="#ffffff" stroke="#222" stroke-width="3"/>
+    <path d="M60 78l5 4-2 6h-6l-2-6z" fill="#222"/>`),
   // Refuerzos propios de cada mundo: no son el objetivo, son la celebración.
   copo: svg(`
     <g stroke="#ffffff" stroke-width="7" stroke-linecap="round">

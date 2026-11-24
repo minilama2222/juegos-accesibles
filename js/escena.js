@@ -7,6 +7,7 @@ import { prefiereMenosMovimiento } from './movimiento-reducido.js';
 import { arrancarCausaEfecto } from './escena-causa-efecto.js';
 import { arrancarClickEstatico } from './escena-click-estatico.js';
 import { arrancarAparicion } from './escena-aparicion.js';
+import { arrancarTiroAPorteria } from './escena-tiro-a-porteria.js';
 import { acierto, entrada } from './audio.js';
 import { crearAyuda } from './ayuda.js';
 
@@ -23,6 +24,7 @@ export async function arrancarEscena(opciones) {
   if (opciones.mecanica?.id === 'causaEfecto') return arrancarCausaEfecto(opciones);
   if (opciones.mecanica?.id === 'clickEstatico') return arrancarClickEstatico(opciones);
   if (opciones.mecanica?.id === 'aparicion') return arrancarAparicion(opciones);
+  if (opciones.mecanica?.id === 'tiroAPorteria') return arrancarTiroAPorteria(opciones);
 
   const { mundo, mecanica, alCambiar, alTerminar, alEstallar } = opciones;
   const ayuda = opciones.ayuda ?? crearAyuda({ juego: mecanica.id });
