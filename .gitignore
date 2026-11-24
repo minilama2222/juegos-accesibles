@@ -1,3 +1,6 @@
 node_modules/
 *.log
 .DS_Store
+
+# Herramienta local de capturas (no es proyecto)
+snap.mjs

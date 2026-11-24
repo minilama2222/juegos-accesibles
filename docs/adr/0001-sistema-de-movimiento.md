@@ -58,14 +58,23 @@ duración, y el juego se vuelve ruidoso justo para un niño con TDAH al que los 
 9. **Movimiento reducido, sí.** `prefers-reduced-motion` se respeta en las tres capas con **un
    único interruptor**: una función `prefiereMenosMovimiento()` que consultan Kaplay, GSAP y el
    confeti. No vale que el CSS lo haga y la escena lo ignore. Lo que se reduce: confeti,
-   partículas, overshoot de aparición, latidos del menú y cortinas. Lo que **no** se quita: el
-   refuerzo de acierto (se acorta, no desaparece), porque es la señal de que acertó.
+   partículas, overshoot de aparición, latidos del menú y cortinas. El acierto **nunca se queda
+   sin señal**: se sustituye el estallido por la reaparición del objetivo y, desde el ticket 03,
+   por su sonido; lo que desaparece es el desplazamiento, no el aviso.
 
 ### 9.1 Estado de implementación
 
-Hoy el CSS respeta `prefers-reduced-motion` solo en el menú (`.mundo`, `.juego`, `.salir`);
-GSAP, Kaplay y el confeti lo ignoran. Pendiente: crear `js/movimiento-reducido.js`, inyectarlo en
-la escena y en el bucle de confeti, y cubrirlo con tests.
+Implementado (commit `3779522`), con tests en `tests/movimiento-reducido.test.js`:
+
+- `js/movimiento-reducido.js` es el único que consulta la preferencia: `prefiereMenosMovimiento()`,
+  `alCambiarPreferencia()` y `cantidadConfeti()`. Nadie improvisa su propio `matchMedia`.
+- **Escena:** sin deformación ni giro en la aparición; el objetivo aparece de golpe, sin
+  partículas de estallido. El hover sigue respondiendo y la barra se ve igual.
+- **Menú:** fundido corto en vez de entrada escalonada y latido; la salida es un fundido de
+  0,15 s en vez de la cortina circular.
+- **Confeti:** 40 piezas en vez de 220.
+- **CSS:** el `@media` del menú (`.mundo`, `.juego`, `.salir`) es la parte CSS del mismo
+  interruptor; no hay un segundo criterio escondido ahí.
 
 ## Tiempo y ayuda
 

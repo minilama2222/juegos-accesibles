@@ -211,7 +211,7 @@ function pintarEstallidos() {
 
   for (let i = estallidosActivos.length - 1; i >= 0; i--) {
     const e = estallidosActivos[i];
-    const t = Math.min(1, (performance.now() - e.desde) / 520);
+    const t = Math.min(1, (performance.now() - e.desde) / 480); // tope del refuerzo (ADR 0001, regla 5)
     if (t >= 1 || e.ac?.opacidad <= 0.01) {
       estallidosActivos.splice(i, 1);
       continue;

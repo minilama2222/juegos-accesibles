@@ -4,9 +4,17 @@
 
 **Blocked by:** 02 — Causa-efecto
 
-**Status:** ready-for-agent
+**Status:** partial
 
-- [ ] El refuerzo dura <0,5 s y no oculta el siguiente objetivo más tiempo del que dura.
+**Hecho ya** (commits `3d1e9a9` y `1446977`):
+- El refuerzo de acierto es un anillo de 480 ms en el sitio del acierto; el objetivo nuevo
+  aparece aparte, así que el refuerzo no tapa el siguiente objetivo.
+- Al terminar la partida: confeti a pantalla completa y fanfarria de trompetas sintetizada.
+
+**Falta:** sonido en cada acierto, botón de silencio con preferencia persistente, música de fondo
+opcional, pegatinas y su colección.
+
+- [x] El refuerzo dura <0,5 s y no oculta el siguiente objetivo más tiempo del que dura.
 - [ ] Acierto, error, entrada y fanfarria tienen sonidos distintos; el botón de silencio los corta y la preferencia persiste.
 - [ ] La música de fondo es suave, opcional y no compite con los sonidos de juego.
 - [ ] Al terminar una partida se entrega una pegatina guardada en `localStorage`, sin repetidos visibles como castigo.

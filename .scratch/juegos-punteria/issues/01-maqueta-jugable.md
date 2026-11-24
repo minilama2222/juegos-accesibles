@@ -4,7 +4,10 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Hecho en:** `f188236` … `e91b461` (refinamientos incluidos: estela del puntero, tamaños
+aleatorios, confeti y fanfarria, pictogramas ARASAAC en la bola y en el menú).
+
+**Status:** done
 
 - [x] La página arranca servida estáticamente, sin build y sin `npm install` para jugar.
 - [x] Kaplay está vendoreado y da la escena de juego; GSAP está vendoreado y anima la UI; no se anima el mismo objeto con ambos.
