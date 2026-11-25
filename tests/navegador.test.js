@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import net from 'node:net';
 import { chromium } from 'playwright';
+import { MECANICAS, ORDEN } from '../js/contenido.js';
 
 let servidor;
 let puerto;
@@ -987,15 +988,16 @@ test('en pantalla táctil el menú avisa al padre con un icono, sin texto', asyn
   }
 });
 
-test('las escenas de clic estático y aparición dejan ver el arte del mundo', async () => {
+test('todas las escenas dejan ver el arte del mundo', async () => {
   const b = await chromium.launch();
   try {
     const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
     await p.goto(URL_BASE());
-    for (const id of ['clickEstatico', 'aparicion']) {
-      await p.click(`[data-juego="${id}"]`);
-      await p.waitForFunction(() => window.juego?.escena?.lista === true);
-      await p.waitForTimeout(400);
+    const implementadas = ORDEN.filter((id) => MECANICAS[id]?.implementada);
+    for (const id of implementadas) {
+      await p.locator(`[data-juego="${id}"]`).first().click();
+      await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 10000 });
+      await p.waitForTimeout(350);
       const alpha = await p.evaluate(() => {
         const lienzo = document.getElementById('lienzo');
         const gl = lienzo.getContext('webgl');
