@@ -1,6 +1,6 @@
 # Spec 0001 — Serie de juegos para afinar la puntería con el ratón
 
-Estado: **lista para agente** · Fecha: 2026-10-30 · Origen: entrevista (`/grill-me`) + acuerdos de costuras.
+Estado: **implementada** · Fecha: 2026-10-30 · Implementada: 2026-11-25 · Origen: entrevista (`/grill-me`) + acuerdos de costuras.
 
 ## Problem Statement
 
@@ -12,7 +12,7 @@ No hay en casa nada que le entrene esta habilidad de forma progresiva, sin texto
 
 Una serie de juegos web estáticos, sin build, publicada en GitHub Pages, que él puede usar solo:
 
-- Cinco o seis juegos cortos (60-90 s) que van de **hover puro** a **click estático**, **aparición con tiempo**, **movimiento lento**, **tiro a portería** y **parejas** (4, 6 y 8).
+- Ocho mecánicas cortas (60-90 s): causa-efecto, **hover puro**, **click estático**, **aparición con tiempo**, **movimiento lento**, **tiro a portería**, **parejas** (4, 6 y 8) y **arrastre** avanzado.
 - Cada juego se juega en **cuatro mundos visuales**: navidad, animalitos, fútbol y criatura amarilla inspirada (sin IP real).
 - Interfaz sin texto: pictogramas, color, forma y sonido.
 - **Botón de "otro juego" siempre visible**; cambiar nunca penaliza.
@@ -78,7 +78,7 @@ Una serie de juegos web estáticos, sin build, publicada en GitHub Pages, que é
 - Un **juego** es una definición pura: `id`, `mecánica`, `reglas` (nº de objetivos, tamaños, tiempos, cadencia), sin DOM ni canvas.
 - Un **mundo** es un paquete visual intercambiable: paleta, fondo, sprites (objetivo, refuerzo, puntero), sonido de acierto/error y nombre pictográfico.
 - La combinación **juego × mundo** no cambia reglas: sólo aspecto. Añadir un mundo no toca la lógica.
-- Progresión recomendada (no bloqueante): causa-efecto → hover → click estático → aparición → movimiento lento → tiro a portería → parejas.
+- Progresión recomendada (no bloqueante): causa-efecto → hover → click estático → aparición → movimiento lento → tiro a portería → parejas → arrastre (avanzado).
 
 ### Mecánicas
 
@@ -89,6 +89,7 @@ Una serie de juegos web estáticos, sin build, publicada en GitHub Pages, que é
 - **Movimiento lento**: objetivo con trayectoria suave, velocidad creciente por nivel de dificultad.
 - **Tiro a portería**: escena fija con huecos clicables; acierto = animación de balón y celebración corta.
 - **Parejas**: 4, 6 u 8 parejas por elección; tablero que se adapta al tamaño de pantalla.
+- **Arrastre**: juego avanzado y separado; pulsar el dibujo, mantener, moverlo a su zona y soltar. Soltar fuera es un fallo suave.
 - **Tamaño de objetivo nunca por debajo de 44 px**; en la práctica, mucho mayores.
 
 ### Interacción
@@ -138,7 +139,7 @@ Dos costuras, acordadas:
 ## Out of Scope
 
 - Táctil, móvil y control por teclado.
-- **Arrastrar y soltar en esta versión** (queda reservado para un juego futuro de nivel avanzado, ver "Notas").
+- **Arrastrar y soltar en los juegos base** (existe solo como juego avanzado separado, ticket 11).
 - Doble clic.
 - Multijugador, cuentas, backend, sincronización.
 - Otras lenguas aparte de nombres de fichero y código.
@@ -152,4 +153,5 @@ Dos costuras, acordadas:
 - GSAP es libre desde abril de 2025 bajo licencia "no charge" de Webflow; se respeta la marca y la licencia en los créditos del repositorio.
 - El repo arranca de cero: no se reutiliza nada del código anterior de la rama `main` previa (`8b620cf`), que queda sólo como histórico.
 - El padre dispone de Playwright y Chromium instalados para desarrollar y probar; eso no es requisito para jugar.
-- **Arrastre (futuro)**: se entrenará en un juego propio, posterior a la serie base y por encima de "movimiento lento" en dificultad. Requiere pulsar, no soltar y desplazar. El modelo contenido × mundo debe permitirlo sin tocar la serie existente: será una mecánica más del registro de juegos, y la API `window.juego` deberá exponer el arrastre en curso para poder testearlo.
+- **Arrastre (ticket 11)**: implementado como juego propio, posterior a la serie base y por encima de "movimiento lento" en dificultad. Requiere pulsar, no soltar y desplazar. Es una mecánica más del registro de juegos y la API `window.juego` expone el arrastre en curso para poder testearlo.
+- Estado de implementación: los tickets 01-11 están hechos. El tracker `.scratch/juegos-punteria/README.md` es la fuente de verdad del estado; esta spec describe el producto y sus costuras.
