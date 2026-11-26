@@ -49,6 +49,9 @@ un sitio.
 
 ## Retos con tiempo
 
+> Estado de implementación (2026-11-26): esta sección es una decisión de diseño, todavía no
+> implementada. Ningún juego declara `tiempo: true` y `panel.html` no muestra ni reinicia la ventana.
+
 Cualquier juego puede usar tiempo, sin regla propia: no es una capa.
 
 - **Un clic sigue siendo el único gesto.** El tiempo cambia *cuándo* el objetivo está

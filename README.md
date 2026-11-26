@@ -68,17 +68,17 @@ Dentro de un juego, pulsar **`E`** descarga un JSON con el historial local por j
 curso. Es el mismo almacén que lee `panel.html`. Se guarda en el propio dispositivo
 (`localStorage`); **no se envía nada a ningún servidor**.
 
-Los juegos con tiempo declaran una ventana adaptativa (4–8 s, provisional) que aprende el ritmo
-del niño entre sesiones. `panel.html` muestra el valor actual y permite reiniciarlo. Ver
-[ADR 0003](docs/adr/0003-movimiento.md).
+La ventana adaptativa del [ADR 0003](docs/adr/0003-movimiento.md) (4–8 s) está **prevista pero
+todavía no implementada**: ningún juego declara `tiempo: true` y `panel.html` no muestra ese valor.
+Cuando se implemente, aprenderá el ritmo del niño entre sesiones.
 
 ## Accesibilidad
 
 - Contraste de componentes **≥3:1** (WCAG 2.2).
 - El color nunca es el único indicador.
 - Sin autoplay ni parpadeos a más de 3 Hz en superficie grande (WCAG 2.3.1).
-- El movimiento en reposo (idle) existe, pero solo en una pieza jugable por pantalla y con función.
-  Ver [ADR 0003](docs/adr/0003-movimiento.md).
+- La clase `.idle` está definida para una pieza jugable por pantalla, pero ningún juego la usa
+  todavía. Ver [ADR 0003](docs/adr/0003-movimiento.md).
 - En pantalla táctil se usa el cursor del sistema y se ocultan puntero y estela.
 
 Ver `ATTRIBUTION.md` para licencias.

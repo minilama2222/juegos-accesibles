@@ -19,8 +19,9 @@ No confundir con la **ventana adaptativa**: son dos mecanismos distintos.
 
 Tiempo máximo que un objetivo con tiempo permanece disponible. Aprende el ritmo
 del niño **entre sesiones**, por juego, y se guarda en `localStorage` (suelo 4 s,
-techo 8 s). Está definida en el [ADR 0003](docs/adr/0003-movimiento.md) y solo
-la usan los juegos que la declaran con `tiempo: true`.
+techo 8 s). Está definida en el [ADR 0003](docs/adr/0003-movimiento.md), pero
+**todavía no está implementada**: ningún juego la declara con `tiempo: true` ni
+`panel.html` la muestra.
 
 ## Escena
 

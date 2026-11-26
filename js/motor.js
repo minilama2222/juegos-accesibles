@@ -98,6 +98,12 @@ const MOTOR = (() => {
         if (res.acierto && ++ronda.aciertos >= ronda.meta) finalizar();
         return Object.assign(res, { terminada: ronda.terminada, aciertosRonda: ronda.aciertos });
       },
+      // Clic que cuenta para puntería pero cuyo resultado aún no se conoce
+      // (la primera carta de una pareja). No toca aciertos, fallos ni la ronda.
+      anotaClic: (x, y, objetivo) => {
+        if (ronda.terminada) return { terminada: true };
+        return Juego.metricas.registrarClic(x, y, objetivo);
+      },
       // Algunos juegos (parejas) calculan la meta según el tablero.
       meta: (n) => {
         if (Number.isFinite(n) && n > 0) ronda.meta = n;

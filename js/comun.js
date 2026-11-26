@@ -32,33 +32,43 @@ const Juego = (() => {
       try { return JSON.parse(localStorage.getItem(this.CLAVE) || "{}"); } catch (e) { return {}; }
     },
 
-    registrarResultado(x, y, objetivo, acierto) {
+    _apunta(x, y, objetivo) {
       const r = objetivo.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
       const d = Math.hypot(x - cx, y - cy);
       const dentro = (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
-      if (typeof acierto !== "boolean") acierto = dentro;
-
       this.sesion.distancias.push(Math.round(d));
       if (dentro) this.sesion.dentro++;
+      return { d, dentro };
+    },
+
+    // Clic sin resultado todavía: cuenta para puntería, pero no para aciertos/fallos.
+    registrarClic(x, y, objetivo) {
+      return this._apunta(x, y, objetivo);
+    },
+
+    registrarResultado(x, y, objetivo, acierto) {
+      const m = this._apunta(x, y, objetivo);
+      if (typeof acierto !== "boolean") acierto = m.dentro;
+
       if (acierto) { this.sesion.aciertos++; ayuda.aciertos++; ayuda.bajar(); }
       else         { this.sesion.fallos++;   ayuda.fallos++;   ayuda.subir(); }
-      return { d, dentro, acierto };
+      return { d: m.d, dentro: m.dentro, acierto };
     },
 
     resumen() {
       const s = this.sesion;
       const d = s.distancias;
       const media = d.length ? Math.round(d.reduce((a, b) => a + b, 0) / d.length) : 0;
-      const total = s.aciertos + s.fallos;
+      const clics = d.length;
       return {
         aciertos: s.aciertos,
         fallos: s.fallos,
-        clics: total,
+        clics,
         dentro: s.dentro,
         distanciaMedia: media,
-        porcentajeDentro: total ? Math.round((s.dentro / total) * 100) : 0,
+        porcentajeDentro: clics ? Math.round((s.dentro / clics) * 100) : 0,
         ayudaFinal: Number(ayuda.nivel.toFixed(2)),
         duracionSeg: Math.round((Date.now() - s.inicio) / 1000),
       };

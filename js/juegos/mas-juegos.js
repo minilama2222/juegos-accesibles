@@ -200,7 +200,11 @@ MOTOR.registrar("parejas", {
           c.appendChild(H.sprite(ruta, "82%"));
           Juego.audio.sonido(520);
 
-          if (!primera) { primera = c; return; }
+          if (!primera) {
+            H.anotaClic(ev.clientX, ev.clientY, c);
+            primera = c;
+            return;
+          }
 
           if (primera._ruta === ruta) {                       // pareja encontrada
             H.anota(ev.clientX, ev.clientY, c, true);
