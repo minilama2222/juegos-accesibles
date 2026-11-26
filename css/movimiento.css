@@ -1,0 +1,116 @@
+/* =====================================================================
+   movimiento.css — Sistema de movimiento (ADR 0003)
+   Único sitio del proyecto con keyframes y transiciones de juego.
+   Los juegos piden una animación por nombre (H.anima / H.toque), no escriben CSS.
+
+   Tokens:
+     --mov-rapido   feedback de un objeto que responde (botones, imán)
+     --mov-clic     refuerzo de acierto (pop)
+     --mov-entrada  aparición de una pieza nueva
+     --mov-salida   retirada de una pieza
+     --mov-idle     ciclo de reposo (pieza jugable, un .idle por pantalla)
+
+   Reglas (ADR 0003):
+     - solo transform y opacity;
+     - transform-origin explícito;
+     - nada de animar left/top/width/height/box-shadow/filter.
+   ===================================================================== */
+
+:root {
+  --mov-rapido:  .12s;
+  --mov-clic:    .5s;
+  --mov-entrada: .55s;
+  --mov-salida:  .35s;
+  --mov-idle:    1.4s;
+
+  --mov-ease:      ease;
+  --mov-ease-suave: ease-in-out;
+  --mov-rebote:    cubic-bezier(.2,1.5,.4,1);
+}
+
+/* ---------------- Feedback de un objeto que responde ---------------- */
+.boton-sup {
+  transform-origin: center;
+  transition: transform var(--mov-rapido) var(--mov-ease);
+}
+.boton-sup:hover, .boton-sup.cerca { transform: scale(1.12); }
+.boton-sup:active { transform: scale(.96); }
+
+#puntero { transition: transform .08s linear; }      /* sigue el ratón: 1:1, con un mínimo de suavizado */
+
+/* ---------------- Objetivos ---------------- */
+.objetivo {
+  transform-origin: 50% 100%;                        /* el peso se apoya abajo (squash del ADR 0003) */
+  transition: transform .15s var(--mov-ease);
+  will-change: transform;
+}
+.objetivo.cerca { transform: scale(1.06); }         /* imán: crece el OBJETIVO */
+
+/* Escalón 3: el ojo aparece y se esconde con una transición, no con una animación.
+   La transición vive aquí, no en el JS del juego (ADR 0003). */
+.objetivo.asoma {
+  transition: opacity var(--mov-salida) var(--mov-ease),
+              transform var(--mov-salida) var(--mov-ease);
+}
+
+/* Clic con refuerzo: la clase dura exactamente lo que dura la animación.
+   H.toque() añade y quita la clase con animationend. */
+.objetivo.acierto { animation: pop var(--mov-clic) var(--mov-ease); }
+
+@keyframes pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+
+/* El imán no se pisa con el refuerzo: mientras dura el pop, la escala es la del pop. */
+.objetivo.acierto { will-change: auto; }
+
+/* ---------------- Aparición y retirada de piezas ---------------- */
+.aparece {
+  position: absolute;
+  transform-origin: center;
+  animation: entrada var(--mov-entrada) var(--mov-rebote);
+}
+.aparece.se-va {
+  animation: none;
+  transition: transform var(--mov-salida) var(--mov-ease), opacity var(--mov-salida) var(--mov-ease);
+  transform: scale(.6);
+  opacity: 0;
+}
+
+@keyframes entrada {
+  0%   { transform: scale(.2) rotate(-18deg); opacity: 0; }
+  60%  { transform: scale(1.18) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* ---------------- Idle: pieza jugable que respira (ADR 0003) ---------------- */
+/* Un .idle por pantalla como máximo. Suave: no aplasta el pictograma. */
+.idle { animation: respira var(--mov-idle) var(--mov-ease-suave) infinite; transform-origin: 50% 100%; }
+
+@keyframes respira {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+
+/* ---------------- Celebración (capa aparte: pieza única en comun.js) ---------------- */
+#celebracion svg { transform-origin: center; animation: latido var(--mov-idle) var(--mov-ease-suave) infinite; }
+
+@keyframes latido {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.08); }
+}
+
+.confeti {
+  transform-origin: center;
+  animation-name: caer;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes caer {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(112vh) rotate(720deg); opacity: .9; }
+}
+
+/* Sin prefers-reduced-motion (ADR 0003): el movimiento es intencionado. */

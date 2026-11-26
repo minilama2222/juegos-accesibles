@@ -18,6 +18,9 @@ atribución ni impiden el uso comercial. Se acredita igualmente por cortesía:
 
 > Artwork by Kenney (https://kenney.nl) — CC0 1.0.
 
+Nota: la versión actual no carga estos packs; se conservan como material de trabajo. El arte activo
+es ARASAAC y se declara en `js/arte.js`.
+
 ## Sonido
 
 Los efectos y bucles que se incorporen vendrán de [Freesound](https://freesound.org) y se documentarán
@@ -31,5 +34,8 @@ El código de este repositorio es propio, salvo dependencias que se indiquen en 
 
 ## Pictogramas / formas actuales
 
-Las formas de la primera versión (círculos, cuadrados, triángulos y estrellas con cara) están
-**dibujadas por código** en `js/comun.js` y son originales de este proyecto.
+El arte que cargan los juegos son pictogramas de ARASAAC. El catálogo único —qué set usa cada juego,
+rutas, nombres, miniaturas y licencia— vive en `js/arte.js`; las páginas de adulto lo leen de ahí.
+
+Las formas SVG originales (círculos, cuadrados, triángulos y estrellas con cara) siguen en
+`js/comun.js` solo para la celebración final.

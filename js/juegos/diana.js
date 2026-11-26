@@ -1,6 +1,6 @@
 /* =====================================================================
    Línea de puntería · P1 — Diana estática
-   Arte: Shooting Gallery (Kenney, CC0)
+   Arte: ARASAAC (CC BY-NC-SA) · set "pelotas" en js/arte.js
    Un objetivo grande y quieto. La ayuda se desvanece según acierta.
    Sin castigo: al fallar, el objetivo crece.
    ===================================================================== */
@@ -8,30 +8,29 @@
 MOTOR.registrar("punteria1", {
   nombre: "P1 · Diana estática",
   escalon: "P1",
-  arte: "ARASAAC (balón)",
+  arte: "pelotas",
+  descripcion: "Un objetivo grande y quieto; entrena la puntería con ayuda que se retira.",
+  meta: 12,
+  siguiente: "escalon0",
 
   crear(H) {
-    const DIANAS = [
-  "assets/recortes/arasaac/balon.png",
-  "assets/recortes/arasaac/pelota.png",
-];
+    const DIANAS = ARTE.rutas("pelotas");
 
-    let i = 0, aciertos = 0, acabado = false;
-    const TOPE = 12;
+    let i = 0;
 
-    const diana = document.createElement("div");
-    diana.className = "objetivo";
-    diana.id = "diana";
-    H.escena.appendChild(diana);
+    const diana = H.objetivo({ id: "diana" });
 
     function pintar() {
       diana.innerHTML = "";
       diana.appendChild(H.sprite(DIANAS[i++ % DIANAS.length], "100%"));
     }
 
+    let base = 26;
+
     function tamano() {
       // Medianas-grandes, y DISTINTA cada vez. La ayuda las agranda un poco más.
-      const base = 26 + H.aleatorio(0, 9);
+      // La base se fija al pintar la pieza: un fallo recalcula solo la ayuda,
+      // así que el objetivo no puede encogerse por una base nueva.
       const vmin = base * (0.92 + 0.18 * H.ayuda.nivel);
       diana.style.width = vmin + "vmin";
       diana.style.height = vmin + "vmin";
@@ -59,35 +58,26 @@ MOTOR.registrar("punteria1", {
       anterior = mejor;
     }
 
-    function siguiente() { pintar(); tamano(); colocar(); }
+    function siguiente() { pintar(); base = 26 + H.aleatorio(0, 9); tamano(); colocar(); }
 
-    pintar(); tamano(); colocar();
-    Juego.iman(diana);
+    pintar(); base = 26 + H.aleatorio(0, 9); tamano(); colocar();
 
-    document.body.addEventListener("pointerdown", (ev) => {
-      if (acabado) return;
-      const res = H.metricas.registrar(ev.clientX, ev.clientY, diana);
+    H.tocaFondo((ev) => {
+      if (H.terminada()) return;
+      const res = H.anota(ev.clientX, ev.clientY, diana);
 
-      if (res.dentro) {
-        aciertos++;
-        diana.classList.add("acierto");
+      if (res.acierto) {
+        H.toque(diana);                                          // refuerzo estándar (pop)
         Juego.audio.acierto();                                   // sonido de "bien"
         Juego.marca(ev.clientX, ev.clientY, "bien");             // señal visual de "bien"
-        setTimeout(() => diana.classList.remove("acierto"), 520);
 
-        if (aciertos >= TOPE) {
-          acabado = true;
-          H.cerrarSesion("punteria1");
-          H.celebracion();
-          // Terminar un nivel lleva al siguiente, sin que nadie tenga que elegir nada.
-          setTimeout(() => H.avanzar(), 4600);
-        } else {
-          setTimeout(siguiente, 320);
-        }
+        if (!res.terminada) setTimeout(siguiente, 320);
       } else {
-        // Fallo: sonido y señal claros, pero suaves. El objetivo NO se mueve ni cambia de tamaño.
+        // Fallo: sonido y señal claros, pero suaves. El objetivo NO se mueve;
+        // la ayuda sube si queda margen y el tamaño se recalcula en el sitio.
         Juego.audio.mal();
         Juego.marca(ev.clientX, ev.clientY, "mal");
+        tamano();
       }
     });
 

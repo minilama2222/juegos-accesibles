@@ -21,20 +21,32 @@ const Juego = (() => {
   };
 
   // ---------- Métricas de puntería ----------
+  // Un solo almacén por juego (v2) y un solo embudo: cada juego declara si el
+  // clic fue acierto o fallo; si no lo declara, se deduce de la geometría.
+  // La clave v1 queda intacta: no identifica el juego, así que no se migra.
   const metricas = {
-    clave: "juegos.metricas.v1",
-    sesion: { inicio: Date.now(), aciertos: 0, fallos: 0, distancias: [] },
-    registrar(x, y, objetivo) {
+    CLAVE: "juegos.metricas.v2",
+    sesion: { inicio: Date.now(), aciertos: 0, fallos: 0, dentro: 0, distancias: [] },
+
+    _leerTodo() {
+      try { return JSON.parse(localStorage.getItem(this.CLAVE) || "{}"); } catch (e) { return {}; }
+    },
+
+    registrarResultado(x, y, objetivo, acierto) {
       const r = objetivo.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
       const d = Math.hypot(x - cx, y - cy);
-      this.sesion.distancias.push(Math.round(d));
       const dentro = (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
-      if (dentro) { this.sesion.aciertos++; ayuda.aciertos++; ayuda.bajar(); }
-      else        { this.sesion.fallos++;   ayuda.fallos++;   ayuda.subir(); }
-      return { d, dentro };
+      if (typeof acierto !== "boolean") acierto = dentro;
+
+      this.sesion.distancias.push(Math.round(d));
+      if (dentro) this.sesion.dentro++;
+      if (acierto) { this.sesion.aciertos++; ayuda.aciertos++; ayuda.bajar(); }
+      else         { this.sesion.fallos++;   ayuda.fallos++;   ayuda.subir(); }
+      return { d, dentro, acierto };
     },
+
     resumen() {
       const s = this.sesion;
       const d = s.distancias;
@@ -43,16 +55,62 @@ const Juego = (() => {
       return {
         aciertos: s.aciertos,
         fallos: s.fallos,
+        clics: total,
+        dentro: s.dentro,
         distanciaMedia: media,
-        porcentajeDentro: total ? Math.round((s.aciertos / total) * 100) : 0,
+        porcentajeDentro: total ? Math.round((s.dentro / total) * 100) : 0,
         ayudaFinal: Number(ayuda.nivel.toFixed(2)),
         duracionSeg: Math.round((Date.now() - s.inicio) / 1000),
       };
     },
-    guardar() {
-      const previos = JSON.parse(localStorage.getItem(this.clave) || "[]");
-      previos.push(Object.assign({ fecha: new Date().toISOString() }, this.resumen()));
-      localStorage.setItem(this.clave, JSON.stringify(previos.slice(-200)));
+
+    cerrarSesion(juego, extra) {
+      const r = Object.assign(this.resumen(), extra || {});
+      const todo = this._leerTodo();
+      (todo[juego] = todo[juego] || []).push(Object.assign({ fecha: new Date().toISOString() }, r));
+      todo[juego] = todo[juego].slice(-300);
+      try { localStorage.setItem(this.CLAVE, JSON.stringify(todo)); } catch (e) {}
+      return r;
+    },
+
+    historial(juego) { return this._leerTodo()[juego] || []; },
+
+    acumulado(juego) {
+      const h = this.historial(juego);
+      const n = h.length;
+      if (!n) return { sesiones: 0 };
+      const suma = (f) => h.reduce((a, s) => a + f(s), 0);
+      const aciertos = suma(s => s.aciertos || 0), fallos = suma(s => s.fallos || 0);
+      const d = h.filter(s => s.distanciaMedia > 0).map(s => s.distanciaMedia);
+      const clics = suma(s => s.clics != null ? s.clics : (s.aciertos || 0) + (s.fallos || 0));
+      const dentro = suma(s => s.dentro != null ? s.dentro
+        : Math.round(((s.porcentajeDentro || 0) / 100) * ((s.aciertos || 0) + (s.fallos || 0))));
+      return {
+        sesiones: n,
+        aciertos, fallos,
+        porcentajeDentro: clics ? Math.round(dentro / clics * 100) : 0,
+        distanciaMedia: d.length ? Math.round(d.reduce((a, b) => a + b, 0) / d.length) : 0,
+        ayudaFinal: h[n - 1].ayudaFinal,
+        minutosTotales: Math.round(suma(s => s.duracionSeg || 0) / 60),
+      };
+    },
+
+    reiniciarSesion() {
+      this.sesion = { inicio: Date.now(), aciertos: 0, fallos: 0, dentro: 0, distancias: [] };
+    },
+
+    exportar() {
+      const datos = JSON.stringify({
+        version: 2,
+        exportado: new Date().toISOString(),
+        actual: localStorage.getItem("juegos.actual"),
+        sesionActual: this.resumen(),
+        juegos: this._leerTodo(),
+      }, null, 2);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([datos], { type: "application/json" }));
+      a.download = "metricas.json";
+      a.click();
     },
   };
 
@@ -179,6 +237,46 @@ const Juego = (() => {
       o.start(t); o.stop(t + 0.32);
     },
 
+    // Pista de identidad: la pieza que suena se distingue por melodía y, si
+    // hay estéreo, por posición. El juego solo dice "suena esta de N".
+    pista(indice, total) {
+      this.iniciar();
+      if (!this.ctx) return;
+
+      const n = Math.max(1, total || 1);
+      const i = ((indice % n) + n) % n;
+      const motivos = [
+        { ondas: ["sine", "sine"], notas: [440.00, 554.37] },
+        { ondas: ["triangle", "triangle"], notas: [554.37, 659.25] },
+        { ondas: ["sine", "triangle"], notas: [659.25, 880.00] },
+      ];
+      const motivo = motivos[i % motivos.length];
+      const t0 = this.ctx.currentTime + 0.02;
+      const paneo = n === 1 ? 0 : (i / (n - 1)) * 1.4 - 0.7;
+
+      let salida = this.ctx.destination;
+      if (this.ctx.createStereoPanner) {
+        const p = this.ctx.createStereoPanner();
+        p.pan.value = paneo;
+        p.connect(this.ctx.destination);
+        salida = p;
+      }
+
+      motivo.notas.forEach((f, j) => {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = motivo.ondas[j];
+        o.frequency.value = f;
+        const ini = t0 + j * 0.13;
+        g.gain.setValueAtTime(0.0001, ini);
+        g.gain.exponentialRampToValueAtTime(0.10, ini + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ini + 0.26);
+        o.connect(g).connect(salida);
+        o.start(ini);
+        o.stop(ini + 0.30);
+      });
+    },
+
     // "Mal": aviso de fallo, suave y descendente (≈0,3 s). Nunca agresivo. Es un EFECTO.
     mal() {
       this.iniciar();
@@ -211,6 +309,7 @@ const Juego = (() => {
   function crearPuntero() {
     if (window.matchMedia("(pointer: coarse)").matches) return;   // táctil: no hay cursor
     document.body.classList.add("con-puntero");
+    iniciarIman();
 
     // ÚNICO puntero visible: flecha grande en blanco y negro, sin adornos.
     const p = document.createElement("div");
@@ -256,15 +355,30 @@ const Juego = (() => {
   }
 
   // ---------- Imán de apoyo: crece el OBJETIVO al acercarse ----------
-  function iman(elemento) {
-    if (window.matchMedia("(pointer: coarse)").matches) return;
-    const radio = () => 70 + 90 * ayuda.nivel;       // se encoge al mejorar
+  // Un solo listener para toda la escena. Los objetivos se buscan vivos en el
+  // DOM en cada frame, así que cambiar de tablero no deja closures colgados.
+  let imanIniciado = false;
+  function iniciarIman() {
+    if (imanIniciado || window.matchMedia("(pointer: coarse)").matches) return;
+    imanIniciado = true;
+
+    let pendiente = false;
     addEventListener("mousemove", (ev) => {
-      const r = elemento.getBoundingClientRect();
-      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const dentro = Math.hypot(ev.clientX - cx, ev.clientY - cy) < Math.max(r.width, r.height) / 2 + radio();
-      elemento.classList.toggle("cerca", dentro);
-    });
+      if (pendiente) return;
+      pendiente = true;
+      const x = ev.clientX, y = ev.clientY;
+
+      requestAnimationFrame(() => {
+        pendiente = false;
+        const radio = 70 + 90 * ayuda.nivel;       // se encoge al mejorar
+        document.querySelectorAll(".objetivo").forEach((elemento) => {
+          const r = elemento.getBoundingClientRect();
+          const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+          const dentro = Math.hypot(x - cx, y - cy) < Math.max(r.width, r.height) / 2 + radio;
+          elemento.classList.toggle("cerca", dentro);
+        });
+      });
+    }, { passive: true });
   }
 
   // ---------- Capa constante: botones ----------
@@ -375,15 +489,15 @@ const Juego = (() => {
   }
 
   function exportar() {
-    metricas.guardar();
-    const datos = JSON.stringify(metricas.sesion, null, 2);
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([datos], { type: "application/json" }));
-    a.download = "metricas.json";
-    a.click();
+    metricas.exportar();
   }
 
-  addEventListener("keydown", (e) => { if (e.key === "e") exportar(); });
+  // Modo adulto (ADR 0001): las páginas de adulto cargan este fichero con
+  // `data-modo="adulto"` y no heredan lo que es solo del niño: la tecla E de exportar.
+  const modo = (document.currentScript && document.currentScript.dataset.modo) || "nino";
+  if (modo !== "adulto") {
+    addEventListener("keydown", (e) => { if (e.key === "e") exportar(); });
+  }
 
-  return { ayuda, metricas, audio, crearPuntero, iman, crearBotones, formaSVG, aleatorio, celebracion, confeti, marca, exportar };
+  return { ayuda, metricas, audio, crearPuntero, crearBotones, aleatorio, celebracion, marca, exportar };
 })();

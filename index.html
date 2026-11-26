@@ -44,28 +44,24 @@
     <a href="kiosco.html">▶️ Modo kiosco</a>
   </div>
 
-  <script src="js/comun.js"></script>
+  <script src="js/comun.js" data-modo="adulto"></script>
+  <script src="js/arte.js"></script>
   <script src="js/motor.js"></script>
   <script src="js/juegos/causa-efecto.js"></script>
   <script src="js/juegos/diana.js"></script><script src="js/juegos/mas-juegos.js"></script>
   <script>
     // El índice se construye desde las definiciones: una sola fuente de verdad.
-    const MINI = {
-      escalon0:  ["assets/recortes/animales/bear.png", "assets/recortes/animales/giraffe.png"],
-      punteria1: ["assets/recortes/dianas/shot_yellow_large.png", "assets/recortes/dianas/duck_target_yellow.png"],
-    };
     const rejilla = document.getElementById("rejilla");
     MOTOR.listar().forEach((id) => {
       const d = MOTOR.definicion(id);
+      const arte = ARTE.ficha(d.arte);
       const a = document.createElement("a");
       a.className = "tarjeta";
       a.href = "juego.html?j=" + encodeURIComponent(id);
       a.innerHTML = `<h2>${d.nombre}</h2>` +
-        `<p>${id === "escalon0"
-            ? "Causa-efecto puro: un toque en cualquier parte y aparece un animal. Imposible fallar."
-            : "Un objetivo grande y quieto. Aquí se entrena la puntería, con ayuda que se retira."}</p>` +
-        `<div class="arte">Arte: ${d.arte} · Kenney (CC0)</div>` +
-        `<div class="mini">${(MINI[id] || []).map(s => `<img src="${s}" alt="">`).join("")}</div>`;
+        `<p>${d.descripcion || ""}</p>` +
+        `<div class="arte">Arte: ${arte ? arte.nombre : "—"} · ${arte ? arte.licencia : "—"}</div>` +
+        `<div class="mini">${ARTE.miniaturas(d.arte, 2).map(s => `<img src="${s}" alt="">`).join("")}</div>`;
       rejilla.appendChild(a);
     });
   </script>

@@ -1,93 +1,127 @@
 /* =====================================================================
    motor.js — Motor único de juegos
    Un solo código de interacción; cada juego es una DEFINICIÓN de datos.
-   Ver docs/adr/0001 (capa constante) y 0002 (reglas no negociables).
+   Ver docs/adr/0001 (capa constante), 0002 (reglas no negociables) y 0003 (movimiento).
    ===================================================================== */
 
 const MOTOR = (() => {
 
   const JUEGOS = {};
-  const CLAVE_METRICAS = "juegos.metricas.v2";
 
   let escena = null;
   let def = null;
-  let ayuda = { nivel: 1, subir() { this.nivel = Math.min(1, this.nivel + 0.15); },
-                        bajar() { this.nivel = Math.max(0.3, this.nivel - 0.08); } };
+  // La ayuda es una sola: la posee comun.js, que es quien la mueve al registrar
+  // cada clic. Motor no guarda una copia; solo la reexpone a los juegos.
 
   // ---------- Registro de juegos ----------
   function registrar(id, definicion) { JUEGOS[id] = definicion; }
   function listar() { return Object.keys(JUEGOS); }
   function definicion(id) { return JUEGOS[id]; }
 
-  // ---------- Almacén de métricas (por juego) ----------
-  function leerTodo() { try { return JSON.parse(localStorage.getItem(CLAVE_METRICAS) || "{}"); } catch (e) { return {}; } }
-  function guardarSesion(id, resumen) {
-    const todo = leerTodo();
-    (todo[id] = todo[id] || []).push(Object.assign({ fecha: new Date().toISOString() }, resumen));
-    todo[id] = todo[id].slice(-300);
-    try { localStorage.setItem(CLAVE_METRICAS, JSON.stringify(todo)); } catch (e) {}
-  }
-  function historial(id) { return leerTodo()[id] || []; }
-  function acumulado(id) {
-    const h = historial(id);
-    const n = h.length;
-    if (!n) return { sesiones: 0 };
-    const suma = (f) => h.reduce((a, s) => a + f(s), 0);
-    const aciertos = suma(s => s.aciertos || 0), fallos = suma(s => s.fallos || 0);
-    const d = h.filter(s => s.distanciaMedia > 0).map(s => s.distanciaMedia);
-    return {
-      sesiones: n,
-      aciertos, fallos,
-      porcentajeDentro: aciertos + fallos ? Math.round(aciertos / (aciertos + fallos) * 100) : 0,
-      distanciaMedia: d.length ? Math.round(d.reduce((a, b) => a + b, 0) / d.length) : 0,
-      ayudaFinal: h[n - 1].ayudaFinal,
-      minutosTotales: Math.round(suma(s => s.duracionSeg || 0) / 60),
-    };
-  }
+  // ---------- Almacén de métricas (delegado en comun.js) ----------
+  // Una sola clave y un solo esquema viven en Juego.metricas.
+  function historial(id) { return Juego.metricas.historial(id); }
+  function acumulado(id) { return Juego.metricas.acumulado(id); }
 
   // ---------- Un nivel lleva al siguiente ----------
-  // Orden de la escalera tal como está construida hoy. El último vuelve al primero.
-  const ORDEN = ["escalon0", "escalon1", "escalon2", "escalon3", "parejas", "punteria1"];
+  // El orden vive en cada definición (`siguiente`), no en una lista aparte.
+  // Si un juego no declara siguiente, o el destino no existe, se vuelve al primero.
   function siguiente(id) {
-    const i = ORDEN.indexOf(id);
-    return ORDEN[(i + 1) % ORDEN.length];
+    const actual = JUEGOS[id];
+    const destino = actual && actual.siguiente;
+    return (destino && JUEGOS[destino]) ? destino : (listar()[0] || id);
+  }
+  function irAlSiguiente() {
+    location.href = "juego.html?j=" + encodeURIComponent(siguiente(def && def.id));
+  }
+
+  // ---------- Ronda: cuenta y ceremonia de fin ----------
+  // La definición declara cuántos aciertos cierran la ronda; el motor la cierra.
+  const ESPERA_FIN = 4600;
+  let ronda = { meta: Infinity, aciertos: 0, terminada: false };
+
+  function finalizar() {
+    if (ronda.terminada) return;
+    ronda.terminada = true;
+    Juego.metricas.cerrarSesion(def.id);
+    Juego.celebracion();
+    setTimeout(irAlSiguiente, ESPERA_FIN);
+  }
+
+  // ---------- Capa constante compartida ----------
+  // Los juegos usan el refuerzo de acierto (.acierto → pop, en movimiento.css).
+  function anima(el, nombre) {
+    if (!el) return;
+    el.classList.remove(nombre);
+    void el.offsetWidth;                              // fuerza el reinicio de la animación
+    el.classList.add(nombre);
+    const fin = () => el.classList.remove(nombre);
+    el.addEventListener("animationend", fin, { once: true });
+    setTimeout(fin, 1200);                            // red de seguridad si la animación no corre
   }
 
   // ---------- Contexto que recibe cada juego ----------
   function contexto() {
-    const rel = (ruta) => ruta;                       // rutas relativas a la raíz del sitio
+    function crearSprite(ruta, tam) {
+      const img = document.createElement("img");
+      img.src = ruta; img.alt = ""; img.draggable = false;
+      img.style.width = (typeof tam === "number" ? tam + "px" : tam);
+      img.style.height = "auto";
+      img.style.pointerEvents = "none";
+      return img;
+    }
+
     return {
       escena,
-      ayuda,
-      // Al terminar un nivel se pasa al siguiente sin que nadie tenga que elegir nada.
-      avanzar: () => { location.href = "juego.html?j=" + encodeURIComponent(siguiente(def && def.id)); },
-      sprite: (ruta, tam) => {
-        const img = document.createElement("img");
-        img.src = ruta; img.alt = ""; img.draggable = false;
-        img.style.width = (typeof tam === "number" ? tam + "px" : tam);
-        img.style.height = "auto";
-        img.style.pointerEvents = "none";
-        return img;
+      ayuda: Juego.ayuda,
+      sprite: crearSprite,
+      // Fábrica única de objetivos: clase, tamaño, sprite y padre.
+      // El imán es global y no se registra por pieza.
+      objetivo: (opciones) => {
+        const o = opciones || {};
+        const caja = document.createElement("div");
+        caja.className = "objetivo" + (o.clase ? " " + o.clase : "");
+        if (o.id) caja.id = o.id;
+        const lado = (typeof o.tam === "number") ? o.tam + "px" : (o.tam || "26vmin");
+        caja.style.width = lado;
+        caja.style.height = lado;
+        if (o.ruta) caja.appendChild(crearSprite(o.ruta, "100%"));
+        (o.padre || escena).appendChild(caja);
+        return caja;
       },
       acierto: () => Juego.audio.acierto(),
-      metricas: Juego.metricas,
+      // Embudo único de métricas y de ronda: el juego declara el resultado del
+      // clic; el motor lo cuenta y cierra la sesión al llegar a la meta.
+      anota: (x, y, objetivo, acierto) => {
+        if (ronda.terminada) return { acierto: false, dentro: false, d: 0, terminada: true };
+        const res = Juego.metricas.registrarResultado(x, y, objetivo, acierto);
+        if (res.acierto && ++ronda.aciertos >= ronda.meta) finalizar();
+        return Object.assign(res, { terminada: ronda.terminada, aciertosRonda: ronda.aciertos });
+      },
+      // Algunos juegos (parejas) calculan la meta según el tablero.
+      meta: (n) => {
+        if (Number.isFinite(n) && n > 0) ronda.meta = n;
+        if (!ronda.terminada && ronda.aciertos >= ronda.meta) finalizar();
+      },
+      terminada: () => ronda.terminada,
       aleatorio: Juego.aleatorio,
       // Elige una pieza al azar de una lista (para no repetir siempre la misma)
       pick: (lista) => lista[Math.floor(Math.random() * lista.length)],
-      // Un toque sobre CUALQUIER objetivo de la escena, con el elemento concreto
-      toca: (fn) => document.body.addEventListener("pointerdown", (ev) => {
+      // Refuerzo de acierto sobre un objetivo (ADR 0003: la animación vive en CSS).
+      anima,
+      // Clic con refuerzo estándar: el juego no decide la animación, la pide.
+      toque: (el) => anima(el, "acierto"),
+      // Un toque sobre CUALQUIER objetivo de la escena, con el elemento concreto.
+      // Escucha en #escena, no en body: botones y celebración quedan fuera.
+      toca: (fn) => escena.addEventListener("pointerdown", (ev) => {
         const el = ev.target.closest && ev.target.closest(".objetivo");
         if (el) fn(ev, el);
       }),
-      celebracion: Juego.celebracion,
-      cerrarSesion(id, extra) {
-        const r = Object.assign(Juego.metricas.resumen(), extra || {});
-        guardarSesion(id, r);
-        return r;
-      },
-      reiniciarSesion() {
-        Juego.metricas.sesion = { inicio: Date.now(), aciertos: 0, fallos: 0, distancias: [] };
-      },
+      // Cualquier toque dentro del área jugable, acierte o no.
+      tocaFondo: (fn) => escena.addEventListener("pointerdown", (ev) => {
+        if (ev.target.closest && ev.target.closest(".boton-sup")) return;
+        fn(ev);
+      }),
     };
   }
 
@@ -99,14 +133,19 @@ const MOTOR = (() => {
     escena = document.getElementById("escena");
     escena.innerHTML = "";
     document.title = def.nombre || id;
+    ronda = {
+      meta: typeof def.meta === "number" ? def.meta : Infinity,
+      aciertos: 0,
+      terminada: false,
+    };
 
     Juego.crearPuntero();
     Juego.crearBotones({ volver: "index.html", fondo: true });
 
+    Juego.metricas.reiniciarSesion();
     const H = contexto();
-    H.reiniciarSesion();
     if (typeof def.crear === "function") def.crear(H);
   }
 
-  return { registrar, listar, definicion, arrancar, historial, acumulado, ayuda };
+  return { registrar, listar, definicion, arrancar, historial, acumulado };
 })();

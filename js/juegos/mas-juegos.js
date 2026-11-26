@@ -4,53 +4,31 @@
    Reglas: sin texto, un clic, objetivos ≥44px, sin castigo dramático.
    ===================================================================== */
 
-const ANIMALES = [
-  "assets/recortes/arasaac/perro.png",
-  "assets/recortes/arasaac/gato.png",
-  "assets/recortes/arasaac/leon.png",
-  "assets/recortes/arasaac/vaca.png",
-  "assets/recortes/arasaac/pato.png",
-  "assets/recortes/arasaac/elefante.png",
-  "assets/recortes/arasaac/caballo.png",
-  "assets/recortes/arasaac/oveja.png",
-  "assets/recortes/arasaac/conejo.png",
-  "assets/recortes/arasaac/raton.png",
-  "assets/recortes/arasaac/tortuga.png",
-  "assets/recortes/arasaac/pajaro.png",
-];
-
-const PELOTAS = ["assets/recortes/arasaac/pelota.png", "assets/recortes/arasaac/balon.png"];
-const OJOS = ["assets/recortes/arasaac/ojo.png"];
+const ANIMALES = ARTE.rutas("animales");
+const PELOTAS = ARTE.rutas("pelotas");
+const OJOS = ARTE.rutas("ojos");
 
 // Piezas comunes ------------------------------------------------------
-function cajaPulsable(H, ruta, tam) {
-  const caja = document.createElement("div");
-  caja.className = "objetivo";
-  const lado = tam > 0 ? tam + "px" : "26vmin";
-  caja.style.width = lado;
-  caja.style.height = lado;
-  caja.appendChild(H.sprite(ruta, "100%"));
-  H.escena.appendChild(caja);
-  Juego.iman(caja);
-  return caja;
-}
+// La creación de objetivos vive en H.objetivo(); el imán es global.
 
 // ---------------------------------------------------------------- 1 · El que brilla
 MOTOR.registrar("escalon1", {
   nombre: "1 · El que brilla",
   escalon: 1,
-  arte: "Sports Pack",
+  arte: "pelotas",
+  descripcion: "Dos pelotas grandes; toca la que brilla.",
+  meta: 12,
+  siguiente: "escalon2",
 
   crear(H) {
-    let aciertos = 0, acabado = false, brillante = 0;
-    const TOPE = 12;
+    let brillante = 0;
 
-    const zonas = [0, 1].map(() => cajaPulsable(H, H.pick(PELOTAS), 0));
-    zonas.forEach((z, i) => {
-      const r = Math.min(innerWidth, innerHeight) * 0.34;
-      z.style.width = r + "px"; z.style.height = r + "px";
+    const r = Math.min(innerWidth, innerHeight) * 0.34;
+    const zonas = [0, 1].map((_, i) => {
+      const z = H.objetivo({ ruta: H.pick(PELOTAS), tam: r });
       z.style.left = (i === 0 ? innerWidth * 0.08 : innerWidth * 0.58) + "px";
       z.style.top = (innerHeight - r) / 2 + "px";
+      return z;
     });
 
     function repintar() {
@@ -66,17 +44,15 @@ MOTOR.registrar("escalon1", {
 
     repintar();
     H.toca((ev, objetivo) => {
-      if (acabado) return;
+      if (H.terminada()) return;
       const i = zonas.indexOf(objetivo);
-      if (i === brillante) {
-        aciertos++;
+      const res = H.anota(ev.clientX, ev.clientY, objetivo, i === brillante);
+
+      if (res.acierto) {
         Juego.audio.acierto(); Juego.marca(ev.clientX, ev.clientY, "bien");
-        H.metricas.registrar(ev.clientX, ev.clientY, objetivo);
-        if (aciertos >= TOPE) { acabado = true; H.cerrarSesion("escalon1"); H.celebracion(); setTimeout(() => H.avanzar(), 4600); }
-        else setTimeout(repintar, 320);
+        if (!res.terminada) setTimeout(repintar, 320);
       } else {
         Juego.audio.mal(); Juego.marca(ev.clientX, ev.clientY, "mal");
-        H.metricas.registrar(ev.clientX, ev.clientY, objetivo);
       }
     });
   },
@@ -86,40 +62,42 @@ MOTOR.registrar("escalon1", {
 MOTOR.registrar("escalon2", {
   nombre: "2 · Toca el que suena",
   escalon: 2,
-  arte: "Animal Pack Remastered",
+  arte: "animales",
+  descripcion: "Tres animales; toca el que suena.",
+  meta: 12,
+  siguiente: "escalon3",
 
   crear(H) {
-    let aciertos = 0, acabado = false, sonoro = 0, reloj = null;
-    const TOPE = 12;
+    let sonoro = 0, reloj = null;
 
-    const zonas = [0, 1, 2].map(() => cajaPulsable(H, H.pick(ANIMALES), 0));
-    zonas.forEach((z, i) => {
-      const r = Math.min(innerWidth * 0.26, innerHeight * 0.42);
-      z.style.width = r + "px"; z.style.height = r + "px";
+    const r = Math.min(innerWidth * 0.26, innerHeight * 0.42);
+    const zonas = [0, 1, 2].map((_, i) => {
+      const z = H.objetivo({ ruta: H.pick(ANIMALES), tam: r });
       z.style.left = (innerWidth * (0.06 + i * 0.32)) + "px";
       z.style.top = (innerHeight - r) / 2 + "px";
-      z.innerHTML = ""; z.appendChild(H.sprite(H.pick(ANIMALES), "100%"));
+      return z;
     });
 
     function elegir() {
+      if (H.terminada()) return;
       sonoro = Math.floor(Math.random() * 3);
-      // el elegido emite un tono suave cada 2 s
+      // el elegido emite su pista cada 2 s
       clearInterval(reloj);
-      const tono = () => { if (!acabado) Juego.audio.sonido(660 + Math.random() * 220); };
+      const tono = () => { if (!H.terminada()) Juego.audio.pista(sonoro, zonas.length); };
       setTimeout(tono, 250);
       reloj = setInterval(tono, 2000);
     }
 
     elegir();
     H.toca((ev, objetivo) => {
-      if (acabado) return;
+      if (H.terminada()) return;
       const i = zonas.indexOf(objetivo);
-      H.metricas.registrar(ev.clientX, ev.clientY, objetivo);
-      if (i === sonoro) {
-        aciertos++;
+      const res = H.anota(ev.clientX, ev.clientY, objetivo, i === sonoro);
+
+      if (res.acierto) {
         Juego.audio.acierto(); Juego.marca(ev.clientX, ev.clientY, "bien");
-        if (aciertos >= TOPE) { acabado = true; clearInterval(reloj); H.cerrarSesion("escalon2"); H.celebracion(); setTimeout(() => H.avanzar(), 4600); }
-        else setTimeout(elegir, 320);
+        if (res.terminada) { clearInterval(reloj); return; }
+        setTimeout(elegir, 320);
       } else {
         // Se señala el fallo, pero NO se cambia el objetivo: puede reintentar en el sitio.
         Juego.audio.mal(); Juego.marca(ev.clientX, ev.clientY, "mal");
@@ -132,20 +110,17 @@ MOTOR.registrar("escalon2", {
 MOTOR.registrar("escalon3", {
   nombre: "3 · ¿Dónde está?",
   escalon: 3,
-  arte: "Googly Eyes",
+  arte: "ojos",
+  descripcion: "Un ojo aparece y se esconde; tócalo mientras se ve.",
+  meta: 12,
+  siguiente: "parejas",
 
   crear(H) {
-    let aciertos = 0, acabado = false, ciclos = 0;
-    const TOPE = 12;
-
-    const ojo = cajaPulsable(H, H.pick(OJOS), 0);
     const tam = Math.round(Math.min(innerWidth, innerHeight) * 0.3);
-    ojo.style.width = tam + "px"; ojo.style.height = tam + "px";
-    ojo.style.transition = "opacity .35s ease, transform .35s ease";
-    ojo.appendChild(H.sprite(H.pick(OJOS), "100%"));
+    const ojo = H.objetivo({ ruta: H.pick(OJOS), tam, clase: "asoma" });
 
     function asomar() {
-      if (acabado) return;
+      if (H.terminada()) return;
       ojo.style.left = H.aleatorio(110, Math.max(120, innerWidth - tam - 110)) + "px";
       ojo.style.top  = H.aleatorio(110, Math.max(120, innerHeight - tam - 110)) + "px";
       ojo.style.opacity = "1"; ojo.style.transform = "scale(1)";
@@ -153,22 +128,22 @@ MOTOR.registrar("escalon3", {
       setTimeout(esconder, 4200);
     }
     function esconder() {
-      if (acabado) return;
+      if (H.terminada()) return;
       ojo.style.opacity = "0"; ojo.style.transform = "scale(.7)";
-      ciclos++;
       setTimeout(asomar, 1200);
     }
 
     setTimeout(asomar, 700);
 
     H.toca((ev, objetivo) => {
-      if (acabado || objetivo !== ojo) return;
-      if (ojo.style.opacity === "0") { Juego.audio.mal(); Juego.marca(ev.clientX, ev.clientY, "mal"); return; }
-      aciertos++;
+      if (H.terminada() || objetivo !== ojo) return;
+      if (ojo.style.opacity === "0") {
+        H.anota(ev.clientX, ev.clientY, ojo, false);
+        Juego.audio.mal(); Juego.marca(ev.clientX, ev.clientY, "mal"); return;
+      }
+      const res = H.anota(ev.clientX, ev.clientY, ojo, true);
       Juego.audio.acierto(); Juego.marca(ev.clientX, ev.clientY, "bien");
-      H.metricas.registrar(ev.clientX, ev.clientY, ojo);
-      if (aciertos >= TOPE) { acabado = true; H.cerrarSesion("escalon3"); H.celebracion(); setTimeout(() => H.avanzar(), 4600); }
-      else { ojo.style.opacity = "0"; setTimeout(asomar, 900); }
+      if (!res.terminada) { ojo.style.opacity = "0"; setTimeout(asomar, 900); }
     });
   },
 });
@@ -177,14 +152,19 @@ MOTOR.registrar("escalon3", {
 MOTOR.registrar("parejas", {
   nombre: "4–6 · Parejas",
   escalon: "4-6",
-  arte: "Animal Pack Remastered",
+  arte: "animales",
+  descripcion: "Encuentra las parejas de animales en tres tableros.",
+  meta: 6,
+  siguiente: "punteria1",
 
   crear(H) {
-    const PARES = parseInt(new URLSearchParams(location.search).get("pares") || "2", 10);
-    const TOPE = 3;                       // tres tableros por sesión
-    let tableros = 0, acabado = false;
+    const PARES = Math.max(1, parseInt(new URLSearchParams(location.search).get("pares") || "2", 10) || 2);
+    const TABLEROS = 3;                   // tres tableros por sesión
+    let tableros = 0;
+    H.meta(TABLEROS * PARES);             // una meta por pareja encontrada
 
     function nuevoTablero() {
+      if (H.terminada()) return;
       H.escena.innerHTML = "";
       const elegidos = [];
       while (elegidos.length < PARES) {
@@ -205,23 +185,16 @@ MOTOR.registrar("parejas", {
       let primera = null, bloqueado = false, quedan = PARES;
 
       cartas.forEach((ruta) => {
-        const c = document.createElement("div");
-        c.className = "objetivo carta";
-        c.style.width = lado + "px"; c.style.height = lado + "px";
-        c.style.background = "#ffffff";
-        c.innerHTML = "";
+        const c = H.objetivo({ clase: "carta", tam: lado, padre: rejilla });
         const dorso = document.createElement("div");
         dorso.textContent = "";
         dorso.style.cssText = "width:100%;height:100%;border-radius:22px;background:#dfe8f3;" +
           "display:grid;place-items:center;";
         c.appendChild(dorso);
-        rejilla.appendChild(c);
-        Juego.iman(c);
 
         c._ruta = ruta;
         c.addEventListener("pointerdown", (ev) => {
-          if (bloqueado || c._vista) return;
-          H.metricas.registrar(ev.clientX, ev.clientY, c);
+          if (bloqueado || c._vista || H.terminada()) return;
           c._vista = true;
           c.innerHTML = "";
           c.appendChild(H.sprite(ruta, "82%"));
@@ -230,16 +203,15 @@ MOTOR.registrar("parejas", {
           if (!primera) { primera = c; return; }
 
           if (primera._ruta === ruta) {                       // pareja encontrada
+            H.anota(ev.clientX, ev.clientY, c, true);
             Juego.audio.acierto();
             Juego.marca(ev.clientX, ev.clientY, "bien");
             primera = null;
-            if (--quedan === 0) {
-              if (++tableros >= TOPE) {
-                acabado = true; H.cerrarSesion("parejas"); H.celebracion();
-                setTimeout(() => H.avanzar(), 4600);
-              } else setTimeout(nuevoTablero, 900);
+            if (--quedan === 0 && ++tableros < TABLEROS) {
+              setTimeout(nuevoTablero, 900);
             }
           } else {                                            // no son pareja
+            H.anota(ev.clientX, ev.clientY, c, false);
             bloqueado = true;
             Juego.audio.mal();
             const a = primera;

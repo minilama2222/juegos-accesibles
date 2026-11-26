@@ -1,6 +1,7 @@
 /* =====================================================================
    comun.css — Juegos accesibles
-   Reglas de la capa CONSTANTE: esto NO cambia de un juego a otro.
+   Capa CONSTANTE (estructura, colores, tamaño). El MOVIMIENTO vive aparte,
+   en movimiento.css (ADR 0003).
    ===================================================================== */
 
 :root {
@@ -53,11 +54,7 @@ body.con-puntero, body.con-puntero * { cursor: none; }
   display: grid;
   place-items: center;
   z-index: 50;
-  transition: transform .12s ease;
 }
-.boton-sup:hover, .boton-sup.cerca { transform: scale(1.12); }
-.boton-sup:active { transform: scale(.96); }
-
 #boton-volver { left: 18px; }
 #boton-mute   { right: 18px; }
 
@@ -69,7 +66,6 @@ body.con-puntero, body.con-puntero * { cursor: none; }
   margin-left: -32px; margin-top: -32px;
   pointer-events: none;
   z-index: 9999;
-  transition: transform .08s linear;
 }
 #puntero svg { width: 100%; height: 100%; display: block; }
 
@@ -91,16 +87,7 @@ body.con-puntero, body.con-puntero * { cursor: none; }
   border-radius: var(--radio);
   background: #ffffff;
   box-shadow: 0 8px 0 rgba(0,0,0,.06);
-  transition: transform .15s ease, box-shadow .15s ease;
   will-change: transform;
-}
-.objetivo.cerca  { transform: scale(1.06); }              /* imán: crece el OBJETIVO */
-.objetivo.acierto { animation: pop .5s ease; }
-
-@keyframes pop {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.28); }
-  100% { transform: scale(1); }
 }
 
 /* Celebración final: fondo suave, sin parpadeos */
@@ -112,12 +99,7 @@ body.con-puntero, body.con-puntero * { cursor: none; }
   z-index: 40;
 }
 #celebracion.activa { display: grid; }
-#celebracion svg { width: min(46vw, 380px); height: auto; animation: latido 1.4s ease-in-out infinite; }
-
-@keyframes latido {
-  0%,100% { transform: scale(1); }
-  50%     { transform: scale(1.08); }
-}
+#celebracion svg { width: min(46vw, 380px); height: auto; }
 
 /* Regla de seguridad: en pantalla táctil, puntero del sistema */
 @media (pointer: coarse) {
@@ -129,23 +111,9 @@ body.con-puntero, body.con-puntero * { cursor: none; }
 body[data-juego="escalon0"]  { background: #f7f3ea; }
 body[data-juego="punteria1"] { background: #eef3fa; }
 
-/* Pieza que aparece en el juego de causa-efecto */
-.aparece {
-  position: absolute;
-  animation: entrada .55s cubic-bezier(.2,1.5,.4,1);
-  transform-origin: center;
-}
-.aparece.se-va {
-  animation: none;
-  transition: transform .35s ease, opacity .35s ease;
-  transform: scale(.6);
-  opacity: 0;
-}
-@keyframes entrada {
-  0%   { transform: scale(.2) rotate(-18deg); opacity: 0; }
-  60%  { transform: scale(1.18) rotate(6deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0); opacity: 1; }
-}
+/* Pieza que aparece en el juego de causa-efecto: la estructura está aquí,
+   el movimiento en movimiento.css (ADR 0003). */
+.aparece { position: absolute; display: grid; place-items: center; }
 
 /* Confeti de final de sesión (sin librerías) */
 .confeti {
@@ -156,25 +124,10 @@ body[data-juego="punteria1"] { background: #eef3fa; }
   border-radius: 3px;
   z-index: 60;
   pointer-events: none;
-  animation-name: caer;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-}
-@keyframes caer {
-  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(112vh) rotate(720deg); opacity: .9; }
 }
 
 /* Los sprites siempre dentro de su caja, sin desbordar */
 .objetivo img, .aparece img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-
-/* Respeta a quien prefiere menos movimiento */
-@media (prefers-reduced-motion: reduce) {
-  #puntero { transition: none; }
-  .objetivo, .boton-sup { transition: none; }
-  #celebracion svg { animation: none; }
-  .aparece { animation: none; }
-}
 
 /* Las cartas del juego de parejas van colocadas por la rejilla, no por coordenadas */
 .objetivo.carta { position: relative; }

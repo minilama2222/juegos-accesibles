@@ -10,17 +10,24 @@ Diseñados bajo tres reglas que no se negocian dentro de un juego:
 
 Y con dos principios de aprendizaje que vienen de la evidencia, no del gusto:
 
-- **Aprendizaje sin error**: el juego lleva al acierto; no se deja fallar para «ver si acierta».
+- **Ventana adaptativa, sin castigo por ir despacio**: el juego lleva al acierto y, si hay tiempo,
+  la ventana aprende el ritmo del niño en vez de penalizarlo (ver [ADR 0003](docs/adr/0003-movimiento.md)).
 - **Refuerzo inmediato** (menos de un segundo). Las demoras de 6 s ya perjudican a algunos niños.
 
 ## Qué hay ahora mismo
 
-| Página | Escalón | Qué entrena |
-|--------|---------|-------------|
-| `escalon0.html` | 0 · Toca y pasa algo | Causa-efecto puro. Imposible fallar. |
-| `punteria1.html` | P1 · Diana estática | Puntería: un objetivo grande y quieto, con ayuda que se retira. |
+| Juego | Escalón | Qué entrena |
+|-------|---------|-------------|
+| `juego.html?j=escalon0` | 0 · Toca y pasa algo | Causa-efecto puro. Imposible fallar. |
+| `juego.html?j=escalon1` | 1 · El que brilla | Elegir entre dos objetivos grandes. |
+| `juego.html?j=escalon2` | 2 · Toca el que suena | Elegir entre tres usando el sonido. |
+| `juego.html?j=escalon3` | 3 · ¿Dónde está? | Seguir un objetivo que aparece y se esconde. |
+| `juego.html?j=parejas` | 4–6 · Parejas | Memoria visual con parejas de animales. |
+| `juego.html?j=punteria1` | P1 · Diana estática | Puntería: un objetivo grande y quieto, con ayuda que se retira. |
 
 `index.html` es la pantalla de selección: **esa sí lleva texto**, porque la usa un adulto para elegir.
+Los juegos se sirven solo por `juego.html?j=<id>`; las antiguas páginas sueltas se retiraron
+(ver [ADR 0004](docs/adr/0004-retirada-legado.md)).
 
 ## Cómo probarlo
 
@@ -33,7 +40,12 @@ python3 -m http.server 8000
 
 ## Capa constante y capa variable
 
-Esto es deliberado y está razonado en los ADR (en el proyecto privado):
+Esto es deliberado y está razonado en los ADR del repo:
+
+- [`docs/adr/0001-capa-constante.md`](docs/adr/0001-capa-constante.md) — qué es constante y qué variable.
+- [`docs/adr/0002-reglas-no-negociables.md`](docs/adr/0002-reglas-no-negociables.md) — las tres reglas.
+- [`docs/adr/0003-movimiento.md`](docs/adr/0003-movimiento.md) — cómo se mueve el juego (los 12 principios).
+- [`docs/adr/0004-retirada-legado.md`](docs/adr/0004-retirada-legado.md) — retirada de las páginas antiguas.
 
 - **Constante** (nunca cambia): puntero, tamaño de objetivo, posición del botón de volver,
   comportamiento del clic, ausencia de texto, duración e intensidad del refuerzo.
@@ -44,22 +56,29 @@ reaprender la mecánica y se pierde justo lo que se entrena.
 
 ## Estado y siguiente paso
 
-El arte de esta primera versión está **dibujado por código** (SVG en `js/comun.js`), para poder probar la
-mecánica y el puntero sin depender de recursos. La siguiente iteración sustituye esas formas por packs de
-[kenney.nl](https://kenney.nl/assets) (CC0) y fondos generados con FLUX-1-dev, un set por juego.
+El arte actual son pictogramas de [ARASAAC](https://arasaac.org) (CC BY-NC-SA). El catálogo
+—qué set usa cada juego, rutas, miniaturas y licencia— vive en `js/arte.js`; el índice, el panel y
+la página de revisión leen de ahí. Las formas SVG de `js/comun.js` quedan solo en la celebración
+final.
 
 ## Métricas (para el adulto)
 
-Dentro de un juego, pulsar **`E`** descarga un JSON con: aciertos, fallos, **distancia media del clic al
-centro del objetivo** y **porcentaje de clics dentro**. Se guardan en el propio dispositivo
+Dentro de un juego, pulsar **`E`** descarga un JSON con el historial local por juego —aciertos, fallos,
+**distancia media del clic al centro del objetivo** y **porcentaje de clics dentro**— y la sesión en
+curso. Es el mismo almacén que lee `panel.html`. Se guarda en el propio dispositivo
 (`localStorage`); **no se envía nada a ningún servidor**.
+
+Los juegos con tiempo declaran una ventana adaptativa (4–8 s, provisional) que aprende el ritmo
+del niño entre sesiones. `panel.html` muestra el valor actual y permite reiniciarlo. Ver
+[ADR 0003](docs/adr/0003-movimiento.md).
 
 ## Accesibilidad
 
 - Contraste de componentes **≥3:1** (WCAG 2.2).
 - El color nunca es el único indicador.
-- Sin autoplay, sin parpadeos, sin movimiento de fondo.
-- Respeta `prefers-reduced-motion`.
+- Sin autoplay ni parpadeos a más de 3 Hz en superficie grande (WCAG 2.3.1).
+- El movimiento en reposo (idle) existe, pero solo en una pieza jugable por pantalla y con función.
+  Ver [ADR 0003](docs/adr/0003-movimiento.md).
 - En pantalla táctil se usa el cursor del sistema y se ocultan puntero y estela.
 
 Ver `ATTRIBUTION.md` para licencias.
