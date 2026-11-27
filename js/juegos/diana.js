@@ -64,19 +64,14 @@ MOTOR.registrar("punteria1", {
 
     H.tocaFondo((ev) => {
       if (H.terminada()) return;
-      const res = H.anota(ev.clientX, ev.clientY, diana);
+      const res = H.resuelve(ev.clientX, ev.clientY, diana);
 
       if (res.acierto) {
         H.toque(diana);                                          // refuerzo estándar (pop)
-        Juego.audio.acierto();                                   // sonido de "bien"
-        Juego.marca(ev.clientX, ev.clientY, "bien");             // señal visual de "bien"
-
         if (!res.terminada) setTimeout(siguiente, 320);
       } else {
-        // Fallo: sonido y señal claros, pero suaves. El objetivo NO se mueve;
-        // la ayuda sube si queda margen y el tamaño se recalcula en el sitio.
-        Juego.audio.mal();
-        Juego.marca(ev.clientX, ev.clientY, "mal");
+        // Fallo: el objetivo NO se mueve; la ayuda sube si queda margen
+        // y el tamaño se recalcula en el sitio.
         tamano();
       }
     });

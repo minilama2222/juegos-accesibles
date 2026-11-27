@@ -46,13 +46,10 @@ MOTOR.registrar("escalon1", {
     H.toca((ev, objetivo) => {
       if (H.terminada()) return;
       const i = zonas.indexOf(objetivo);
-      const res = H.anota(ev.clientX, ev.clientY, objetivo, i === brillante);
+      const res = H.resuelve(ev.clientX, ev.clientY, objetivo, i === brillante);
 
       if (res.acierto) {
-        Juego.audio.acierto(); Juego.marca(ev.clientX, ev.clientY, "bien");
         if (!res.terminada) setTimeout(repintar, 320);
-      } else {
-        Juego.audio.mal(); Juego.marca(ev.clientX, ev.clientY, "mal");
       }
     });
   },
@@ -92,15 +89,11 @@ MOTOR.registrar("escalon2", {
     H.toca((ev, objetivo) => {
       if (H.terminada()) return;
       const i = zonas.indexOf(objetivo);
-      const res = H.anota(ev.clientX, ev.clientY, objetivo, i === sonoro);
+      const res = H.resuelve(ev.clientX, ev.clientY, objetivo, i === sonoro);
 
       if (res.acierto) {
-        Juego.audio.acierto(); Juego.marca(ev.clientX, ev.clientY, "bien");
         if (res.terminada) { clearInterval(reloj); return; }
         setTimeout(elegir, 320);
-      } else {
-        // Se señala el fallo, pero NO se cambia el objetivo: puede reintentar en el sitio.
-        Juego.audio.mal(); Juego.marca(ev.clientX, ev.clientY, "mal");
       }
     });
   },
@@ -138,11 +131,10 @@ MOTOR.registrar("escalon3", {
     H.toca((ev, objetivo) => {
       if (H.terminada() || objetivo !== ojo) return;
       if (ojo.style.opacity === "0") {
-        H.anota(ev.clientX, ev.clientY, ojo, false);
-        Juego.audio.mal(); Juego.marca(ev.clientX, ev.clientY, "mal"); return;
+        H.resuelve(ev.clientX, ev.clientY, ojo, false);
+        return;
       }
-      const res = H.anota(ev.clientX, ev.clientY, ojo, true);
-      Juego.audio.acierto(); Juego.marca(ev.clientX, ev.clientY, "bien");
+      const res = H.resuelve(ev.clientX, ev.clientY, ojo, true);
       if (!res.terminada) { ojo.style.opacity = "0"; setTimeout(asomar, 900); }
     });
   },
@@ -207,17 +199,14 @@ MOTOR.registrar("parejas", {
           }
 
           if (primera._ruta === ruta) {                       // pareja encontrada
-            H.anota(ev.clientX, ev.clientY, c, true);
-            Juego.audio.acierto();
-            Juego.marca(ev.clientX, ev.clientY, "bien");
+            H.resuelve(ev.clientX, ev.clientY, c, true);
             primera = null;
             if (--quedan === 0 && ++tableros < TABLEROS) {
               setTimeout(nuevoTablero, 900);
             }
           } else {                                            // no son pareja
-            H.anota(ev.clientX, ev.clientY, c, false);
+            H.resuelve(ev.clientX, ev.clientY, c, false);
             bloqueado = true;
-            Juego.audio.mal();
             const a = primera;
             setTimeout(() => {
               [a, c].forEach((x) => { x._vista = false; x.innerHTML = ""; const d = document.createElement("div");

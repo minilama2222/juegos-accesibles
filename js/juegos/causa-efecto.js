@@ -33,8 +33,7 @@ MOTOR.registrar("escalon0", {
       caja.appendChild(H.sprite(elegir(), tam));
       H.escena.appendChild(caja);
 
-      H.anota(ev.clientX, ev.clientY, caja, true);       // aquí nunca hay fallo
-      H.acierto();
+      H.resuelve(ev.clientX, ev.clientY, caja, true, { marca: false }); // aquí nunca hay fallo
 
       setTimeout(() => { caja.classList.add("se-va"); }, 900);
       setTimeout(() => caja.remove(), 1300);

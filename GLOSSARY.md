@@ -63,9 +63,11 @@ Se usa en el juego de «toca el que suena».
 ## Ronda
 
 Tramo de una sesión que termina cuando se alcanza la **meta de aciertos** que
-declara el juego (`meta`). El motor lleva la cuenta con `H.anota()` y, al llegar,
-guarda la sesión, celebra y pasa al juego declarado en `siguiente`. Los juegos no
-repiten esa ceremonia ni llevan su propio contador de ronda.
+declara el juego (`meta`). El motor lleva la cuenta con `H.resuelve()` —métricas,
+sonido y marca en una sola llamada— y, al llegar, guarda la sesión, celebra y pasa
+al juego declarado en `siguiente`. `H.anotaClic()` registra un clic cuyo resultado
+todavía no se conoce, sin tocar la cuenta de la ronda. Los juegos no repiten esa
+ceremonia ni llevan su propio contador de ronda.
 
 ## Sesión
 

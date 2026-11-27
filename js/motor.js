@@ -71,6 +71,37 @@ const MOTOR = (() => {
       return img;
     }
 
+    // Embudo único de métricas y de ronda: el juego declara el resultado del
+    // clic; el motor lo cuenta y cierra la sesión al llegar a la meta.
+    function anota(x, y, objetivo, acierto) {
+      if (ronda.terminada) return { acierto: false, dentro: false, d: 0, terminada: true };
+      const res = Juego.metricas.registrarResultado(x, y, objetivo, acierto);
+      if (res.acierto && ++ronda.aciertos >= ronda.meta) finalizar();
+      return Object.assign(res, { terminada: ronda.terminada, aciertosRonda: ronda.aciertos });
+    }
+
+    // Clic que cuenta para puntería pero cuyo resultado aún no se conoce
+    // (la primera carta de una pareja). No toca aciertos, fallos ni la ronda.
+    function anotaClic(x, y, objetivo) {
+      if (ronda.terminada) return { terminada: true };
+      return Juego.metricas.registrarClic(x, y, objetivo);
+    }
+
+    // Métricas + feedback estándar. `opciones.marca:false` deja el sonido pero
+    // no dibuja la marca (causa-efecto ya tiene su propia pieza).
+    function resuelve(x, y, objetivo, acierto, opciones) {
+      if (ronda.terminada) return { terminada: true };
+      const res = anota(x, y, objetivo, acierto);
+      if (res.acierto) {
+        Juego.audio.acierto();
+        if (!opciones || opciones.marca !== false) Juego.marca(x, y, "bien");
+      } else {
+        Juego.audio.mal();
+        if (!opciones || opciones.marca !== false) Juego.marca(x, y, "mal");
+      }
+      return res;
+    }
+
     return {
       escena,
       ayuda: Juego.ayuda,
@@ -89,21 +120,9 @@ const MOTOR = (() => {
         (o.padre || escena).appendChild(caja);
         return caja;
       },
-      acierto: () => Juego.audio.acierto(),
-      // Embudo único de métricas y de ronda: el juego declara el resultado del
-      // clic; el motor lo cuenta y cierra la sesión al llegar a la meta.
-      anota: (x, y, objetivo, acierto) => {
-        if (ronda.terminada) return { acierto: false, dentro: false, d: 0, terminada: true };
-        const res = Juego.metricas.registrarResultado(x, y, objetivo, acierto);
-        if (res.acierto && ++ronda.aciertos >= ronda.meta) finalizar();
-        return Object.assign(res, { terminada: ronda.terminada, aciertosRonda: ronda.aciertos });
-      },
-      // Clic que cuenta para puntería pero cuyo resultado aún no se conoce
-      // (la primera carta de una pareja). No toca aciertos, fallos ni la ronda.
-      anotaClic: (x, y, objetivo) => {
-        if (ronda.terminada) return { terminada: true };
-        return Juego.metricas.registrarClic(x, y, objetivo);
-      },
+      anota,
+      anotaClic,
+      resuelve,
       // Algunos juegos (parejas) calculan la meta según el tablero.
       meta: (n) => {
         if (Number.isFinite(n) && n > 0) ronda.meta = n;
@@ -148,6 +167,7 @@ const MOTOR = (() => {
     Juego.crearPuntero();
     Juego.crearBotones({ volver: "index.html", fondo: true });
 
+    Juego.ayuda.reiniciar();
     Juego.metricas.reiniciarSesion();
     const H = contexto();
     if (typeof def.crear === "function") def.crear(H);

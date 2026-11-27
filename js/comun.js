@@ -18,6 +18,7 @@ const Juego = (() => {
     fallos: 0,
     subir() { this.nivel = Math.min(1, this.nivel + 0.15); },
     bajar() { this.nivel = Math.max(0.3, this.nivel - 0.08); },
+    reiniciar() { this.nivel = 1; this.aciertos = 0; this.fallos = 0; },
   };
 
   // ---------- Métricas de puntería ----------
