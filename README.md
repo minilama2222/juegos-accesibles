@@ -38,6 +38,12 @@ python3 -m http.server 8000
 # y abrir http://localhost:8000
 ```
 
+Comprobaciones mecánicas (sintaxis, movimiento, confeti y rutas de arte):
+
+```bash
+bash scripts/check.sh
+```
+
 ## Capa constante y capa variable
 
 Esto es deliberado y está razonado en los ADR del repo:

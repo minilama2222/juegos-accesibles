@@ -25,5 +25,8 @@ assets/kenney/
 *.tmp
 .cache/
 
+# Volcado de sesión de agente; no es material del sitio
+/ctx3.json
+
 # NOTA: .opencode/ y .agents/ NO se ignoran a propósito.
 # Pueden contener skills o configuración específicas del repo, y queremos versionarlas.

@@ -66,15 +66,16 @@ Cualquier juego puede usar tiempo, sin regla propia: no es una capa.
 
 ## Verificación
 
-El skill `.opencode/skills/movimiento-accesible/` aplica, mecánicamente:
+`scripts/check.sh` aplica, mecánicamente:
 
-- como mucho un `.idle` por escena;
-- cero animación sobre `left`/`top`/`width`/`height`/`box-shadow`/`filter`;
+- sintaxis JS con `node --check`;
 - cero `transition`/`@keyframes` fuera de `css/movimiento.css`;
-- cero confeti fuera de `js/comun.js`.
+- cero `style.transition`/`style.animation` en `js/juegos`;
+- cero confeti fuera de `js/comun.js`;
+- rutas del catálogo de arte existentes.
 
-Lo mecánico lo arregla el skill y avisa. Lo de diseño (¿este idle se lee?) lo decide una revisión
-visual humana.
+La regla de un `.idle` por escena y la legibilidad del movimiento quedan para la revisión
+visual humana: lo mecánico lo avisa `check.sh`, lo de diseño se decide mirando.
 
 ## Alcance
 
