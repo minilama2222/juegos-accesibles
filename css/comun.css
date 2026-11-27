@@ -87,7 +87,6 @@ body.con-puntero, body.con-puntero * { cursor: none; }
   border-radius: var(--radio);
   background: #ffffff;
   box-shadow: 0 8px 0 rgba(0,0,0,.06);
-  will-change: transform;
 }
 
 /* Celebración final: fondo suave, sin parpadeos */

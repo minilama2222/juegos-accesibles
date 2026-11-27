@@ -36,5 +36,5 @@ El proyecto se divide en dos capas explícitas.
 - La variedad va en el **decorado**, no en las **reglas**. Un juego nuevo elige arte y paleta,
   no interacción.
 - Todo cambio que altere la capa constante es un cambio de ADR, no una decisión de juego.
-- El modo adulto de `comun.js` (`{ adulto: true }`) existe porque las páginas de adulto también
+- El modo adulto de `comun.js` (`data-modo="adulto"` en el `<script>`) existe porque las páginas de adulto también
   cargan el mismo fichero: sin él, heredan puntero, estela y la tecla `E` de exportar métricas.

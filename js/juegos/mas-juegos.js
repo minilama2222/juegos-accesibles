@@ -114,15 +114,15 @@ MOTOR.registrar("escalon3", {
 
     function asomar() {
       if (H.terminada()) return;
-      ojo.style.left = H.aleatorio(110, Math.max(120, innerWidth - tam - 110)) + "px";
-      ojo.style.top  = H.aleatorio(110, Math.max(120, innerHeight - tam - 110)) + "px";
-      ojo.style.opacity = "1"; ojo.style.transform = "scale(1)";
+      ojo.style.setProperty("--ojo-x", H.aleatorio(110, Math.max(120, innerWidth - tam - 110)) + "px");
+      ojo.style.setProperty("--ojo-y", H.aleatorio(110, Math.max(120, innerHeight - tam - 110)) + "px");
+      ojo.classList.add("visible");
       // se queda visible un tiempo generoso y luego se esconde
       setTimeout(esconder, 4200);
     }
     function esconder() {
       if (H.terminada()) return;
-      ojo.style.opacity = "0"; ojo.style.transform = "scale(.7)";
+      ojo.classList.remove("visible");
       setTimeout(asomar, 1200);
     }
 
@@ -130,12 +130,12 @@ MOTOR.registrar("escalon3", {
 
     H.toca((ev, objetivo) => {
       if (H.terminada() || objetivo !== ojo) return;
-      if (ojo.style.opacity === "0") {
+      if (!ojo.classList.contains("visible")) {
         H.resuelve(ev.clientX, ev.clientY, ojo, false);
         return;
       }
       const res = H.resuelve(ev.clientX, ev.clientY, ojo, true);
-      if (!res.terminada) { ojo.style.opacity = "0"; setTimeout(asomar, 900); }
+      if (!res.terminada) { ojo.classList.remove("visible"); setTimeout(asomar, 900); }
     });
   },
 });
