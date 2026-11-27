@@ -24,6 +24,7 @@ const ARTE = (() => {
       licencia: LICENCIA,
       url: URL,
       atribucion: ATRIBUCION,
+      miniatura: pieza("perro", "perro.png").ruta,
       piezas: [
         pieza("perro", "perro.png"),
         pieza("gato", "gato.png"),
@@ -46,6 +47,7 @@ const ARTE = (() => {
       licencia: LICENCIA,
       url: URL,
       atribucion: ATRIBUCION,
+      miniatura: pieza("pelota", "pelota.png").ruta,
       piezas: [
         pieza("pelota", "pelota.png"),
         pieza("balón", "balon.png"),
@@ -58,6 +60,7 @@ const ARTE = (() => {
       licencia: LICENCIA,
       url: URL,
       atribucion: ATRIBUCION,
+      miniatura: pieza("ojo", "ojo.png").ruta,
       piezas: [
         pieza("ojo", "ojo.png"),
       ],
@@ -69,7 +72,17 @@ const ARTE = (() => {
     const set = ficha(id);
     return set ? set.piezas.map((p) => p.ruta) : [];
   }
-  function miniaturas(id, cuantas) { return rutas(id).slice(0, cuantas || 2); }
+  function miniaturas(id, cuantas) {
+    const set = ficha(id);
+    if (!set) return [];
+    const n = cuantas || 2;
+    const mini = set.miniatura || (set.piezas[0] && set.piezas[0].ruta);
+    const salida = mini ? [mini] : [];
+    set.piezas.forEach((p) => {
+      if (salida.length < n && salida.indexOf(p.ruta) === -1) salida.push(p.ruta);
+    });
+    return salida;
+  }
   function lista() { return Object.keys(SETS).map((id) => SETS[id]); }
   function atribuciones() {
     const vistas = [];

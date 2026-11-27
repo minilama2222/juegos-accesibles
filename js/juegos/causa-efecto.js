@@ -24,14 +24,13 @@ MOTOR.registrar("escalon0", {
       if (H.terminada()) return;
 
       const tam = Math.round(Math.min(innerWidth, innerHeight) * 0.36);
-      const caja = document.createElement("div");
-      caja.className = "aparece";
-      caja.style.width = tam + "px";
-      caja.style.height = tam + "px";
-      caja.style.left = (ev.clientX - tam / 2) + "px";
-      caja.style.top  = (ev.clientY - tam / 2) + "px";
-      caja.appendChild(H.sprite(elegir(), tam));
-      H.escena.appendChild(caja);
+      const caja = H.pieza({
+        ruta: elegir(),
+        tam,
+        clase: "aparece",
+        x: ev.clientX - tam / 2,
+        y: ev.clientY - tam / 2,
+      });
 
       H.resuelve(ev.clientX, ev.clientY, caja, true, { marca: false }); // aquí nunca hay fallo
 

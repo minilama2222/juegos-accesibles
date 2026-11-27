@@ -27,9 +27,10 @@ techo 8 s). Está definida en el [ADR 0003](docs/adr/0003-movimiento.md), pero
 
 Área jugable (`#escena`). Contiene los objetivos y las piezas que aparecen; el
 chrome —volver, sonido y celebración— vive fuera. El motor la posee y expone
-`H.objetivo()` para crear objetivos, `H.toca()` para aciertos sobre `.objetivo` y
-`H.tocaFondo()` para cualquier clic del área jugable. El imán es un único
-listener global que recorre los objetivos vivos.
+`H.objetivo()` para crear objetivos, `H.pieza()` para piezas transitorias,
+`H.toca()` para aciertos sobre `.objetivo` y `H.tocaFondo()` para cualquier clic
+del área jugable. El imán es un único listener global que recorre los objetivos
+vivos.
 
 ## Objetivo
 

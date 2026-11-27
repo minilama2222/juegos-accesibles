@@ -66,6 +66,27 @@ const MOTOR = (() => {
       return img;
     }
 
+    // Caja común: clase, tamaño, sprite, posición y padre. Los objetivos
+    // añaden `.objetivo`; las piezas transitorias (causa-efecto) no.
+    function crearCaja(opciones, esObjetivo) {
+      const o = opciones || {};
+      const caja = document.createElement("div");
+      const clases = [];
+      if (esObjetivo) clases.push("objetivo");
+      if (o.clase) clases.push(o.clase);
+      if (clases.length) caja.className = clases.join(" ");
+      if (o.id) caja.id = o.id;
+
+      const lado = (typeof o.tam === "number") ? o.tam + "px" : (o.tam || "26vmin");
+      caja.style.width = lado;
+      caja.style.height = lado;
+      if (o.ruta) caja.appendChild(crearSprite(o.ruta, "100%"));
+      if (o.x != null) caja.style.left = (typeof o.x === "number" ? o.x + "px" : o.x);
+      if (o.y != null) caja.style.top = (typeof o.y === "number" ? o.y + "px" : o.y);
+      (o.padre || escena).appendChild(caja);
+      return caja;
+    }
+
     // Embudo único de métricas y de ronda: el juego declara el resultado del
     // clic; el motor lo cuenta y cierra la sesión al llegar a la meta.
     function anota(x, y, objetivo, acierto) {
@@ -101,21 +122,10 @@ const MOTOR = (() => {
       escena,
       ayuda: Juego.ayuda,
       sprite: crearSprite,
-      // Fábrica única de objetivos: clase, tamaño, sprite y padre.
-      // El imán es global y no se registra por pieza.
-      objetivo: (opciones) => {
-        const o = opciones || {};
-        const caja = document.createElement("div");
-        caja.className = "objetivo" + (o.clase ? " " + o.clase : "");
-        if (o.id) caja.id = o.id;
-        const lado = (typeof o.tam === "number") ? o.tam + "px" : (o.tam || "26vmin");
-        caja.style.width = lado;
-        caja.style.height = lado;
-        if (o.ruta) caja.appendChild(crearSprite(o.ruta, "100%"));
-        (o.padre || escena).appendChild(caja);
-        return caja;
-      },
-      anota,
+      // Objetivos jugables (con `.objetivo` e imán global).
+      objetivo: (opciones) => crearCaja(opciones, true),
+      // Piezas transitorias que no son objetivo (causa-efecto).
+      pieza: (opciones) => crearCaja(opciones, false),
       anotaClic,
       resuelve,
       // Algunos juegos (parejas) calculan la meta según el tablero.
