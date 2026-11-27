@@ -40,6 +40,6 @@ juicios que un check automático no puede sustituir.
 ## Dónde mirar
 
 - `docs/adr/0001-sistema-de-movimiento.md`: capas, curvas y movimiento reducido.
-- `docs/adr/0002-arte-arasaac.md`: arte y licencias.
+- `docs/adr/0003-arte-arasaac-primero.md`: arte y licencias (sustituye a 0002).
 - `docs/specs/0001-serie-punteria-raton.md`: producto y costuras de test.
 - `.scratch/juegos-punteria/README.md`: estado de los tickets.
