@@ -26,7 +26,7 @@ const Juego = (() => {
   // clic fue acierto o fallo; si no lo declara, se deduce de la geometría.
   // La clave v1 queda intacta: no identifica el juego, así que no se migra.
   const metricas = {
-    CLAVE: "juegos.metricas.v2",
+    CLAVE: CLAVES.metricas,
     sesion: { inicio: Date.now(), aciertos: 0, fallos: 0, dentro: 0, distancias: [] },
 
     _leerTodo() {
@@ -114,7 +114,7 @@ const Juego = (() => {
       const datos = JSON.stringify({
         version: 2,
         exportado: new Date().toISOString(),
-        actual: localStorage.getItem("juegos.actual"),
+        actual: localStorage.getItem(CLAVES.actual),
         sesionActual: this.resumen(),
         juegos: this._leerTodo(),
       }, null, 2);
@@ -128,7 +128,7 @@ const Juego = (() => {
   // ---------- Audio (sin ficheros: sintetizado, siempre < 1 s) ----------
   const audio = {
     ctx: null,
-    mutado: JSON.parse(localStorage.getItem("juegos.mutado") || "false"),
+    mutado: JSON.parse(localStorage.getItem(CLAVES.mutado) || "false"),
     fondoNodo: null,
     iniciar() {
       if (!this.ctx) {
@@ -309,7 +309,7 @@ const Juego = (() => {
 
     alternarBoton() {
       this.mutado = !this.mutado;
-      localStorage.setItem("juegos.mutado", JSON.stringify(this.mutado));
+      localStorage.setItem(CLAVES.mutado, JSON.stringify(this.mutado));
       const b = document.getElementById("boton-mute");
       if (b) b.innerHTML = ICO_SONIDO(this.mutado);
       if (this.mutado) this.fondo(false); else this.fondo(true);
@@ -499,16 +499,12 @@ const Juego = (() => {
     setTimeout(() => audio.acierto(), 380);
   }
 
-  function exportar() {
-    metricas.exportar();
-  }
-
   // Modo adulto (ADR 0001): las páginas de adulto cargan este fichero con
   // `data-modo="adulto"` y no heredan lo que es solo del niño: la tecla E de exportar.
   const modo = (document.currentScript && document.currentScript.dataset.modo) || "nino";
   if (modo !== "adulto") {
-    addEventListener("keydown", (e) => { if (e.key === "e") exportar(); });
+    addEventListener("keydown", (e) => { if (e.key === "e") metricas.exportar(); });
   }
 
-  return { ayuda, metricas, audio, crearPuntero, crearBotones, aleatorio, celebracion, marca, exportar };
+  return { ayuda, metricas, audio, crearPuntero, crearBotones, aleatorio, celebracion, marca };
 })();

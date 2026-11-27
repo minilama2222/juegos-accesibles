@@ -18,11 +18,6 @@ const MOTOR = (() => {
   function listar() { return Object.keys(JUEGOS); }
   function definicion(id) { return JUEGOS[id]; }
 
-  // ---------- Almacén de métricas (delegado en comun.js) ----------
-  // Una sola clave y un solo esquema viven en Juego.metricas.
-  function historial(id) { return Juego.metricas.historial(id); }
-  function acumulado(id) { return Juego.metricas.acumulado(id); }
-
   // ---------- Un nivel lleva al siguiente ----------
   // El orden vive en cada definición (`siguiente`), no en una lista aparte.
   // Si un juego no declara siguiente, o el destino no existe, se vuelve al primero.
@@ -77,7 +72,7 @@ const MOTOR = (() => {
       if (ronda.terminada) return { acierto: false, dentro: false, d: 0, terminada: true };
       const res = Juego.metricas.registrarResultado(x, y, objetivo, acierto);
       if (res.acierto && ++ronda.aciertos >= ronda.meta) finalizar();
-      return Object.assign(res, { terminada: ronda.terminada, aciertosRonda: ronda.aciertos });
+      return Object.assign(res, { terminada: ronda.terminada });
     }
 
     // Clic que cuenta para puntería pero cuyo resultado aún no se conoce
@@ -173,5 +168,5 @@ const MOTOR = (() => {
     if (typeof def.crear === "function") def.crear(H);
   }
 
-  return { registrar, listar, definicion, arrancar, historial, acumulado };
+  return { registrar, listar, definicion, arrancar };
 })();

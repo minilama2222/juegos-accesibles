@@ -10,9 +10,10 @@
   <!-- Modo kiosco: abre directamente el juego que toca, sin elegir nada.
        El juego "actual" se guarda al abrir cualquier juego; para fijarlo,
        usa ?j=<id>. Pensado para dejar la tablet lista para él. -->
+  <script src="js/claves.js"></script>
   <script>
     const pedido = new URLSearchParams(location.search).get("j");
-    const actual = pedido || localStorage.getItem("juegos.actual") || "escalon0";
+    const actual = pedido || localStorage.getItem(CLAVES.actual) || "escalon0";
     location.replace("juego.html?j=" + encodeURIComponent(actual));
   </script>
 </body>

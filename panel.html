@@ -32,6 +32,7 @@
     <a class="volver" href="index.html">← volver</a>
   </div>
 
+  <script src="js/claves.js"></script>
   <script src="js/comun.js" data-modo="adulto"></script>
   <script src="js/arte.js"></script>
   <script src="js/motor.js"></script>
@@ -45,8 +46,8 @@
     ids.forEach((id) => {
       const def = MOTOR.definicion(id);
       const arte = def ? ARTE.ficha(def.arte) : null;
-      const a = MOTOR.acumulado(id);
-      const h = MOTOR.historial(id).slice(-8).reverse();
+      const a = Juego.metricas.acumulado(id);
+      const h = Juego.metricas.historial(id).slice(-8).reverse();
 
       const caja = document.createElement("div");
       caja.className = "caja";

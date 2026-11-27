@@ -146,7 +146,6 @@ MOTOR.registrar("parejas", {
   escalon: "4-6",
   arte: "animales",
   descripcion: "Encuentra las parejas de animales en tres tableros.",
-  meta: 6,
   siguiente: "punteria1",
 
   crear(H) {
