@@ -1,6 +1,7 @@
 import { arrancarEscena } from './escena.js';
 import { MUNDOS, MECANICAS, ORDEN, mundoPorId } from './contenido.js';
 import { pictograma } from './pictogramas.js';
+import { imagenArasaac } from './arasaac.js';
 import { fondoSvg } from './fondos.js';
 import { accionDeDestino, guardarMundo, leerMundo, leerAvatar, guardarAvatar, siguienteAvatar } from './menu.js';
 import { crearEstela } from './estela.js';
@@ -17,10 +18,8 @@ import { AVISO_TACTIL, hayPunteroGrueso } from './tactil.js';
 // El avatar es del niño (historia 22): se elige con un clic y se recuerda.
 // Nada de bolas raras: solo caras que se entienden.
 const AVATARES = [
-  { id: 'gato', nombre: 'Gato' },
-  { id: 'perro', nombre: 'Perro' },
-  { id: 'pato', nombre: 'Pato' },
-  { id: 'bicho', nombre: 'Bicho' },
+  { id: 'contento', nombre: 'Carita contenta' },
+  { id: 'contenta', nombre: 'Carita contenta de pelo largo' },
 ];
 
 const avatarGuardado = leerAvatar();
@@ -72,9 +71,10 @@ function svg(nombre) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(pictograma(nombre));
 }
 
-// Las pegatinas con pictograma ARASAAC usan su PNG; el resto, el SVG propio.
+// La pegatina pinta su pictograma ARASAAC; si faltara, la estrella dibujada.
 function dibujoPegatina(p) {
-  return p.imagen || svg(p.icono);
+  const imagen = imagenArasaac(p.pictograma);
+  return imagen ? `<img alt="" src="${imagen}">` : svg('estrella');
 }
 
 function publicar(extra = {}) {
@@ -221,10 +221,16 @@ function render() {
     <section class="menu" style="--fondo:${mundoMenu.fondo};--acento:${mundoMenu.acento}">
       ${fondoDe(mundoMenu)}
       <header class="menu__cabecera">
-        <button class="avatar" data-accion="avatar" data-avatar="${estado.avatarId}"
-                aria-label="Cambiar mi avatar">
-          <img class="avatar__img" alt="" src="${svg(estado.avatarId)}">
-        </button>
+        <div class="herramientas herramientas--izquierda">
+          <button class="herramienta herramienta--lugar" data-accion="lugar"
+                  aria-label="Cambiar de mundo" style="--tinta:${mundoMenu.paleta[2]}">
+            <img alt="" src="${svg('lugar')}">
+          </button>
+          <button class="herramienta herramienta--premio" data-accion="coleccion"
+                  data-ganadas="${ganadas}" aria-label="Mis pegatinas">
+            <img alt="" src="${svg('coleccion')}">
+          </button>
+        </div>
         <nav class="mundos" aria-label="Elige un mundo">
           ${MUNDOS.map(
             (m) => `
@@ -235,11 +241,8 @@ function render() {
             </button>`,
           ).join('')}
         </nav>
-        <div class="herramientas">
-          <button class="herramienta herramienta--premio" data-accion="coleccion"
-                  data-ganadas="${ganadas}" aria-label="Mis pegatinas">
-            <img alt="" src="${svg('coleccion')}">
-          </button>
+        <div class="herramientas herramientas--derecha">
+          ${botonAvatar()}
           ${botonEfectos()}
           ${botonMusica()}
           ${botonPantalla()}
@@ -260,13 +263,30 @@ function render() {
   publicar({ escena: null, ultimo: null });
 }
 
+// El avatar ya no es una cara grande: es un control más (gato, carita…), así
+// que vive en la fila de herramientas y se pinta como los demás.
+function botonAvatar() {
+  return `
+    <button class="herramienta herramienta--avatar" data-accion="avatar"
+            data-avatar="${estado.avatarId}" aria-label="Cambiar mi avatar">
+      <img alt="" src="${imagenArasaac(estado.avatarId)}">
+    </button>`;
+}
+
 function botonJuego(id, parejas) {
   const extra = parejas ? ` data-parejas="${parejas}"` : '';
   const nombre = parejas ? `${parejas} parejas` : id;
   return `
     <button class="juego" data-juego="${id}"${extra} aria-label="${nombre}">
-      <span class="juego__icono"><img alt="" src="${svg(iconoMecanica(id, parejas))}"></span>
+      <span class="juego__icono"><img alt="" src="${dibujoMecanica(id, parejas)}"></span>
     </button>`;
+}
+
+// Los iconos de mecánica pueden ser un pictograma ARASAAC con su propia clase
+// de color (p. ej. `destello`) o un SVG propio del menú (p. ej. `porteria`).
+function dibujoMecanica(id, parejas) {
+  const nombre = iconoMecanica(id, parejas);
+  return imagenArasaac(nombre) ?? svg(nombre);
 }
 
 function iconoMecanica(id, parejas) {
@@ -304,11 +324,7 @@ function renderColeccion() {
     <section class="coleccion" style="--fondo:${mundoMenu.fondo};--acento:${mundoMenu.acento}">
       ${fondoDe(mundoMenu)}
       <button class="volver" data-accion="volver" aria-label="Volver al menú">
-        <svg viewBox="0 0 100 100" aria-hidden="true">
-          <path d="M78 50H34M48 36L34 50l14 14" fill="none" stroke="currentColor" stroke-width="9"
-                stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="20" cy="50" r="9" fill="currentColor"/>
-        </svg>
+        <img alt="" src="${svg('volver')}">
       </button>
       <div class="herramientas herramientas--coleccion">${botonEfectos()}${botonMusica()}${botonPantalla()}</div>
       <div class="pegatinas" role="list" aria-label="Mis pegatinas">
@@ -318,7 +334,7 @@ function renderColeccion() {
           <figure class="pegatina ${p.ganada ? 'pegatina--ganada' : ''}"
                   role="listitem" data-pegatina="${p.id}" data-ganada="${p.ganada}"
                   aria-label="${p.nombre}${p.ganada ? '' : ': por conseguir'}">
-            <span class="pegatina__icono"><img alt="" src="${dibujoPegatina(p)}"></span>
+            <span class="pegatina__icono">${dibujoPegatina(p)}</span>
           </figure>`,
           )
           .join('')}
@@ -373,16 +389,24 @@ function animarMenu() {
   });
 }
 
+// "Lugar": cambia al siguiente mundo. Es el mismo paquete visual y sonoro de
+// siempre; no toca reglas.
+function cambiarMundo() {
+  const i = MUNDOS.findIndex((m) => m.id === estado.mundoId);
+  elegirMundo(MUNDOS[(i + 1) % MUNDOS.length].id);
+}
+
 function cambiarAvatar() {
   const ids = AVATARES.map((a) => a.id);
   estado.avatarId = siguienteAvatar(estado.avatarId, ids);
   guardarAvatar(estado.avatarId);
 
-  const boton = document.querySelector('[data-accion="avatar"]');
-  const img = boton?.querySelector('img');
-  if (boton) boton.dataset.avatar = estado.avatarId;
-  if (img) {
-    img.src = svg(estado.avatarId);
+  // Hay más de un botón de avatar (menú y partida): se cambian todos.
+  for (const boton of document.querySelectorAll('[data-accion="avatar"]')) {
+    boton.dataset.avatar = estado.avatarId;
+    const img = boton.querySelector('img');
+    if (!img) continue;
+    img.src = imagenArasaac(estado.avatarId);
     const gsap = window.gsap;
     if (gsap && !prefiereMenosMovimiento()) {
       gsap.fromTo(
@@ -411,6 +435,9 @@ function elegirMundo(id) {
     b.classList.toggle('mundo--activo', activo);
     b.setAttribute('aria-pressed', String(activo));
   });
+  // La pieza «lugar» y el fondo de los botones llevan el acento del mundo.
+  const lugar = menu?.querySelector('[data-accion="lugar"]');
+  if (lugar) lugar.style.setProperty('--tinta', mundo.paleta[2]);
   publicar();
 }
 
@@ -603,7 +630,7 @@ function mostrarPremio(contenedor, premio) {
   const caja = document.createElement('div');
   caja.className = 'premio';
   caja.dataset.premio = premio.id;
-  caja.innerHTML = `<img alt="" src="${dibujoPegatina(p)}">`;
+  caja.innerHTML = dibujoPegatina(p);
   contenedor.appendChild(caja);
   if (gsap && !prefiereMenosMovimiento()) {
     gsap.fromTo(
@@ -803,6 +830,7 @@ document.addEventListener('click', (ev) => {
   }
   if (accionDeDestino(ev, '[data-accion="coleccion"]')) return renderColeccion();
   if (accionDeDestino(ev, '[data-accion="avatar"]')) return cambiarAvatar();
+  if (accionDeDestino(ev, '[data-accion="lugar"]')) return cambiarMundo();
   const m = accionDeDestino(ev, '[data-mundo]');
   if (m) return elegirMundo(m.dataset.mundo);
   const j = accionDeDestino(ev, '[data-juego]');

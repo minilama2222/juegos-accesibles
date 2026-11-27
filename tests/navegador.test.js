@@ -55,10 +55,10 @@ test('el menú muestra los cuatro mundos y los juegos sin texto visible', async 
   assert.deepEqual(
     iconos,
     [
-      'assets/arasaac/regalo-25381.png',
-      'assets/arasaac/gato-7114.png',
-      'assets/arasaac/balon-2269.png',
-      'assets/arasaac/carita-13354.png',
+      'assets/arasaac/25381.png',
+      'assets/arasaac/7114.png',
+      'assets/arasaac/2269.png',
+      'assets/arasaac/13354.png',
     ],
     'el selector de mundo usa los mismos pictogramas que las bolas',
   );
@@ -228,7 +228,7 @@ test('el objetivo dibuja el pictograma del mundo elegido', async () => {
   await p.click('[data-juego="hover"]');
   await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
   assert.ok(
-    pedidas.some((u) => u.endsWith('/assets/arasaac/balon-2269.png')),
+    pedidas.some((u) => u.endsWith('/assets/arasaac/2269.png')),
     'debe cargar el balón de ARASAAC del mundo de fútbol',
   );
   await b.close();
@@ -934,13 +934,13 @@ test('la pegatina del balón usa el pictograma ARASAAC, no el SVG propio', async
 
   await p.waitForSelector('.premio img', { timeout: 5000 });
   const enPremio = await p.$eval('.premio img', (n) => n.getAttribute('src'));
-  assert.equal(enPremio, 'assets/arasaac/balon-2269.png');
+  assert.equal(enPremio, 'assets/arasaac/2269.png');
 
   await p.waitForFunction(() => window.juego?.vista === 'menu', null, { timeout: 10000 });
   await p.click('[data-accion="coleccion"]');
   await p.waitForFunction(() => window.juego?.vista === 'coleccion');
   const enColeccion = await p.$eval('[data-pegatina="balon"] img', (n) => n.getAttribute('src'));
-  assert.equal(enColeccion, 'assets/arasaac/balon-2269.png');
+  assert.equal(enColeccion, 'assets/arasaac/2269.png');
   await b.close();
 });
 

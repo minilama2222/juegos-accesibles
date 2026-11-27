@@ -3,17 +3,19 @@
 
 export const CLAVE_PEGATINAS = 'juegos.pegatinas.v1';
 
-// Catálogo de pegatinas. El niño no lee: cada pegatina se reconoce por su dibujo.
-// `imagen` manda si existe (mismo pictograma ARASAAC que el objetivo); `icono` es el SVG propio de reserva.
+// Catálogo de pegatinas. El niño no lee: cada pegatina se reconoce por su
+// dibujo, y el dibujo es siempre un pictograma ARASAAC (`pictograma`, un
+// concepto de `js/arasaac.js`). El regalo y el balón usan el mismo pictograma
+// que el objetivo de su mundo: lo que se gana es lo que se toca.
 export const PEGATINAS = [
-  { id: 'estrella', nombre: 'Estrella', icono: 'estrella' },
-  { id: 'regalo', nombre: 'Regalo', icono: 'regalo' },
-  { id: 'gato', nombre: 'Gato', icono: 'gato' },
-  { id: 'balon', nombre: 'Balón', icono: 'balon', imagen: 'assets/arasaac/balon-2269.png' },
-  { id: 'bicho', nombre: 'Bicho', icono: 'bicho' },
-  { id: 'trofeo', nombre: 'Trofeo', icono: 'trofeo' },
-  { id: 'pato', nombre: 'Pato', icono: 'pato' },
-  { id: 'huevo', nombre: 'Huevo', icono: 'huevo' },
+  { id: 'estrella', nombre: 'Estrella', pictograma: 'estrellaArasaac' },
+  { id: 'regalo', nombre: 'Regalo', pictograma: 'regalo' },
+  { id: 'gato', nombre: 'Gato', pictograma: 'gato' },
+  { id: 'balon', nombre: 'Balón', pictograma: 'balon' },
+  { id: 'bicho', nombre: 'Bicho', pictograma: 'bichoArasaac' },
+  { id: 'trofeo', nombre: 'Trofeo', pictograma: 'trofeo' },
+  { id: 'pato', nombre: 'Pato', pictograma: 'pato' },
+  { id: 'huevo', nombre: 'Huevo', pictograma: 'huevo' },
 ];
 
 function almacenPorDefecto() {

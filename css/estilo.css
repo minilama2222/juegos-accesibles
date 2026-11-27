@@ -80,35 +80,31 @@ img {
 .menu__cabecera {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 5vmin;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 3vmin;
 }
 
-.avatar {
-  width: 15vmin;
-  height: 15vmin;
+/* Laterales de la cabecera: a la izquierda lugar y colección; a la derecha el
+   avatar y los controles de sonido y pantalla. */
+.herramientas--izquierda,
+.herramientas--derecha {
+  gap: 1.6vmin;
+}
+
+/* El avatar ya no es una cara grande: es una pieza más de la fila, con el
+   borde del acento del mundo para reconocerla. */
+.herramienta--avatar {
+  border-color: var(--acento);
+}
+
+.herramienta--avatar img {
   border-radius: 50%;
-  background: #ffffff18;
-  border: 0.6vmin solid var(--acento);
-  padding: 1.4vmin;
-  flex: none;
-  display: grid;
-  place-items: center;
-  transition:
-    transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    border-color 160ms ease;
 }
 
-.avatar:hover,
-.avatar:focus-visible {
-  transform: scale(1.08) rotate(-2deg);
-  border-color: #ffffff;
-}
-
-.avatar:active {
-  transform: scale(1.02, 0.96);
-  transition-duration: 90ms;
+/* «Lugar»: cambia de mundo. La casa se tiñe con el color claro del mundo
+   (`--tinta`), que pone el script al elegir mundo. */
+.herramienta--lugar {
+  color: var(--tinta, #a5d6a7);
 }
 
 .mundos {
@@ -430,7 +426,6 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .avatar,
   .mundo,
   .juego,
   .salir,

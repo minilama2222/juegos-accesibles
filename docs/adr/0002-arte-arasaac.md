@@ -1,6 +1,6 @@
 # 0002 · Arte de los objetivos: pictogramas ARASAAC
 
-- Estado: aceptado
+- Estado: sustituido por [0003](0003-arte-arasaac-primero.md)
 - Fecha: 2026-11-24
 - Sustituye: la línea «Assets: SVG propios generados; sin ARASAAC ni descargas externas» de
   `docs/specs/0001-serie-punteria-raton.md`.

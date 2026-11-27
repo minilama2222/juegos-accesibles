@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { MUNDOS } from '../js/contenido.js';
 import { fondoSvg } from '../js/fondos.js';
 import { PICTOGRAMAS } from '../js/pictogramas.js';
+import { PICTOGRAMAS_ARASAAC } from '../js/arasaac.js';
 
 // Un mundo completo es un paquete visual y sonoro intercambiable (spec 0001).
 const CAMPOS = ['fondo', 'acento', 'paleta', 'objetivo', 'imagen', 'refuerzo', 'puntero', 'fondoArte', 'sonidos'];
@@ -31,14 +32,14 @@ test('cada mundo tiene al menos ocho pictogramas distintos para las parejas', ()
     assert.ok(m.parejas.length >= 8, `${m.id}: hay bastantes para el tablero de 8`);
     assert.equal(new Set(m.parejas).size, m.parejas.length, `${m.id}: sin dibujos repetidos`);
     for (const nombre of m.parejas) {
-      assert.ok(PICTOGRAMAS[nombre], `${m.id}: falta el pictograma ${nombre}`);
+      assert.ok(PICTOGRAMAS_ARASAAC[nombre], `${m.id}: falta el pictograma ${nombre}`);
     }
   }
 });
 
 test('cada mundo usa un refuerzo y un puntero dibujados, no una forma genérica', () => {
   for (const m of MUNDOS) {
-    assert.ok(PICTOGRAMAS[m.refuerzo], `${m.id}: falta el refuerzo ${m.refuerzo}`);
+    assert.ok(PICTOGRAMAS_ARASAAC[m.refuerzo] || PICTOGRAMAS[m.refuerzo], `${m.id}: falta el refuerzo`);
     assert.ok(PICTOGRAMAS[m.puntero], `${m.id}: falta el puntero ${m.puntero}`);
   }
 });

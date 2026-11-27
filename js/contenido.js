@@ -1,7 +1,9 @@
 // El mundo es un paquete visual y sonoro intercambiable: fondo, paleta,
 // objetivo, refuerzo, puntero y sonidos. Cambiar de mundo no cambia reglas.
-// Los objetos que se tocan son pictogramas ARASAAC; el resto es SVG propio
-// (docs/adr/0002-arte-arasaac.md). Sin IP real.
+// Todo lo que se nombra es un pictograma ARASAAC, referido por su concepto en
+// `js/arasaac.js`; el dibujo propio queda para iconos y gestos
+// (docs/adr/0003-arte-arasaac-primero.md). Sin IP real.
+import { imagenArasaac } from './arasaac.js';
 export const MUNDOS = [
   {
     id: 'navidad',
@@ -11,12 +13,13 @@ export const MUNDOS = [
     paleta: ['#0b3d2e', '#e53935', '#a5d6a7', '#ffffff', '#ffd54f'],
     fondoArte: 'navidad',
     objetivo: 'regalo',
-    imagen: 'assets/arasaac/regalo-25381.png',
-    refuerzo: 'copo',
-    puntero: 'punteroEstrella',
-    sprites: ['regalo', 'estrella', 'bolita', 'reno'],
-    // Ocho dibujos propios del mundo para el tablero de parejas.
-    parejas: ['regalo', 'estrella', 'bolita', 'reno', 'copo', 'campana', 'galleta', 'calcetin'],
+    imagen: imagenArasaac('regalo'),
+    refuerzo: 'copoArasaac',
+    // El puntero es el icono de la mecánica «tocar»: dónde está el ratón.
+    puntero: 'destello',
+    sprites: ['regalo', 'estrellaArasaac', 'canica', 'reno'],
+    // Ocho pictogramas del mundo para el tablero de parejas.
+    parejas: ['regalo', 'estrellaArasaac', 'canica', 'reno', 'copoArasaac', 'campana', 'galleta', 'calcetin'],
     sonidos: {
       acierto: 660,
       entrada: 880,
@@ -32,11 +35,11 @@ export const MUNDOS = [
     paleta: ['#2e6b3d', '#f9a825', '#aed581', '#fafafa', '#795548'],
     fondoArte: 'animalitos',
     objetivo: 'gato',
-    imagen: 'assets/arasaac/gato-7114.png',
-    refuerzo: 'huella',
-    puntero: 'punteroHuella',
+    imagen: imagenArasaac('gato'),
+    refuerzo: 'huellaArasaac',
+    puntero: 'aguantar',
     sprites: ['gato', 'perro', 'pato', 'vaca'],
-    parejas: ['gato', 'perro', 'pato', 'vaca', 'huevo', 'hueso', 'pez', 'huella'],
+    parejas: ['gato', 'perro', 'pato', 'vaca', 'huevo', 'hueso', 'pez', 'huellaArasaac'],
     sonidos: {
       acierto: 587,
       entrada: 784,
@@ -52,11 +55,11 @@ export const MUNDOS = [
     paleta: ['#1b5e20', '#ffffff', '#2e7d32', '#ffd54f', '#4fc3f7'],
     fondoArte: 'futbol',
     objetivo: 'balon',
-    imagen: 'assets/arasaac/balon-2269.png',
-    refuerzo: 'silbato',
-    puntero: 'punteroBalon',
+    imagen: imagenArasaac('balon'),
+    refuerzo: 'silbatoArasaac',
+    puntero: 'aparicion',
     sprites: ['balon', 'botas', 'trofeo', 'bandera'],
-    parejas: ['balon', 'botas', 'trofeo', 'bandera', 'silbato', 'guante', 'camiseta', 'cono'],
+    parejas: ['balon', 'botas', 'trofeo', 'bandera', 'silbatoArasaac', 'guante', 'camiseta', 'cono'],
     sonidos: {
       acierto: 523,
       entrada: 698,
@@ -72,11 +75,11 @@ export const MUNDOS = [
     paleta: ['#3f51b5', '#ffeb3b', '#9fa8da', '#ffffff', '#e53935'],
     fondoArte: 'amarillo',
     objetivo: 'carita',
-    imagen: 'assets/arasaac/carita-13354.png',
-    refuerzo: 'chispa',
-    puntero: 'punteroRayo',
-    sprites: ['bicho', 'chispa', 'huevo', 'cola'],
-    parejas: ['bicho', 'chispa', 'huevo', 'cola', 'estrella', 'corazon', 'nube', 'rayo'],
+    imagen: imagenArasaac('carita'),
+    refuerzo: 'chispaArasaac',
+    puntero: 'movimiento',
+    sprites: ['bichoArasaac', 'chispaArasaac', 'huevo'],
+    parejas: ['bichoArasaac', 'chispaArasaac', 'corazon', 'nube', 'rayo', 'estrellaArasaac', 'huellaArasaac', 'galleta'],
     sonidos: {
       acierto: 784,
       entrada: 1046.5,
@@ -112,7 +115,7 @@ export const MECANICAS = {
   clickEstatico: {
     id: 'clickEstatico',
     implementada: true,
-    icono: 'balon',
+    icono: 'clickEstatico',
     meta: 8,
     // Objetivo grande de partida: es el juego de clicar con blanco fácil.
     objetivoMinVmin: 14,

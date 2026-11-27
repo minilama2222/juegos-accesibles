@@ -2,109 +2,161 @@
 // Es una función pura para poder probarla sin navegador. El dibujo del fondo
 // no se anima nunca (ADR 0001, regla 6: el idle solo va en piezas jugables).
 //
-// Cada mundo tiene un motivo reconocible de un vistazo y su propia paleta.
-// Nada de IP real: son formas geométricas y pictogramas propios.
+// El fondo no compite con el juego: es un paisaje suave, de dos o tres masas
+// grandes y poca textura. Nada de patrones repetidos a la vista, porque detrás
+// se juega. Nada de IP real: formas geométricas y pictogramas propios.
+//
+// Los colores salen de la paleta del mundo y se mezclan con blanco o negro
+// (`mezclar`), así cada mundo tiene su luz sin escribir doce colores a mano.
 
 function svg(cuerpo, id) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" data-fondo="${id}">${cuerpo}</svg>`;
 }
 
+function aRgb(hex) {
+  const n = parseInt(hex.replace('#', ''), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function aHex([r, g, b]) {
+  return '#' + [r, g, b].map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+}
+
+// Mezcla `hex` con blanco (`t > 0`) o con negro (`t < 0`), de 0 a 1.
+export function mezclar(hex, t) {
+  const base = aRgb(hex);
+  const hacia = t >= 0 ? [255, 255, 255] : [0, 0, 0];
+  const k = Math.abs(t);
+  return aHex(base.map((v, i) => v + (hacia[i] - v) * k));
+}
+
+// El cielo, la luz del centro y la viñeta que oscurece los bordes para que el
+// centro (donde se juega) respire.
+function cielo(fondo, claro) {
+  return `<linearGradient id="cie" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${mezclar(fondo, 0.16)}"/>
+      <stop offset=".62" stop-color="${mezclar(fondo, -0.12)}"/>
+      <stop offset="1" stop-color="${mezclar(fondo, -0.3)}"/>
+    </linearGradient>
+    <radialGradient id="luz" cx="50%" cy="34%" r="55%">
+      <stop offset="0" stop-color="${claro}" stop-opacity=".2"/>
+      <stop offset="1" stop-color="${claro}" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="fin" cx="50%" cy="42%" r="78%">
+      <stop offset=".45" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity=".42"/>
+    </radialGradient>`;
+}
+
+function base(fondo) {
+  return `<rect width="1600" height="900" fill="url(#cie)"/><rect width="1600" height="900" fill="url(#luz)"/>`;
+}
+
+function vineta() {
+  return `<rect width="1600" height="900" fill="url(#fin)"/>`;
+}
+
+// Una colina: una elipse muy ancha, con su propia luz arriba.
+function colina(cx, cy, rx, ry, color) {
+  return `<g>
+    <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${color}"/>
+    <ellipse cx="${cx}" cy="${cy - ry * 0.18}" rx="${rx * 0.92}" ry="${ry * 0.8}" fill="${mezclar(color, 0.08)}"/>
+  </g>`;
+}
+
+// Un árbol de árbol: tronco y tres masas de copa. Sin detalle, para que no
+// compita con las cartas.
+function arbol(x, y, alto, tronco, copa) {
+  const r = alto * 0.28;
+  return `<g>
+    <rect x="${x - alto * 0.045}" y="${y - alto * 0.42}" width="${alto * 0.09}" height="${alto * 0.44}" rx="${alto * 0.03}" fill="${tronco}"/>
+    <circle cx="${x}" cy="${y - alto * 0.62}" r="${r}" fill="${copa}"/>
+    <circle cx="${x - r * 0.78}" cy="${y - alto * 0.44}" r="${r * 0.76}" fill="${copa}"/>
+    <circle cx="${x + r * 0.8}" cy="${y - alto * 0.46}" r="${r * 0.7}" fill="${copa}"/>
+  </g>`;
+}
+
 function navidad(m) {
-  const [fondo, acento, claro] = m.paleta;
+  const [fondo, , claro] = m.paleta;
   return svg(
-    `
-    <defs>
-      <radialGradient id="nav-brillo" cx="50%" cy="18%" r="85%">
-        <stop offset="0" stop-color="${claro}" stop-opacity=".35"/>
-        <stop offset="1" stop-color="${fondo}" stop-opacity="0"/>
-      </radialGradient>
-      <pattern id="nav-copos" width="140" height="140" patternUnits="userSpaceOnUse">
-        <circle cx="26" cy="34" r="2.6" fill="#ffffff" opacity=".45"/>
-        <circle cx="96" cy="88" r="1.8" fill="#ffffff" opacity=".3"/>
-        <circle cx="118" cy="22" r="1.4" fill="#ffffff" opacity=".25"/>
-        <path d="M26 34v14M26 41h-7M26 41h7" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.4"/>
-      </pattern>
-    </defs>
-    <rect width="1600" height="900" fill="${fondo}"/>
-    <rect width="1600" height="900" fill="url(#nav-brillo)"/>
-    <g fill="${claro}" opacity=".28">
-      <path d="M120 820 L260 520 L400 820 Z"/>
-      <path d="M310 840 L470 470 L630 840 Z"/>
-      <path d="M1140 840 L1310 430 L1480 840 Z"/>
-      <path d="M1370 830 L1460 640 L1550 830 Z"/>
+    `<defs>${cielo(fondo, claro)}</defs>
+    ${base(fondo)}
+    ${colina(300, 960, 620, 260, mezclar(fondo, 0.1))}
+    ${colina(1320, 975, 700, 300, mezclar(fondo, 0.06))}
+    ${colina(800, 1010, 900, 230, mezclar(fondo, 0.02))}
+    <g fill="${mezclar(claro, -0.35)}" opacity=".5">
+      ${[140, 118, 132, 104, 126].map((h, i) => {
+        const x = 90 + i * 92;
+        const pie = 840; // la base de los pinos se pierde dentro de la nieve
+        return `<path d="M${x} ${pie} L${x + h * 0.42} ${pie - h * 2.1} L${x + h * 0.84} ${pie} Z"/>`;
+      }).join('')}
+      ${[150, 112, 140].map((h, i) => {
+        const x = 1270 + i * 105;
+        const pie = 875;
+        return `<path d="M${x} ${pie} L${x + h * 0.42} ${pie - h * 2.2} L${x + h * 0.84} ${pie} Z"/>`;
+      }).join('')}
     </g>
-    <g fill="${acento}" opacity=".55">
-      <circle cx="260" cy="548" r="9"/><circle cx="470" cy="500" r="11"/><circle cx="1310" cy="462" r="10"/>
-      <circle cx="1460" cy="668" r="7"/>
+    ${colina(800, 1012, 940, 190, mezclar(claro, -0.18))}
+    <path d="M0 900 L0 830 C 260 800 420 850 640 838 S 1040 800 1230 830 S 1500 850 1600 822 L1600 900 Z"
+          fill="${mezclar(fondo, -0.28)}" opacity=".55"/>
+    <g fill="#ffffff">
+      ${[[210, 180, 2.6], [520, 120, 2], [980, 160, 2.4], [1400, 210, 2], [760, 90, 1.8], [1180, 320, 1.6], [360, 320, 1.6], [1500, 90, 2.2]]
+        .map(([cx, cy, r]) => `<circle cx="${cx}" cy="${cy}" r="${r}" opacity=".6"/>`)
+        .join('')}
     </g>
-    <rect y="820" width="1600" height="80" fill="#ffffff" opacity=".13"/>
-    <rect width="1600" height="900" fill="url(#nav-copos)"/>
-    `,
+    ${vineta()}`,
     'navidad',
   );
 }
 
 function animalitos(m) {
-  const [fondo, acento, claro] = m.paleta;
+  const [fondo, , claro] = m.paleta;
   return svg(
-    `
-    <defs>
-      <pattern id="ani-huellas" width="180" height="180" patternUnits="userSpaceOnUse">
-        <g fill="${claro}" opacity=".22">
-          <ellipse cx="62" cy="84" rx="22" ry="17"/>
-          <circle cx="34" cy="58" r="7"/><circle cx="50" cy="48" r="7"/>
-          <circle cx="72" cy="48" r="7"/><circle cx="88" cy="58" r="7"/>
-        </g>
-        <g fill="${acento}" opacity=".18">
-          <ellipse cx="152" cy="164" rx="15" ry="12"/>
-          <circle cx="133" cy="146" r="5"/><circle cx="144" cy="140" r="5"/>
-          <circle cx="160" cy="140" r="5"/><circle cx="171" cy="146" r="5"/>
-        </g>
-      </pattern>
+    `<defs>
+      ${cielo(fondo, claro)}
+      <linearGradient id="suelo" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${mezclar(fondo, 0.14)}"/>
+        <stop offset="1" stop-color="${mezclar(fondo, 0.02)}"/>
+      </linearGradient>
     </defs>
-    <rect width="1600" height="900" fill="${fondo}"/>
-    <ellipse cx="800" cy="980" rx="900" ry="300" fill="${claro}" opacity=".22"/>
-    <ellipse cx="260" cy="930" rx="360" ry="190" fill="${acento}" opacity=".12"/>
-    <ellipse cx="1380" cy="940" rx="420" ry="220" fill="${claro}" opacity=".14"/>
-    <g fill="${claro}" opacity=".35">
-      <path d="M180 780c8-60 46-96 96-110-6 58-36 96-96 110z"/>
-      <path d="M1420 760c-10-58-48-92-98-104 8 56 38 92 98 104z"/>
+    ${base(fondo)}
+    <ellipse cx="800" cy="915" rx="1150" ry="330" fill="url(#suelo)"/>
+    ${colina(200, 870, 470, 200, mezclar(fondo, 0.08))}
+    ${colina(1440, 890, 520, 220, mezclar(fondo, 0.05))}
+    ${arbol(120, 720, 210, mezclar(fondo, -0.42), mezclar(claro, 0.06))}
+    ${arbol(1500, 745, 240, mezclar(fondo, -0.42), mezclar(claro, 0.02))}
+    ${arbol(1420, 700, 160, mezclar(fondo, -0.42), mezclar(claro, 0.1))}
+    <g fill="${mezclar(fondo, 0.24)}" opacity=".5">
+      <ellipse cx="640" cy="880" rx="70" ry="12"/><ellipse cx="900" cy="920" rx="54" ry="10"/>
     </g>
-    <rect width="1600" height="900" fill="url(#ani-huellas)"/>
-    `,
+    ${vineta()}`,
     'animalitos',
   );
 }
 
 function futbol(m) {
-  const [fondo, acento, claro] = m.paleta;
+  const [fondo, , claro] = m.paleta;
   return svg(
-    `
-    <defs>
-      <linearGradient id="fut-hierba" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="${fondo}"/>
-        <stop offset="1" stop-color="${claro}"/>
-      </linearGradient>
-      <pattern id="fut-rayas" width="200" height="900" patternUnits="userSpaceOnUse">
-        <rect width="100" height="900" fill="#ffffff" opacity=".035"/>
+    `<defs>
+      ${cielo(fondo, claro)}
+      <pattern id="rayas" width="200" height="900" patternUnits="userSpaceOnUse">
+        <rect width="100" height="900" fill="#ffffff" opacity=".03"/>
       </pattern>
     </defs>
-    <rect width="1600" height="900" fill="url(#fut-hierba)"/>
-    <rect width="1600" height="900" fill="url(#fut-rayas)"/>
-    <g fill="none" stroke="${acento}" stroke-opacity=".55" stroke-width="6">
-      <rect x="70" y="70" width="1460" height="760" rx="8"/>
-      <line x1="800" y1="70" x2="800" y2="830"/>
-      <circle cx="800" cy="450" r="140"/>
-      <circle cx="800" cy="450" r="10" fill="${acento}" fill-opacity=".55"/>
-      <rect x="70" y="280" width="180" height="340"/>
-      <rect x="1350" y="280" width="180" height="340"/>
-      <rect x="70" y="370" width="70" height="160"/>
-      <rect x="1460" y="370" width="70" height="160"/>
+    ${base(fondo)}
+    <rect width="1600" height="900" fill="url(#rayas)"/>
+    <g fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="5">
+      <rect x="90" y="80" width="1420" height="740" rx="6"/>
+      <line x1="800" y1="80" x2="800" y2="820"/>
+      <circle cx="800" cy="450" r="130"/>
+      <circle cx="800" cy="450" r="8" fill="#ffffff" fill-opacity=".3"/>
+      <path d="M90 300h170v300H90M1510 300h-170v300h170"/>
+      <path d="M90 370h70v160H90M1510 370h-70v160h70"/>
     </g>
-    <g fill="${acento}" opacity=".18">
-      <circle cx="800" cy="450" r="250" fill="none" stroke="${acento}" stroke-opacity=".2" stroke-width="3"/>
+    <g opacity=".16">
+      <ellipse cx="800" cy="450" rx="330" ry="330" fill="${claro}"/>
     </g>
-    `,
+    ${vineta()}`,
     'futbol',
   );
 }
@@ -112,30 +164,28 @@ function futbol(m) {
 function amarillo(m) {
   const [fondo, acento, claro] = m.paleta;
   return svg(
-    `
-    <defs>
-      <radialGradient id="ama-foco" cx="50%" cy="44%" r="72%">
-        <stop offset="0" stop-color="${acento}" stop-opacity=".28"/>
-        <stop offset="1" stop-color="${fondo}" stop-opacity="0"/>
+    `<defs>
+      ${cielo(fondo, acento)}
+      <radialGradient id="foco" cx="50%" cy="46%" r="60%">
+        <stop offset="0" stop-color="${acento}" stop-opacity=".26"/>
+        <stop offset="1" stop-color="${acento}" stop-opacity="0"/>
       </radialGradient>
-      <pattern id="ama-rayos" width="260" height="260" patternUnits="userSpaceOnUse">
-        <path d="M40 20l34 58-22 4 30 52-58-34 20-6z" fill="${acento}" opacity=".16"/>
-        <circle cx="210" cy="190" r="5" fill="${claro}" opacity=".4"/>
-        <circle cx="180" cy="60" r="3" fill="${claro}" opacity=".32"/>
-      </pattern>
     </defs>
-    <rect width="1600" height="900" fill="${fondo}"/>
-    <rect width="1600" height="900" fill="url(#ama-foco)"/>
-    <g fill="none" stroke="${acento}" stroke-opacity=".2" stroke-width="4">
-      <path d="M0 720l240-90 180 60 220-130 260 90 230-70 240 100 230-60"/>
-      <path d="M0 780l260-70 190 50 230-110 250 80 240-60 220 90 210-40"/>
+    ${base(fondo)}
+    <rect width="1600" height="900" fill="url(#foco)"/>
+    <g fill="none" stroke="${mezclar(acento, -0.25)}" stroke-opacity=".22" stroke-width="4" stroke-linejoin="round">
+      <path d="M-40 830 L240 770 L470 812 L740 748 L1010 806 L1250 762 L1480 812 L1640 780"/>
+      <path d="M-40 872 L260 826 L520 860 L800 806 L1060 856 L1300 818 L1640 866"/>
     </g>
-    <g fill="${acento}" opacity=".28">
-      <circle cx="180" cy="170" r="5"/><circle cx="420" cy="120" r="3"/>
-      <circle cx="1260" cy="160" r="6"/><circle cx="1450" cy="300" r="4"/>
+    ${colina(-60, 930, 520, 210, mezclar(fondo, -0.22))}
+    ${colina(1660, 950, 560, 230, mezclar(fondo, -0.26))}
+    ${colina(800, 1060, 1000, 230, mezclar(fondo, -0.34))}
+    <g fill="${acento}" opacity=".5">
+      ${[[250, 200, 6], [1330, 170, 5], [560, 110, 4], [1120, 260, 4], [1460, 380, 3], [160, 420, 3]]
+        .map(([cx, cy, r]) => `<circle cx="${cx}" cy="${cy}" r="${r}"/>`)
+        .join('')}
     </g>
-    <rect width="1600" height="900" fill="url(#ama-rayos)"/>
-    `,
+    ${vineta()}`,
     'amarillo',
   );
 }
