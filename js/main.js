@@ -58,7 +58,6 @@ function aparienciaMundo(m) {
     objetivo: m.objetivo,
     imagen: m.imagen,
     refuerzo: m.refuerzo,
-    puntero: m.puntero,
     sonidos: { ...m.sonidos, fanfarria: [...m.sonidos.fanfarria] },
   };
 }
@@ -91,6 +90,7 @@ function publicar(extra = {}) {
           terminada: escenaEstado.terminada,
           bloqueada: escenaEstado.bloqueada,
           tiempoVisibleMs: escenaEstado.tiempoVisibleMs,
+          dibujos: escenaEstado.dibujos,
         }
       : {};
   window.juego = {
@@ -416,6 +416,12 @@ function cambiarAvatar() {
       );
     }
   }
+  // En partida el puntero es la propia cara: cambia con ella.
+  const puntero = document.querySelector('#puntero img');
+  if (puntero) {
+    puntero.dataset.puntero = estado.avatarId;
+    puntero.src = imagenArasaac(estado.avatarId);
+  }
   publicar();
 }
 
@@ -466,7 +472,7 @@ async function jugar(mecanicaId, opciones = {}) {
       <canvas class="estallidos" id="estallidos" aria-hidden="true"></canvas>
       <div class="sellos" id="sellos" aria-hidden="true"></div>
       <div class="puntero" id="puntero" aria-hidden="true">
-        <img alt="" data-puntero="${mundo.puntero}" src="${svg(mundo.puntero)}">
+        <img alt="" data-puntero="${estado.avatarId}" src="${imagenArasaac(estado.avatarId)}">
       </div>
       <button class="salir" id="otro-juego" data-accion="otro-juego" aria-label="Otro juego">
         <svg viewBox="0 0 100 100" aria-hidden="true">

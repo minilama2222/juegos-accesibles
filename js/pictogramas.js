@@ -149,25 +149,6 @@ export const PICTOGRAMAS = {
     <path d="M64 34h18M74 24l8 10-8 10" fill="none" stroke="#ffffff" stroke-width="5"
           stroke-linecap="round" stroke-linejoin="round"/>`),
 
-  /* ---------------- Punteros (≈48 px): trazo gordo, forma inconfundible ---- */
-  punteroEstrella: svg(`
-    <path d="M60 10l14 32 35 4-26 25 7 35-30-16-30 16 7-35-26-25 35-4z"
-          fill="#e53935" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"/>
-    <circle cx="60" cy="60" r="8" fill="#ffd54f"/>`),
-  punteroHuella: svg(`
-    <ellipse cx="60" cy="72" rx="24" ry="19" fill="#f9a825" stroke="#ffffff" stroke-width="7"/>
-    <g fill="#f9a825" stroke="#ffffff" stroke-width="6">
-      <circle cx="32" cy="46" r="9"/><circle cx="50" cy="34" r="9"/>
-      <circle cx="70" cy="34" r="9"/><circle cx="88" cy="46" r="9"/>
-    </g>`),
-  punteroBalon: svg(`
-    <circle cx="60" cy="60" r="48" fill="#ffffff" stroke="#1b5e20" stroke-width="7"/>
-    <path d="M60 26l20 15-8 24H48l-8-24z" fill="#1b5e20"/>
-    <path d="M60 26v-8M80 41l8-4M72 65l6 8M48 65l-6 8M40 41l-8-4" stroke="#1b5e20" stroke-width="6"/>`),
-  punteroRayo: svg(`
-    <path d="M72 8L30 66h24l-6 46 44-62H68z"
-          fill="#ffeb3b" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"/>`),
-
   /* ---------------- Refuerzos del mundo (≈50 px) ---------------- */
   // Refuerzos de ARASAAC (copo, hueso, silbato, rayo) viven en
   // `assets/arasaac/`; aquí solo queda lo que se dibuja como gesto.

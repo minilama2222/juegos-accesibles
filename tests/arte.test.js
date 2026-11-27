@@ -38,11 +38,6 @@ const PROPIOS = [
   'coleccion',
   'tactil',
   'volver',
-  // Punteros.
-  'punteroEstrella',
-  'punteroHuella',
-  'punteroBalon',
-  'punteroRayo',
   // Gestos y reservas.
   'chispa',
   'huella',

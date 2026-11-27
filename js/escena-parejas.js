@@ -4,6 +4,7 @@ import { prefiereMenosMovimiento } from './movimiento-reducido.js';
 import { acierto, entrada, error } from './audio.js';
 import { crearAyuda } from './ayuda.js';
 import { imagenPictograma } from './pictogramas.js';
+import { imagenArasaac } from './arasaac.js';
 import {
   disposicionTablero,
   indiceCartaEn,
@@ -20,12 +21,20 @@ const VOLTEO_MS = 190;
 const CELEBRACION_MS = 480;
 const LADO_SPRITE = 256;
 
+// Lo que se nombra en una carta es un pictograma de ARASAAC (PNG), igual que en
+// el resto del juego; el SVG propio solo es reserva para los gestos (dorso,
+// refuerzo). Con `imagenPictograma` todas las cartas caían en la estrella de
+// reserva y el tablero era ocho copias del mismo dibujo.
+function fuentePictograma(nombre) {
+  return imagenArasaac(nombre) ?? imagenPictograma(nombre);
+}
+
 // Kaplay carga bien los PNG pero no dibuja los SVG como sprite. Se rasteriza
 // cada pictograma a PNG en un canvas antes de cargarlo: mismo dibujo, sin
 // depender del soporte de SVG del motor.
 async function rasterizar(nombre) {
   const img = new Image();
-  img.src = imagenPictograma(nombre);
+  img.src = fuentePictograma(nombre);
   try {
     await img.decode();
   } catch {
@@ -142,6 +151,9 @@ export async function arrancarParejas({
       tiempoVisibleMs: estado.tiempoVisibleMs,
       lista: estado.lista,
       visible: estado.lista && layout.cartas.length > 0,
+      // Origen del dibujo de cada símbolo: los tests comprueban que cada pareja
+      // pinta un dibujo distinto y que ninguna cae en la reserva.
+      dibujos: Object.fromEntries(simbolos.map((s) => [s, fuentePictograma(s)])),
     };
   };
 

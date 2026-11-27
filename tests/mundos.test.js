@@ -6,7 +6,7 @@ import { PICTOGRAMAS } from '../js/pictogramas.js';
 import { PICTOGRAMAS_ARASAAC } from '../js/arasaac.js';
 
 // Un mundo completo es un paquete visual y sonoro intercambiable (spec 0001).
-const CAMPOS = ['fondo', 'acento', 'paleta', 'objetivo', 'imagen', 'refuerzo', 'puntero', 'fondoArte', 'sonidos'];
+const CAMPOS = ['fondo', 'acento', 'paleta', 'objetivo', 'imagen', 'refuerzo', 'fondoArte', 'sonidos'];
 
 test('los cuatro mundos declaran todo el paquete visual y sonoro', () => {
   assert.equal(MUNDOS.length, 4);
@@ -37,16 +37,14 @@ test('cada mundo tiene al menos ocho pictogramas distintos para las parejas', ()
   }
 });
 
-test('cada mundo usa un refuerzo y un puntero dibujados, no una forma genérica', () => {
+test('cada mundo usa un refuerzo dibujado, no una forma genérica', () => {
   for (const m of MUNDOS) {
     assert.ok(PICTOGRAMAS_ARASAAC[m.refuerzo] || PICTOGRAMAS[m.refuerzo], `${m.id}: falta el refuerzo`);
-    assert.ok(PICTOGRAMAS[m.puntero], `${m.id}: falta el puntero ${m.puntero}`);
   }
 });
 
-test('refuerzos, punteros y tonos de acierto son distintos en cada mundo', () => {
+test('refuerzos y tonos de acierto son distintos en cada mundo', () => {
   assert.equal(new Set(MUNDOS.map((m) => m.refuerzo)).size, MUNDOS.length);
-  assert.equal(new Set(MUNDOS.map((m) => m.puntero)).size, MUNDOS.length);
   assert.equal(new Set(MUNDOS.map((m) => m.sonidos.acierto)).size, MUNDOS.length);
   assert.equal(new Set(MUNDOS.map((m) => m.fondoArte)).size, MUNDOS.length);
 });

@@ -374,14 +374,24 @@ test('tiro a portería: clico el hueco y el balón entra', async () => {
     );
 
     const hueco = antes.huecos[0];
+    // El vuelo dura medio segundo. Se mira el balón en cuanto el marcador
+    // cambia, sin esperar a que la animación acabe: antes era una carrera.
     await p.mouse.click(hueco.x, hueco.y);
-    await p.waitForFunction(() => window.juego?.escena?.aciertos === 1, null, { timeout: 4000 });
+    const vuelo = await p.waitForFunction(
+      () => {
+        const e = window.juego?.escena;
+        return e && e.aciertos === 1 && e.balon && e.balon.activo ? e.balon : false;
+      },
+      null,
+      { timeout: 3000, polling: 30 },
+    );
 
     const durante = await p.evaluate(() => window.juego.escena);
     assert.equal(durante.fallos, 0, 'el gol no cuenta como fallo');
     assert.equal(durante.ultimoTiro.acierto, true);
     assert.equal(durante.ultimoTiro.hueco, 0);
-    assert.ok(durante.balon, 'el balón está volando');
+    assert.ok(vuelo, 'el balón está volando');
+    assert.equal((await vuelo.jsonValue()).acierto, true);
     assert.equal(durante.terminada, false);
   } finally {
     await b.close();
@@ -1015,7 +1025,7 @@ test('todas las escenas dejan ver el arte del mundo', async () => {
   }
 });
 
-test('cada mundo cambia fondo, refuerzo, puntero y sonido en la partida', async () => {
+test('cada mundo cambia fondo, refuerzo y sonido en la partida', async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
   await p.goto(URL_BASE());
@@ -1028,13 +1038,13 @@ test('cada mundo cambia fondo, refuerzo, puntero y sonido en la partida', async 
     const e = await p.evaluate(() => window.juego);
     assert.equal(e.apariencia.fondoArte, id);
     assert.ok(e.apariencia.refuerzo, `${id}: refuerzo propio`);
-    assert.ok(e.apariencia.puntero, `${id}: puntero propio`);
     assert.ok(e.apariencia.sonidos.acierto > 0);
 
     const fondo = await p.$eval('.fondo svg', (n) => n.outerHTML);
     assert.ok(fondo.length > 100, `${id}: el fondo es arte, no un color plano`);
+    // El puntero es la cara del jugador, igual en todos los mundos.
     const puntero = await p.$eval('#puntero img', (n) => n.dataset.puntero);
-    assert.equal(puntero, e.apariencia.puntero);
+    assert.equal(puntero, e.avatar, `${id}: el puntero es mi avatar`);
 
     await p.mouse.click(620, 420);
     await p.waitForFunction(() => !!window.juego?.ultimoRefuerzo);
@@ -1046,6 +1056,33 @@ test('cada mundo cambia fondo, refuerzo, puntero y sonido en la partida', async 
     await p.waitForSelector('[data-mundo]');
   }
   assert.equal(new Set(vistos).size, 4, 'los cuatro paquetes visuales son distintos');
+  await b.close();
+});
+
+test('el puntero de la partida es el avatar elegido en el menú', async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1200, height: 800 } });
+  await p.goto(URL_BASE());
+
+  // Elige la otra cara en el menú general y entra a jugar.
+  const enMenu = await p.$eval('.menu [data-accion="avatar"]', (n) => n.dataset.avatar);
+  await p.click('.menu [data-accion="avatar"]');
+  const elegido = await p.$eval('.menu [data-accion="avatar"]', (n) => n.dataset.avatar);
+  assert.notEqual(elegido, enMenu, 'el clic cambia de avatar');
+
+  await p.click('[data-juego="causaEfecto"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  const enPartida = await p.$eval('#puntero img', (n) => n.dataset.puntero);
+  assert.equal(enPartida, elegido, 'el puntero es la cara elegida en el menú');
+  const src = await p.$eval('#puntero img', (n) => n.getAttribute('src'));
+  assert.match(src, /assets\/arasaac\/\d+\.png$/, 'el puntero es un pictograma de la cara');
+
+  // La cara se guarda: al volver a entrar, el puntero la recuerda.
+  await p.click('[data-accion="otro-juego"]');
+  await p.waitForSelector('[data-mundo]');
+  await p.click('[data-juego="causaEfecto"]');
+  await p.waitForFunction(() => window.juego?.escena?.lista === true);
+  assert.equal(await p.$eval('#puntero img', (n) => n.dataset.puntero), elegido);
   await b.close();
 });
 
@@ -1264,6 +1301,40 @@ test('parejas: elijo 6 parejas, giro dos iguales y se quedan visibles', async ()
     assert.equal(despues.cartas[pareja.id].estado, 'encontrada');
     assert.equal(despues.fallos, 0);
     assert.equal(despues.terminada, false);
+  } finally {
+    await b.close();
+  }
+});
+
+test('parejas: cada pareja pinta un dibujo distinto, no la estrella de reserva', async () => {
+  const b = await chromium.launch();
+  try {
+    const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
+    await p.goto(URL_BASE());
+    const mundos = await p.evaluate(() =>
+      [...document.querySelectorAll('[data-mundo]')].map((e) => e.dataset.mundo),
+    );
+    assert.ok(mundos.length >= 1, 'hay mundos en el menú');
+
+    for (const mundo of mundos) {
+      await p.goto(URL_BASE());
+      await p.click(`[data-mundo="${mundo}"]`);
+      await p.click('[data-juego="parejas"][data-parejas="4"]');
+      await p.waitForFunction(() => window.juego?.escena?.lista === true, null, { timeout: 8000 });
+      const cartas = await p.evaluate(() => window.juego.escena.cartas);
+      const simbolos = [...new Set(cartas.map((c) => c.simbolo))];
+      assert.equal(simbolos.length, 4, `${mundo}: cuatro parejas distintas`);
+
+      // Cada carta lleva su sprite, y los cuatro sprites salen de ficheros distintos.
+      const dibujos = await p.evaluate(() => window.juego.dibujos);
+      const fuentes = simbolos.map((s) => dibujos[s]);
+      assert.equal(new Set(fuentes).size, 4, `${mundo}: cada pareja con su propio dibujo`);
+      for (const s of simbolos) {
+        const f = dibujos[s];
+        assert.ok(f, `${mundo}/${s}: la carta tiene dibujo`);
+        assert.match(f, /^assets\/arasaac\/\d+\.png$/, `${mundo}/${s}: es un pictograma de ARASAAC`);
+      }
+    }
   } finally {
     await b.close();
   }

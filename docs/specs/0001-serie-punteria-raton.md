@@ -98,7 +98,8 @@ Una serie de juegos web estáticos, sin build, publicada en GitHub Pages, que é
 
 - **Botón "otro juego"** fijo, grande, siempre visible y fuera del área de juego; lleva al selector sin pedir confirmación.
 - **Selector de mundo** al entrar en la serie; la elección persiste durante la sesión.
-- **Puntero propio** grande dibujado por la escena, con estela corta y opcional.
+- **Puntero propio**: es la cara (avatar) que el niño eligió en el menú, grande y redonda, con
+  estela corta y opcional. No cambia con el mundo; cambia cuando cambia su cara.
 - **Sin texto en el juego**; pictogramas, color y audio.
 - **Refuerzo** <0,5 s de duración; nunca oculta el siguiente objetivo más tiempo.
 - **Fallo**: animación y sonido suaves; sin pérdida de progreso ni vidas.

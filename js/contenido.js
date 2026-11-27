@@ -1,5 +1,6 @@
 // El mundo es un paquete visual y sonoro intercambiable: fondo, paleta,
-// objetivo, refuerzo, puntero y sonidos. Cambiar de mundo no cambia reglas.
+// objetivo, refuerzo y sonidos. Cambiar de mundo no cambia reglas. El puntero
+// no es del mundo: es la cara que el niño eligió en el menú.
 // Todo lo que se nombra es un pictograma ARASAAC, referido por su concepto en
 // `js/arasaac.js`; el dibujo propio queda para iconos y gestos
 // (docs/adr/0003-arte-arasaac-primero.md). Sin IP real.
@@ -15,8 +16,6 @@ export const MUNDOS = [
     objetivo: 'regalo',
     imagen: imagenArasaac('regalo'),
     refuerzo: 'copoArasaac',
-    // El puntero es el icono de la mecánica «tocar»: dónde está el ratón.
-    puntero: 'destello',
     sprites: ['regalo', 'estrellaArasaac', 'canica', 'reno'],
     // Ocho pictogramas del mundo para el tablero de parejas.
     parejas: ['regalo', 'estrellaArasaac', 'canica', 'reno', 'copoArasaac', 'campana', 'galleta', 'calcetin'],
@@ -37,7 +36,6 @@ export const MUNDOS = [
     objetivo: 'gato',
     imagen: imagenArasaac('gato'),
     refuerzo: 'huellaArasaac',
-    puntero: 'aguantar',
     sprites: ['gato', 'perro', 'pato', 'vaca'],
     parejas: ['gato', 'perro', 'pato', 'vaca', 'huevo', 'hueso', 'pez', 'huellaArasaac'],
     sonidos: {
@@ -57,7 +55,6 @@ export const MUNDOS = [
     objetivo: 'balon',
     imagen: imagenArasaac('balon'),
     refuerzo: 'silbatoArasaac',
-    puntero: 'aparicion',
     sprites: ['balon', 'botas', 'trofeo', 'bandera'],
     parejas: ['balon', 'botas', 'trofeo', 'bandera', 'silbatoArasaac', 'guante', 'camiseta', 'cono'],
     sonidos: {
@@ -77,7 +74,6 @@ export const MUNDOS = [
     objetivo: 'carita',
     imagen: imagenArasaac('carita'),
     refuerzo: 'chispaArasaac',
-    puntero: 'movimiento',
     sprites: ['bichoArasaac', 'chispaArasaac', 'huevo'],
     parejas: ['bichoArasaac', 'chispaArasaac', 'corazon', 'nube', 'rayo', 'estrellaArasaac', 'huellaArasaac', 'galleta'],
     sonidos: {
