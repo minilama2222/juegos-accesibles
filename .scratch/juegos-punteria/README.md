@@ -17,6 +17,19 @@ Trabajar **de bloqueante en bloqueante**. Cualquier ticket cuyos bloqueantes est
 | 09 | Tiro a portería | hecho | 05 |
 | 10 | Cuatro mundos completos y accesibilidad | hecho | 03 |
 | 11 | Arrastre — juego avanzado | hecho | 08 |
+| 12 | Glosario y ADR del catálogo de piezas | pendiente | — |
+| 13 | Catálogo único y piezas propias como SVG | pendiente | 12 |
+| 14 | Nombres canónicos, variantes y fin de las repeticiones | pendiente | 13 |
+| 15 | Galería `catalogo.html` | pendiente | 14 |
+| 16 | Guardarraíles del catálogo en los tests | pendiente | 14 |
+| 17 | Flujo de rediseño y auditoría inicial | pendiente | 15, 16 |
+
+### Serie de arte
+
+Los tickets 12–17 no cambian reglas ni mecánicas: construyen el catálogo de piezas para poder
+rediseñar el arte una a una sin duplicados y revisarlo a tamaño real. Decisiones de partida en
+`docs/adr/0004-catalogo-de-piezas.md` (ticket 12); la galería vive en `catalogo.html` y no está
+enlazada desde el menú del niño.
 
 ## Despliegue continuo
 
